@@ -273,7 +273,7 @@ src_read_locate_file(gdinfo_t *gdinfo,
     for(int is=0; is<in_num_source; is++)
     {
       if(in_3coord_meaning == 1) {
-        all_coords[3*is+2] = gdinfo->nk2 - all_coords[3*is+2];
+        all_coords[3*is+2] = gdinfo->gnk2 - all_coords[3*is+2];
       }
       // nearest integer index
       si_glob = (int) (all_coords[3*is+0] + 0.5);
