@@ -61,12 +61,13 @@ main_curv_col_el_3d: \
 		media_geometry3d.o \
 		media_read_file.o \
 		gd_info.o gd_t.o md_t.o wav_t.o \
-		bdry_free.o bdry_pml.o src_t.o io_funcs.o \
+		bdry_t.o src_t.o io_funcs.o \
 		blk_t.o cuda_common.o \
-		sv_eq1st_curv_col.o \
-		sv_eq1st_curv_col_el_iso_gpu.o \
-		sv_eq1st_curv_col_el_vti_gpu.o \
-		sv_eq1st_curv_col_el_aniso_gpu.o \
+		drv_rk_curv_col.o \
+		sv_curv_col_el_gpu.o \
+		sv_curv_col_el_iso_gpu.o \
+		sv_curv_col_el_vti_gpu.o \
+		sv_curv_col_el_aniso_gpu.o \
 		main_curv_col_el_3d.o
 	$(GC) -o $@ $^ $(LDFLAGS) 
 
@@ -107,9 +108,7 @@ md_t.o: forward/md_t.cu
 	${GC} -c -o $@ $(CFLAGS_CUDA) $<
 wav_t.o: forward/wav_t.cu
 	${GC} -c -o $@ $(CFLAGS_CUDA) $<
-bdry_pml.o: forward/bdry_pml.cu
-	${GC} -c -o $@ $(CFLAGS_CUDA) $<
-bdry_free.o: forward/bdry_free.cu
+bdry_t.o: forward/bdry_t.cu
 	${GC} -c -o $@ $(CFLAGS_CUDA) $<
 src_t.o: forward/src_t.cu
 	${GC} -c -o $@ $(CFLAGS_CUDA) $<
@@ -121,13 +120,15 @@ alloc.o: forward/alloc.cu
 	$(GC) -c -o $@ $(CFLAGS_CUDA) $<
 cuda_common.o: forward/cuda_common.cu
 	$(GC) -c -o $@ $(CFLAGS_CUDA) $<
-sv_eq1st_curv_col.o:          forward/sv_eq1st_curv_col.cu
+drv_rk_curv_col.o:          forward/drv_rk_curv_col.cu
 	${GC} -c -o $@ $(CFLAGS_CUDA) $<
-sv_eq1st_curv_col_el_iso_gpu.o:   forward/sv_eq1st_curv_col_el_iso_gpu.cu
+sv_curv_col_el_gpu.o:          forward/sv_curv_col_el_gpu.cu
 	${GC} -c -o $@ $(CFLAGS_CUDA) $<
-sv_eq1st_curv_col_el_vti_gpu.o:   forward/sv_eq1st_curv_col_el_vti_gpu.cu
+sv_curv_col_el_iso_gpu.o:   forward/sv_curv_col_el_iso_gpu.cu
 	${GC} -c -o $@ $(CFLAGS_CUDA) $<
-sv_eq1st_curv_col_el_aniso_gpu.o:   forward/sv_eq1st_curv_col_el_aniso_gpu.cu
+sv_curv_col_el_vti_gpu.o:   forward/sv_curv_col_el_vti_gpu.cu
+	${GC} -c -o $@ $(CFLAGS_CUDA) $<
+sv_curv_col_el_aniso_gpu.o:   forward/sv_curv_col_el_aniso_gpu.cu
 	${GC} -c -o $@ $(CFLAGS_CUDA) $<
 main_curv_col_el_3d.o: forward/main_curv_col_el_3d.cu
 	${GC} -c -o $@ $(CFLAGS_CUDA) $<
