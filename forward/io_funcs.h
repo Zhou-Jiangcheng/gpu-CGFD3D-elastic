@@ -433,4 +433,5 @@ PG_slice_output(float *PG,  gdinfo_t *gdinfo, char *output_dir, char *frame_coor
 int
 io_get_nextline(FILE *fp, char *str, int length);
 
+
 #endif

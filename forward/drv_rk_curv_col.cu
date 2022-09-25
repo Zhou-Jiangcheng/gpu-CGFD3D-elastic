@@ -11,14 +11,12 @@
 #include "fdlib_mem.h"
 #include "fdlib_math.h"
 #include "blk_t.h"
-#include "sv_eq1st_curv_col.h"
-#include "sv_eq1st_curv_col_el_iso_gpu.h"
-#include "sv_eq1st_curv_col_el_vti_gpu.h"
-#include "sv_eq1st_curv_col_el_aniso_gpu.h"
+#include "sv_curv_col_el_gpu.h"
+#include "sv_curv_col_el_iso_gpu.h"
+#include "sv_curv_col_el_vti_gpu.h"
+#include "sv_curv_col_el_aniso_gpu.h"
 #include "alloc.h"
 #include "cuda_common.h"
-
-//#define SV_ELISO1ST_CURV_MACDRP_DEBUG
 
 /*******************************************************************************
  * one simulation over all time steps, could be used in imaging or inversion
@@ -26,20 +24,19 @@
  ******************************************************************************/
 
 void
-sv_eq1st_curv_col_allstep(
+drv_rk_curv_col_allstep(
   fd_t            *fd,
   gdinfo_t        *gdinfo,
   gdcurv_metric_t *metric,
   md_t      *md,
-  src_t      *src,
-  bdryfree_t *bdryfree,
-  bdrypml_t  *bdrypml,
-  wav_t  *wav,
-  mympi_t    *mympi,
-  iorecv_t   *iorecv,
-  ioline_t   *ioline,
-  ioslice_t  *ioslice,
-  iosnap_t   *iosnap,
+  src_t     *src,
+  bdry_t    *bdry,
+  wav_t     *wav,
+  mympi_t   *mympi,
+  iorecv_t  *iorecv,
+  ioline_t  *ioline,
+  ioslice_t *ioslice,
+  iosnap_t  *iosnap,
   // time
   float dt, int nt_total, float t0,
   char *output_fname_part,
@@ -73,8 +70,7 @@ sv_eq1st_curv_col_allstep(
   md_t   md_d;
   src_t  src_d;
   wav_t  wav_d;
-  bdryfree_t bdryfree_d;
-  bdrypml_t  bdrypml_d;
+  bdry_t  bdry_d;
   gdcurv_metric_t metric_d;
   fd_wav_t fd_wav_d;
 
@@ -84,10 +80,9 @@ sv_eq1st_curv_col_allstep(
   init_fd_device(fd, &fd_wav_d);
   init_src_device(src, &src_d);
   init_metric_device(metric, &metric_d);
-  init_bdryfree_device(gdinfo, bdryfree, &bdryfree_d);
-  init_bdrypml_device(gdinfo, bdrypml, &bdrypml_d);
+  init_bdry_device(gdinfo, bdry, &bdry_d);
   init_wave_device(wav, &wav_d);
-
+  //---------------------------------------
   // get device wavefield 
   float *w_buff = wav->v5d; // size number is V->siz_icmp * (V->ncmp+6)
   // GPU local pointer
@@ -122,16 +117,18 @@ sv_eq1st_curv_col_allstep(
   int num_of_r_reqs = 4;
   int num_of_s_reqs = 4;
   
-
   // set pml for rk
-  for (int idim=0; idim<CONST_NDIM; idim++) {
-    for (int iside=0; iside<2; iside++) {
-      if (bdrypml_d.is_at_sides[idim][iside]==1) {
-        bdrypml_auxvar_t *auxvar_d = &(bdrypml_d.auxvar[idim][iside]);
-        auxvar_d->pre = auxvar_d->var + auxvar_d->siz_ilevel * 0;
-        auxvar_d->tmp = auxvar_d->var + auxvar_d->siz_ilevel * 1;
-        auxvar_d->rhs = auxvar_d->var + auxvar_d->siz_ilevel * 2;
-        auxvar_d->end = auxvar_d->var + auxvar_d->siz_ilevel * 3;
+  if(bdry_d.is_enable_pml == 1)
+  {
+    for (int idim=0; idim<CONST_NDIM; idim++) {
+      for (int iside=0; iside<2; iside++) {
+        if (bdry_d.is_sides_pml[idim][iside]==1) {
+          bdrypml_auxvar_t *auxvar_d = &(bdry_d.auxvar[idim][iside]);
+          auxvar_d->pre = auxvar_d->var + auxvar_d->siz_ilevel * 0;
+          auxvar_d->tmp = auxvar_d->var + auxvar_d->siz_ilevel * 1;
+          auxvar_d->rhs = auxvar_d->var + auxvar_d->siz_ilevel * 2;
+          auxvar_d->end = auxvar_d->var + auxvar_d->siz_ilevel * 3;
+        }
       }
     }
   }
@@ -141,14 +138,14 @@ sv_eq1st_curv_col_allstep(
   float *PG   = NULL;
   // Dis_accu is Displacemen accumulation, be uesd for PGD calculaton.
   float *Dis_accu_d   = NULL;
-  if (bdryfree_d.is_at_sides[CONST_NDIM-1][1] == 1)
+  if (bdry_d.is_sides_free[CONST_NDIM-1][1] == 1)
   {
     PG_d = init_PGVAD_device(gdinfo);
     Dis_accu_d = init_Dis_accu_device(gdinfo);
     PG = (float *) fdlib_mem_calloc_1d_float(CONST_NDIM_5*gdinfo->ny*gdinfo->nx,0.0,"PGV,A,D malloc");
   }
   // calculate conversion matrix for free surface
-  if (bdryfree_d.is_at_sides[CONST_NDIM-1][1] == 1)
+  if (bdry_d.is_sides_free[CONST_NDIM-1][1] == 1)
   {
     if (md_d.medium_type == CONST_MEDIUM_ELASTIC_ISO)
     {
@@ -156,7 +153,7 @@ sv_eq1st_curv_col_allstep(
       dim3 grid;
       grid.x = (ni+block.x-1)/block.x;
       grid.y = (nj+block.y-1)/block.y;
-      sv_eq1st_curv_col_el_iso_dvh2dvz_gpu <<<grid, block>>> (gdinfo_d,metric_d,md_d,bdryfree_d,verbose);
+      sv_curv_col_el_iso_dvh2dvz_gpu <<<grid, block>>> (gdinfo_d,metric_d,md_d,bdry_d,verbose);
       CUDACHECK(cudaDeviceSynchronize());
     }
     else if (md_d.medium_type == CONST_MEDIUM_ELASTIC_VTI)
@@ -165,7 +162,7 @@ sv_eq1st_curv_col_allstep(
       dim3 grid;
       grid.x = (ni+block.x-1)/block.x;
       grid.y = (nj+block.y-1)/block.y;
-      sv_eq1st_curv_col_el_vti_dvh2dvz_gpu <<<grid, block>>> (gdinfo_d,metric_d,md_d,bdryfree_d,verbose);
+      sv_curv_col_el_vti_dvh2dvz_gpu <<<grid, block>>> (gdinfo_d,metric_d,md_d,bdry_d,verbose);
       CUDACHECK(cudaDeviceSynchronize());
     }
     else if (md_d.medium_type == CONST_MEDIUM_ELASTIC_ANISO)
@@ -174,7 +171,7 @@ sv_eq1st_curv_col_allstep(
       dim3 grid;
       grid.x = (ni+block.x-1)/block.x;
       grid.y = (nj+block.y-1)/block.y;
-      sv_eq1st_curv_col_el_aniso_dvh2dvz_gpu <<<grid, block>>> (gdinfo_d,metric_d,md_d,bdryfree_d,verbose);
+      sv_curv_col_el_aniso_dvh2dvz_gpu <<<grid, block>>> (gdinfo_d,metric_d,md_d,bdry_d,verbose);
       CUDACHECK(cudaDeviceSynchronize());
     }
     else
@@ -189,7 +186,7 @@ sv_eq1st_curv_col_allstep(
   //--------------------------------------------------------
 
   if (myid==0 && verbose>0) fprintf(stdout,"start time loop ...\n"); 
-
+  //---------
   for (int it=0; it<nt_total; it++)
   {
     t_cur  = it * dt + t0;
@@ -218,18 +215,24 @@ sv_eq1st_curv_col_allstep(
       // use pointer to avoid 1 copy for previous level value
       if (istage==0) {
         w_cur_d = w_pre_d;
-        for (int idim=0; idim<CONST_NDIM; idim++) {
-          for (int iside=0; iside<2; iside++) {
-            bdrypml_d.auxvar[idim][iside].cur = bdrypml_d.auxvar[idim][iside].pre;
+        if(bdry_d.is_enable_pml == 1)
+        {
+          for (int idim=0; idim<CONST_NDIM; idim++) {
+            for (int iside=0; iside<2; iside++) {
+              bdry_d.auxvar[idim][iside].cur = bdry_d.auxvar[idim][iside].pre;
+            }
           }
         }
       }
       else
       {
         w_cur_d = w_tmp_d;
-        for (int idim=0; idim<CONST_NDIM; idim++) {
-          for (int iside=0; iside<2; iside++) {
-            bdrypml_d.auxvar[idim][iside].cur = bdrypml_d.auxvar[idim][iside].tmp;
+        if(bdry_d.is_enable_pml == 1)
+        {
+          for (int idim=0; idim<CONST_NDIM; idim++) {
+            for (int iside=0; iside<2; iside++) {
+              bdry_d.auxvar[idim][iside].cur = bdry_d.auxvar[idim][iside].tmp;
+            }
           }
         }
       }
@@ -242,9 +245,9 @@ sv_eq1st_curv_col_allstep(
       {
         case CONST_MEDIUM_ELASTIC_ISO : {
 
-          sv_eq1st_curv_col_el_iso_onestage(
+          sv_curv_col_el_iso_onestage(
               w_cur_d,w_rhs_d,wav_d,fd_wav_d,
-              gdinfo_d, metric_d, md_d, bdryfree_d, bdrypml_d, src_d,
+              gdinfo_d, metric_d, md_d, bdry_d, src_d,
               fd->num_of_fdx_op, fd->pair_fdx_op[ipair][istage],
               fd->num_of_fdy_op, fd->pair_fdy_op[ipair][istage],
               fd->num_of_fdz_op, fd->pair_fdz_op[ipair][istage],
@@ -255,9 +258,9 @@ sv_eq1st_curv_col_allstep(
 
         case CONST_MEDIUM_ELASTIC_VTI : {
 
-          sv_eq1st_curv_col_el_vti_onestage(
+          sv_curv_col_el_vti_onestage(
               w_cur_d,w_rhs_d,wav_d,fd_wav_d,
-              gdinfo_d, metric_d, md_d, bdryfree_d, bdrypml_d, src_d,
+              gdinfo_d, metric_d, md_d, bdry_d, src_d,
               fd->num_of_fdx_op, fd->pair_fdx_op[ipair][istage],
               fd->num_of_fdy_op, fd->pair_fdy_op[ipair][istage],
               fd->num_of_fdz_op, fd->pair_fdz_op[ipair][istage],
@@ -268,9 +271,9 @@ sv_eq1st_curv_col_allstep(
 
         case CONST_MEDIUM_ELASTIC_ANISO : {
 
-          sv_eq1st_curv_col_el_aniso_onestage(
+          sv_curv_col_el_aniso_onestage(
               w_cur_d,w_rhs_d,wav_d,fd_wav_d,
-              gdinfo_d, metric_d, md_d, bdryfree_d, bdrypml_d, src_d,
+              gdinfo_d, metric_d, md_d, bdry_d, src_d,
               fd->num_of_fdx_op, fd->pair_fdx_op[ipair][istage],
               fd->num_of_fdy_op, fd->pair_fdy_op[ipair][istage],
               fd->num_of_fdz_op, fd->pair_fdz_op[ipair][istage],
@@ -300,7 +303,7 @@ sv_eq1st_curv_col_allstep(
         }
         // apply Qs
         //if (md->visco_type == CONST_VISCO_GRAVES_QS) {
-        //  sv_eq1st_curv_graves_Qs(w_tmp, wave->ncmp, gdinfo, md);
+        //  sv_curv_graves_Qs(w_tmp, wave->ncmp, gdinfo, md);
         //}
 
         // pack and isend
@@ -309,15 +312,18 @@ sv_eq1st_curv_col_allstep(
         MPI_Startall(num_of_s_reqs, mympi->pair_s_reqs[ipair_mpi][istage_mpi]);
         
         // pml_tmp
-        for (int idim=0; idim<CONST_NDIM; idim++) {
-          for (int iside=0; iside<2; iside++) {
-            if (bdrypml_d.is_at_sides[idim][iside]==1) {
-              bdrypml_auxvar_t *auxvar_d = &(bdrypml_d.auxvar[idim][iside]);
-              dim3 block(256);
-              dim3 grid;
-              grid.x = (auxvar_d->siz_ilevel + block.x - 1) / block.x;
-              wav_update <<<grid, block>>> (
-                         auxvar_d->siz_ilevel, coef_a, auxvar_d->tmp, auxvar_d->pre, auxvar_d->rhs);
+        if(bdry_d.is_enable_pml == 1)
+        {
+          for (int idim=0; idim<CONST_NDIM; idim++) {
+            for (int iside=0; iside<2; iside++) {
+              if (bdry_d.is_sides_pml[idim][iside]==1) {
+                bdrypml_auxvar_t *auxvar_d = &(bdry_d.auxvar[idim][iside]);
+                dim3 block(256);
+                dim3 grid;
+                grid.x = (auxvar_d->siz_ilevel + block.x - 1) / block.x;
+                wav_update <<<grid, block>>> (
+                           auxvar_d->siz_ilevel, coef_a, auxvar_d->tmp, auxvar_d->pre, auxvar_d->rhs);
+              }
             }
           }
         }
@@ -329,15 +335,18 @@ sv_eq1st_curv_col_allstep(
           wav_update <<<grid, block>>> (wav_d.siz_ilevel, coef_b, w_end_d, w_pre_d, w_rhs_d);
         }
         // pml_end
-        for (int idim=0; idim<CONST_NDIM; idim++) {
-          for (int iside=0; iside<2; iside++) {
-            if (bdrypml_d.is_at_sides[idim][iside]==1) {
-              bdrypml_auxvar_t *auxvar_d = &(bdrypml_d.auxvar[idim][iside]);
-              dim3 block(256);
-              dim3 grid;
-              grid.x = (auxvar_d->siz_ilevel + block.x - 1) / block.x;
-              wav_update <<<grid, block>>> (
-                          auxvar_d->siz_ilevel, coef_b, auxvar_d->end, auxvar_d->pre, auxvar_d->rhs);
+        if(bdry_d.is_enable_pml == 1)
+        {
+          for (int idim=0; idim<CONST_NDIM; idim++) {
+            for (int iside=0; iside<2; iside++) {
+              if (bdry_d.is_sides_pml[idim][iside]==1) {
+                bdrypml_auxvar_t *auxvar_d = &(bdry_d.auxvar[idim][iside]);
+                dim3 block(256);
+                dim3 grid;
+                grid.x = (auxvar_d->siz_ilevel + block.x - 1) / block.x;
+                wav_update <<<grid, block>>> (
+                            auxvar_d->siz_ilevel, coef_b, auxvar_d->end, auxvar_d->pre, auxvar_d->rhs);
+              }
             }
           }
         }
@@ -351,30 +360,31 @@ sv_eq1st_curv_col_allstep(
           dim3 grid;
           grid.x = (wav_d.siz_ilevel + block.x - 1) / block.x;
           wav_update <<<grid, block>>> (wav_d.siz_ilevel, coef_a, w_tmp_d, w_pre_d, w_rhs_d);
-          //CUDACHECK(cudaDeviceSynchronize());
         }
         // apply Qs
         //if (md->visco_type == CONST_VISCO_GRAVES_QS) {
-        //  sv_eq1st_curv_graves_Qs(w_tmp, wave->ncmp, gdinfo, md);
+        //  sv_curv_graves_Qs(w_tmp, wave->ncmp, gdinfo, md);
         //}
 
         // pack and isend
         blk_macdrp_pack_mesg_gpu(w_tmp_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, myid);
         MPI_Startall(num_of_s_reqs, mympi->pair_s_reqs[ipair_mpi][istage_mpi]);
         // pml_tmp
-        for (int idim=0; idim<CONST_NDIM; idim++) {
-          for (int iside=0; iside<2; iside++) {
-            if (bdrypml_d.is_at_sides[idim][iside]==1) {
-              bdrypml_auxvar_t *auxvar_d = &(bdrypml_d.auxvar[idim][iside]);
-              dim3 block(256);
-              dim3 grid;
-              grid.x = (auxvar_d->siz_ilevel + block.x - 1) / block.x;
-              wav_update <<<grid, block>>> (
-                         auxvar_d->siz_ilevel, coef_a, auxvar_d->tmp, auxvar_d->pre, auxvar_d->rhs);
+        if(bdry_d.is_enable_pml == 1)
+        {
+          for (int idim=0; idim<CONST_NDIM; idim++) {
+            for (int iside=0; iside<2; iside++) {
+              if (bdry_d.is_sides_pml[idim][iside]==1) {
+                bdrypml_auxvar_t *auxvar_d = &(bdry_d.auxvar[idim][iside]);
+                dim3 block(256);
+                dim3 grid;
+                grid.x = (auxvar_d->siz_ilevel + block.x - 1) / block.x;
+                wav_update <<<grid, block>>> (
+                           auxvar_d->siz_ilevel, coef_a, auxvar_d->tmp, auxvar_d->pre, auxvar_d->rhs);
+              }
             }
           }
         }
-
         // w_end
         {
           dim3 block(256);
@@ -383,15 +393,18 @@ sv_eq1st_curv_col_allstep(
           wav_update_end <<<grid, block>>> (wav_d.siz_ilevel, coef_b, w_end_d, w_rhs_d);
         }
         // pml_end
-        for (int idim=0; idim<CONST_NDIM; idim++) {
-          for (int iside=0; iside<2; iside++) {
-            if (bdrypml_d.is_at_sides[idim][iside]==1) {
-              bdrypml_auxvar_t *auxvar_d = &(bdrypml_d.auxvar[idim][iside]);
-              dim3 block(256);
-              dim3 grid;
-              grid.x = (auxvar_d->siz_ilevel + block.x - 1) / block.x;
-              wav_update_end <<<grid, block>>> (
-                         auxvar_d->siz_ilevel, coef_b, auxvar_d->end, auxvar_d->rhs);
+        if(bdry_d.is_enable_pml == 1)
+        {
+          for (int idim=0; idim<CONST_NDIM; idim++) {
+            for (int iside=0; iside<2; iside++) {
+              if (bdry_d.is_sides_pml[idim][iside]==1) {
+                bdrypml_auxvar_t *auxvar_d = &(bdry_d.auxvar[idim][iside]);
+                dim3 block(256);
+                dim3 grid;
+                grid.x = (auxvar_d->siz_ilevel + block.x - 1) / block.x;
+                wav_update_end <<<grid, block>>> (
+                           auxvar_d->siz_ilevel, coef_b, auxvar_d->end, auxvar_d->rhs);
+              }
             }
           }
         }
@@ -410,22 +423,25 @@ sv_eq1st_curv_col_allstep(
 
         // apply Qs
         //if (md->visco_type == CONST_VISCO_GRAVES_QS) {
-        //  sv_eq1st_curv_graves_Qs(w_end, wav->ncmp, dt, gdinfo, md);
+        //  sv_curv_graves_Qs(w_end, wav->ncmp, dt, gdinfo, md);
         //}
         
         // pack and isend
         blk_macdrp_pack_mesg_gpu(w_end_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, myid);
         MPI_Startall(num_of_s_reqs, mympi->pair_s_reqs[ipair_mpi][istage_mpi]);
         // pml_end
-        for (int idim=0; idim<CONST_NDIM; idim++) {
-          for (int iside=0; iside<2; iside++) {
-            if (bdrypml->is_at_sides[idim][iside]==1) {
-              bdrypml_auxvar_t *auxvar_d = &(bdrypml_d.auxvar[idim][iside]);
-              dim3 block(256);
-              dim3 grid;
-              grid.x = (auxvar_d->siz_ilevel + block.x - 1) / block.x;
-              wav_update_end <<<grid, block>>> (
-                         auxvar_d->siz_ilevel, coef_b, auxvar_d->end, auxvar_d->rhs);
+        if(bdry_d.is_enable_pml == 1)
+        {
+          for (int idim=0; idim<CONST_NDIM; idim++) {
+            for (int iside=0; iside<2; iside++) {
+              if (bdry_d.is_sides_pml[idim][iside]==1) {
+                bdrypml_auxvar_t *auxvar_d = &(bdry_d.auxvar[idim][iside]);
+                dim3 block(256);
+                dim3 grid;
+                grid.x = (auxvar_d->siz_ilevel + block.x - 1) / block.x;
+                wav_update_end <<<grid, block>>> (
+                           auxvar_d->siz_ilevel, coef_b, auxvar_d->end, auxvar_d->rhs);
+              }
             }
           }
         }
@@ -449,12 +465,17 @@ sv_eq1st_curv_col_allstep(
       if (myid==0 && verbose>10) fprintf(stdout,"-> check value nan\n");
         //wav_check_value(w_end);
     }
-    
+
     //--------------------------------------------
+     if (bdry_d.is_enable_ablexp == 1) {
+       //if (myid==0 && verbose>10) fprintf(stdout,"-> apply ablexp\n");
+       bdry_ablexp_apply(bdry_d, gdinfo, w_end_d, wav->ncmp);
+     }
+
     // save results
     //--------------------------------------------
     // calculate PGV, PGA and PGD for each surface at each stage
-    if (bdryfree_d.is_at_sides[CONST_NDIM-1][1] == 1)
+    if (bdry_d.is_sides_free[CONST_NDIM-1][1] == 1)
     {
         dim3 block(8,8);
         dim3 grid;
@@ -476,14 +497,18 @@ sv_eq1st_curv_col_allstep(
     io_snap_nc_put(iosnap, &iosnap_nc, gdinfo, md, wav, 
                    w_end_d, w_buff, nt_total, it, t_end, 1,1,1);
 
-    // swap w_pre and w_end pointer, avoid copying
+    // swap w_pre and w_end, avoid copying
     w_cur_d = w_pre_d; w_pre_d = w_end_d; w_end_d = w_cur_d;
-    for (int idim=0; idim<CONST_NDIM; idim++) {
-      for (int iside=0; iside<2; iside++) {
-        bdrypml_auxvar_t *auxvar_d = &(bdrypml_d.auxvar[idim][iside]);
-        auxvar_d->cur = auxvar_d->pre;
-        auxvar_d->pre = auxvar_d->end;
-        auxvar_d->end = auxvar_d->cur;
+
+    if(bdry_d.is_enable_pml == 1)
+    {
+      for (int idim=0; idim<CONST_NDIM; idim++) {
+        for (int iside=0; iside<2; iside++) {
+          bdrypml_auxvar_t *auxvar_d = &(bdry_d.auxvar[idim][iside]);
+          auxvar_d->cur = auxvar_d->pre;
+          auxvar_d->pre = auxvar_d->end;
+          auxvar_d->end = auxvar_d->cur;
+        }
       }
     }
   } // time loop
@@ -497,47 +522,16 @@ sv_eq1st_curv_col_allstep(
   dealloc_fd_device(fd_wav_d);
   dealloc_metric_device(metric_d);
   dealloc_src_device(src_d);
-  dealloc_bdryfree_device(bdryfree_d);
-  dealloc_bdrypml_device(bdrypml_d);
+  dealloc_bdry_device(bdry_d);
   dealloc_wave_device(wav_d);
   // postproc
-  if (bdryfree_d.is_at_sides[CONST_NDIM-1][1] == 1)
+  if (bdry_d.is_sides_free[CONST_NDIM-1][1] == 1)
   {
     PG_slice_output(PG,gdinfo,output_dir,output_fname_part,topoid);
   }
   // close nc
   io_slice_nc_close(&ioslice_nc);
   io_snap_nc_close(&iosnap_nc);
+
   return;
 }
-
-int
-sv_eq1st_curv_graves_Qs(float *w, int ncmp, float dt, gdinfo_t *gdinfo, md_t *md)
-{
-  int ierr = 0;
-
-  float coef = - PI * md->visco_Qs_freq * dt;
-
-  for (int icmp=0; icmp<ncmp; icmp++)
-  {
-    float *var = w + icmp * gdinfo->siz_icmp;
-
-    for (int k = gdinfo->nk1; k <= gdinfo->nk2; k++)
-    {
-      for (int j = gdinfo->nj1; j <= gdinfo->nj2; j++)
-      {
-        for (int i = gdinfo->ni1; i <= gdinfo->ni2; i++)
-        {
-          size_t iptr = i + j * gdinfo->siz_iy + k * gdinfo->siz_iz;
-
-          float Qatt = expf( coef / md->Qs[iptr] );
-
-          var[iptr] *= Qatt;
-        }
-      }
-    }
-  }
-
-  return ierr;
-}
-

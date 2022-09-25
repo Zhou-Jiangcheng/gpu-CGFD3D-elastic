@@ -8,8 +8,7 @@
 #include "md_t.h"
 #include "wav_t.h"
 #include "src_t.h"
-#include "bdry_free.h"
-#include "bdry_pml.h"
+#include "bdry_t.h"
 #include "io_funcs.h"
 
 /*************************************************
@@ -17,14 +16,13 @@
  *************************************************/
 
 void
-sv_eq1st_curv_col_allstep(
+drv_rk_curv_col_allstep(
   fd_t            *fd,
   gdinfo_t        *gdinfo,
   gdcurv_metric_t *metric,
   md_t      *md,
   src_t      *src,
-  bdryfree_t *bdryfree,
-  bdrypml_t  *bdrypml,
+  bdry_t    *bdry,
   wav_t  *wav,
   mympi_t    *mympi,
   iorecv_t   *iorecv,

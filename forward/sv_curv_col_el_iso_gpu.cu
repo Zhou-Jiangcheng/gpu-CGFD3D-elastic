@@ -1,5 +1,5 @@
 /*******************************************************************************
- * solver of isotropic elastic 1st-order eqn using curv grid and macdrp schem
+ * solver of isotropic elastic 1st-order eqn using curv grid and collocated scheme
  ******************************************************************************/
 
 #include <stdio.h>
@@ -10,8 +10,8 @@
 
 #include "fdlib_mem.h"
 #include "fdlib_math.h"
-#include "sv_eq1st_curv_col_el_iso_gpu.h"
-#include "sv_eq1st_curv_col_el_aniso_gpu.h"
+#include "sv_curv_col_el_gpu.h"
+#include "sv_curv_col_el_iso_gpu.h"
 #include "cuda_common.h"
 
 //#define SV_EQ1ST_CURV_COLGRD_ISO_DEBUG
@@ -21,7 +21,7 @@
  ******************************************************************************/
 
 void
-sv_eq1st_curv_col_el_aniso_onestage(
+sv_curv_col_el_iso_onestage(
   float *w_cur_d,
   float *rhs_d, 
   wav_t  wav_d,
@@ -29,8 +29,7 @@ sv_eq1st_curv_col_el_aniso_onestage(
   gdinfo_t  gdinfo_d,
   gdcurv_metric_t metric_d,
   md_t md_d,
-  bdryfree_t bdryfree_d,
-  bdrypml_t  bdrypml_d,
+  bdry_t bdry_d,
   src_t src_d,
   // include different order/stentil
   int num_of_fdx_op, fd_op_t *fdx_op,
@@ -70,27 +69,8 @@ sv_eq1st_curv_col_el_aniso_onestage(
   float *zt_z  = metric_d.zeta_z;
   float *jac3d = metric_d.jac;
 
-  float *c11   = md_d.c11;
-  float *c12   = md_d.c12;
-  float *c13   = md_d.c13;
-  float *c14   = md_d.c14;
-  float *c15   = md_d.c15;
-  float *c16   = md_d.c16;
-  float *c22   = md_d.c22;
-  float *c23   = md_d.c23;
-  float *c24   = md_d.c24;
-  float *c25   = md_d.c25;
-  float *c26   = md_d.c26;
-  float *c33   = md_d.c33;
-  float *c34   = md_d.c34;
-  float *c35   = md_d.c35;
-  float *c36   = md_d.c36;
-  float *c44   = md_d.c44;
-  float *c45   = md_d.c45;
-  float *c46   = md_d.c46;
-  float *c55   = md_d.c55;
-  float *c56   = md_d.c56;
-  float *c66   = md_d.c66;
+  float *lam3d = md_d.lambda;
+  float * mu3d = md_d.mu;
   float *slw3d = md_d.rho;
 
   // grid size
@@ -111,8 +91,8 @@ sv_eq1st_curv_col_el_aniso_onestage(
   size_t siz_slice  = gdinfo_d.siz_slice;
   size_t siz_volume = gdinfo_d.siz_volume;
 
-  float *matVx2Vz = bdryfree_d.matVx2Vz2;
-  float *matVy2Vz = bdryfree_d.matVy2Vz2;
+  float *matVx2Vz = bdry_d.matVx2Vz2;
+  float *matVy2Vz = bdry_d.matVy2Vz2;
 
   // local fd op
   int    fdx_len;
@@ -206,32 +186,29 @@ sv_eq1st_curv_col_el_aniso_onestage(
   CUDACHECK(cudaMemcpy(lfdz_len_d,fdz_len_all,num_of_fdz_op*sizeof(int),cudaMemcpyHostToDevice));
   CUDACHECK(cudaMemcpy(lfdz_coef_all_d,fdz_coef_all,fdz_max_len*num_of_fdz_op*sizeof(float),cudaMemcpyHostToDevice));
   CUDACHECK(cudaMemcpy(lfdz_shift_all_d,fdz_shift_all,fdz_max_len*num_of_fdz_op*sizeof(size_t),cudaMemcpyHostToDevice));
-
+  
   {
     dim3 block(8,8,8);
     dim3 grid;
     grid.x = (ni+block.x-1)/block.x;
     grid.y = (nj+block.y-1)/block.y;
     grid.z = (nk+block.z-1)/block.z;
-    sv_eq1st_curv_col_el_aniso_rhs_inner_gpu <<<grid, block>>> (
+    sv_curv_col_el_iso_rhs_inner_gpu <<<grid, block>>> (
                         Vx,Vy,Vz,Txx,Tyy,Tzz,Txz,Tyz,Txy,
                         hVx,hVy,hVz,hTxx,hTyy,hTzz,hTxz,hTyz,hTxy,
                         xi_x, xi_y, xi_z, et_x, et_y, et_z, zt_x, zt_y, zt_z,
-                        c11,c12,c13,c14,c15,c16,
-                            c22,c23,c24,c25,c26,
-                                c33,c34,c35,c36,
-                                    c44,c45,c46,
-                                        c55,c56,
-                                            c66, slw3d,
+                        lam3d, mu3d, slw3d,
                         ni1,ni,nj1,nj,nk1,nk,siz_line,siz_slice,
                         fdx_len, lfdx_shift_d, lfdx_coef_d,
                         fdy_len, lfdy_shift_d, lfdy_coef_d,
                         fdz_len, lfdz_shift_d, lfdz_coef_d,
                         myid, verbose);
+    CUDACHECK( cudaDeviceSynchronize() );
   }
 
+  // free, abs, source in turn
   // free surface at z2
-  if (bdryfree_d.is_at_sides[2][1] == 1)
+  if (bdry_d.is_sides_free[2][1] == 1)
   {
     // tractiong
     {
@@ -239,7 +216,7 @@ sv_eq1st_curv_col_el_aniso_onestage(
       dim3 grid;
       grid.x = (ni+block.x-1)/block.x;
       grid.y = (nj+block.y-1)/block.y;
-      sv_eq1st_curv_col_el_iso_rhs_timg_z2_gpu  <<<grid, block>>> (
+      sv_curv_col_el_iso_rhs_timg_z2_gpu  <<<grid, block>>> (
                           Txx,Tyy,Tzz,Txz,Tyz,Txy,hVx,hVy,hVz,
                           xi_x, xi_y, xi_z, et_x, et_y, et_z, zt_x, zt_y, zt_z,
                           jac3d, slw3d,
@@ -250,22 +227,16 @@ sv_eq1st_curv_col_el_aniso_onestage(
                           myid, verbose);
       cudaDeviceSynchronize();
     }
-
     // velocity: vlow
     {
       dim3 block(8,8);
       dim3 grid;
       grid.x = (ni+block.x-1)/block.x;
       grid.y = (nj+block.y-1)/block.y;
-      sv_eq1st_curv_col_el_aniso_rhs_vlow_z2_gpu  <<<grid, block>>> (
+      sv_curv_col_el_iso_rhs_vlow_z2_gpu  <<<grid, block>>> (
                         Vx,Vy,Vz,hTxx,hTyy,hTzz,hTxz,hTyz,hTxy,
                         xi_x, xi_y, xi_z, et_x, et_y, et_z, zt_x, zt_y, zt_z,
-                        c11,c12,c13,c14,c15,c16,
-                            c22,c23,c24,c25,c26,
-                                c33,c34,c35,c36,
-                                    c44,c45,c46,
-                                        c55,c56,
-                                            c66, slw3d,
+                        lam3d, mu3d, slw3d,
                         matVx2Vz,matVy2Vz,
                         ni1,ni,nj1,nj,nk1,nk2,siz_line,siz_slice,
                         fdx_len, lfdx_shift_d, lfdx_coef_d,
@@ -278,23 +249,18 @@ sv_eq1st_curv_col_el_aniso_onestage(
   }
 
   // cfs-pml, loop face inside
-  if (bdrypml_d.is_enable == 1)
+  if (bdry_d.is_enable_pml == 1)
   {
-    sv_eq1st_curv_col_el_aniso_rhs_cfspml(Vx,Vy,Vz,Txx,Tyy,Tzz,Txz,Tyz,Txy,
-                                        hVx,hVy,hVz,hTxx,hTyy,hTzz,hTxz,hTyz,hTxy,
-                                        xi_x, xi_y, xi_z, et_x, et_y, et_z, zt_x, zt_y, zt_z,
-                                        c11,c12,c13,c14,c15,c16,
-                                            c22,c23,c24,c25,c26,
-                                                c33,c34,c35,c36,
-                                                    c44,c45,c46,
-                                                        c55,c56,
-                                                            c66, slw3d,
-                                        nk2, siz_line,siz_slice,
-                                        fdx_len, lfdx_shift_d, lfdx_coef_d,
-                                        fdy_len, lfdy_shift_d, lfdy_coef_d,
-                                        fdz_len, lfdz_shift_d, lfdz_coef_d,
-                                        bdrypml_d, bdryfree_d,
-                                        myid, verbose);
+    sv_curv_col_el_iso_rhs_cfspml(Vx,Vy,Vz,Txx,Tyy,Tzz,Txz,Tyz,Txy,
+                                  hVx,hVy,hVz,hTxx,hTyy,hTzz,hTxz,hTyz,hTxy,
+                                  xi_x, xi_y, xi_z, et_x, et_y, et_z, zt_x, zt_y, zt_z,
+                                  lam3d, mu3d, slw3d,
+                                  nk2, siz_line,siz_slice,
+                                  fdx_len, lfdx_shift_d, lfdx_coef_d,
+                                  fdy_len, lfdy_shift_d, lfdy_coef_d,
+                                  fdz_len, lfdz_shift_d, lfdz_coef_d,
+                                  bdry_d,
+                                  myid, verbose);
   }
 
   // add source term
@@ -304,7 +270,7 @@ sv_eq1st_curv_col_el_aniso_onestage(
       dim3 block(256);
       dim3 grid;
       grid.x = (src_d.total_number+block.x-1) / block.x;
-      sv_eq1st_curv_col_el_iso_rhs_src_gpu  <<< grid,block >>> (
+      sv_curv_col_el_iso_rhs_src_gpu  <<< grid,block >>> (
                         hVx, hVy, hVz, hTxx, hTyy, hTzz, hTxz, hTyz, hTxy,
                         jac3d, slw3d, 
                         src_d,
@@ -312,7 +278,8 @@ sv_eq1st_curv_col_el_aniso_onestage(
       CUDACHECK( cudaDeviceSynchronize() );
     }
   }
-
+  
+  // end func
   return;
 }
 
@@ -321,7 +288,7 @@ sv_eq1st_curv_col_el_aniso_onestage(
  ******************************************************************************/
 
 __global__ void
-sv_eq1st_curv_col_el_aniso_rhs_inner_gpu(
+sv_curv_col_el_iso_rhs_inner_gpu(
     float *  Vx , float *  Vy , float *  Vz ,
     float *  Txx, float *  Tyy, float *  Tzz,
     float *  Txz, float *  Tyz, float *  Txy,
@@ -331,16 +298,7 @@ sv_eq1st_curv_col_el_aniso_rhs_inner_gpu(
     float * xi_x, float * xi_y, float * xi_z,
     float * et_x, float * et_y, float * et_z,
     float * zt_x, float * zt_y, float * zt_z,
-    float * c11d, float * c12d, float * c13d,
-    float * c14d, float * c15d, float * c16d,
-                  float * c22d, float * c23d,
-    float * c24d, float * c25d, float * c26d,
-                                float * c33d,
-    float * c34d, float * c35d, float * c36d,
-    float * c44d, float * c45d, float * c46d,
-                  float * c55d, float * c56d,
-                                float * c66d,
-                                float * slw3d,
+    float * lam3d, float * mu3d, float * slw3d,
     int ni1, int ni, int nj1, int nj, int nk1, int nk,
     size_t siz_line, size_t siz_slice,
     int fdx_len, size_t * lfdx_shift, float * lfdx_coef,
@@ -348,18 +306,11 @@ sv_eq1st_curv_col_el_aniso_rhs_inner_gpu(
     int fdz_len, size_t * lfdz_shift, float * lfdz_coef,
     const int myid, const int verbose)
 {
-  // use local stack array for speedup
   // local var
   float DxTxx,DxTyy,DxTzz,DxTxy,DxTxz,DxTyz,DxVx,DxVy,DxVz;
   float DyTxx,DyTyy,DyTzz,DyTxy,DyTxz,DyTyz,DyVx,DyVy,DyVz;
   float DzTxx,DzTyy,DzTzz,DzTxy,DzTxz,DzTyz,DzVx,DzVy,DzVz;
-  float slw;
-  float c11,c12,c13,c14,c15,c16;
-  float     c22,c23,c24,c25,c26;
-  float         c33,c34,c35,c36;
-  float             c44,c45,c46;
-  float                 c55,c56;
-  float                     c66;
+  float lam,mu,lam2mu,slw;
   float xix,xiy,xiz,etx,ety,etz,ztx,zty,ztz;
 
   float * Vx_ptr;
@@ -437,6 +388,7 @@ sv_eq1st_curv_col_el_aniso_rhs_inner_gpu(
     M_FD_SHIFT_PTR_MACDRP(DyTxy, Txy_ptr, fdy_len, lfdy_shift, lfdy_coef);
     M_FD_SHIFT_PTR_MACDRP(DzTxy, Txy_ptr, fdz_len, lfdz_shift, lfdz_coef);
 
+    
     // metric
     xix = xi_x[iptr];
     xiy = xi_y[iptr];
@@ -449,28 +401,10 @@ sv_eq1st_curv_col_el_aniso_rhs_inner_gpu(
     ztz = zt_z[iptr];
 
     // medium
+    lam = lam3d[iptr];
+    mu  =  mu3d[iptr];
     slw = slw3d[iptr];
-    c11 = c11d[iptr];
-    c12 = c12d[iptr];
-    c13 = c13d[iptr];
-    c14 = c14d[iptr];
-    c15 = c15d[iptr];
-    c16 = c16d[iptr];
-    c22 = c22d[iptr];
-    c23 = c23d[iptr];
-    c24 = c24d[iptr];
-    c25 = c25d[iptr];
-    c26 = c26d[iptr];
-    c33 = c33d[iptr];
-    c34 = c34d[iptr];
-    c35 = c35d[iptr];
-    c36 = c36d[iptr];
-    c44 = c44d[iptr];
-    c45 = c45d[iptr];
-    c46 = c46d[iptr];
-    c55 = c55d[iptr];
-    c56 = c56d[iptr];
-    c66 = c66d[iptr];
+    lam2mu = lam + 2.0 * mu;
 
     // moment equation
     hVx[iptr] = slw*( xix*DxTxx + xiy*DxTxy + xiz*DxTxz  
@@ -484,31 +418,33 @@ sv_eq1st_curv_col_el_aniso_rhs_inner_gpu(
                      +ztx*DzTxz + zty*DzTyz + ztz*DzTzz );
 
     // Hooke's equatoin
+    hTxx[iptr] =  lam2mu * ( xix*DxVx  +etx*DyVx + ztx*DzVx)
+                + lam    * ( xiy*DxVy + ety*DyVy + zty*DzVy
+                            +xiz*DxVz + etz*DyVz + ztz*DzVz);
 
-	  hTxx[iptr] = (c11*xix + c16*xiy + c15*xiz) * DxVx + (c16*xix + c12*xiy + c14*xiz) * DxVy + (c15*xix + c14*xiy + c13*xiz) * DxVz
-               + (c11*etx + c16*ety + c15*etz) * DyVx + (c16*etx + c12*ety + c14*etz) * DyVy + (c15*etx + c14*ety + c13*etz) * DyVz
-               + (c11*ztx + c16*zty + c15*ztz) * DzVx + (c16*ztx + c12*zty + c14*ztz) * DzVy + (c15*ztx + c14*zty + c13*ztz) * DzVz;
-    
-    hTyy[iptr] = (c12*xix + c26*xiy + c25*xiz) * DxVx + (c26*xix + c22*xiy + c24*xiz) * DxVy + (c25*xix + c24*xiy + c23*xiz) * DxVz
-               + (c12*etx + c26*ety + c25*etz) * DyVx + (c26*etx + c22*ety + c24*etz) * DyVy + (c25*etx + c24*ety + c23*etz) * DyVz
-               + (c12*ztx + c26*zty + c25*ztz) * DzVx + (c26*ztx + c22*zty + c24*ztz) * DzVy + (c25*ztx + c24*zty + c23*ztz) * DzVz;
-    
-    hTzz[iptr] = (c13*xix + c36*xiy + c35*xiz) * DxVx + (c36*xix + c23*xiy + c34*xiz) * DxVy + (c35*xix + c34*xiy + c33*xiz) * DxVz
-               + (c13*etx + c36*ety + c35*etz) * DyVx + (c36*etx + c23*ety + c34*etz) * DyVy + (c35*etx + c34*ety + c33*etz) * DyVz
-               + (c13*ztx + c36*zty + c35*ztz) * DzVx + (c36*ztx + c23*zty + c34*ztz) * DzVy + (c35*ztx + c34*zty + c33*ztz) * DzVz;
-  
+    hTyy[iptr] = lam2mu * ( xiy*DxVy + ety*DyVy + zty*DzVy)
+                +lam    * ( xix*DxVx + etx*DyVx + ztx*DzVx
+                           +xiz*DxVz + etz*DyVz + ztz*DzVz);
 
-    hTyz[iptr] = (c14*xix + c46*xiy + c45*xiz) * DxVx + (c46*xix + c24*xiy + c44*xiz) * DxVy + (c45*xix + c44*xiy + c34*xiz) * DxVz
-               + (c14*etx + c46*ety + c45*etz) * DyVx + (c46*etx + c24*ety + c44*etz) * DyVy + (c45*etx + c44*ety + c34*etz) * DyVz
-               + (c14*ztx + c46*zty + c45*ztz) * DzVx + (c46*ztx + c24*zty + c44*ztz) * DzVy + (c45*ztx + c44*zty + c34*ztz) * DzVz;
-  
-    hTxz[iptr] = (c15*xix + c56*xiy + c55*xiz) * DxVx + (c56*xix + c25*xiy + c45*xiz) * DxVy + (c55*xix + c45*xiy + c35*xiz) * DxVz
-               + (c15*etx + c56*ety + c55*etz) * DyVx + (c56*etx + c25*ety + c45*etz) * DyVy + (c55*etx + c45*ety + c35*etz) * DyVz
-               + (c15*ztx + c56*zty + c55*ztz) * DzVx + (c56*ztx + c25*zty + c45*ztz) * DzVy + (c55*ztx + c45*zty + c35*ztz) * DzVz;
-  
-    hTxy[iptr] = (c16*xix + c66*xiy + c56*xiz) * DxVx + (c66*xix + c26*xiy + c46*xiz) * DxVy + (c56*xix + c46*xiy + c36*xiz) * DxVz
-               + (c16*etx + c66*ety + c56*etz) * DyVx + (c66*etx + c26*ety + c46*etz) * DyVy + (c56*etx + c46*ety + c36*etz) * DyVz
-               + (c16*ztx + c66*zty + c56*ztz) * DzVx + (c66*ztx + c26*zty + c46*ztz) * DzVy + (c56*ztx + c46*zty + c36*ztz) * DzVz;
+    hTzz[iptr] = lam2mu * ( xiz*DxVz + etz*DyVz + ztz*DzVz)
+                +lam    * ( xix*DxVx  +etx*DyVx  +ztx*DzVx
+                           +xiy*DxVy + ety*DyVy + zty*DzVy);
+
+    hTxy[iptr] = mu *(
+                 xiy*DxVx + xix*DxVy
+                +ety*DyVx + etx*DyVy
+                +zty*DzVx + ztx*DzVy
+                );
+    hTxz[iptr] = mu *(
+                 xiz*DxVx + xix*DxVz
+                +etz*DyVx + etx*DyVz
+                +ztz*DzVx + ztx*DzVz
+                );
+    hTyz[iptr] = mu *(
+                 xiz*DxVy + xiy*DxVz
+                +etz*DyVy + ety*DyVz
+                +ztz*DzVy + zty*DzVz
+                );
   }
 
   return;
@@ -523,23 +459,14 @@ sv_eq1st_curv_col_el_aniso_rhs_inner_gpu(
  */
 
 __global__ void
-sv_eq1st_curv_col_el_aniso_rhs_vlow_z2_gpu(
+sv_curv_col_el_iso_rhs_vlow_z2_gpu(
     float *  Vx , float *  Vy , float *  Vz ,
     float * hTxx, float * hTyy, float * hTzz,
     float * hTxz, float * hTyz, float * hTxy,
     float * xi_x, float * xi_y, float * xi_z,
     float * et_x, float * et_y, float * et_z,
     float * zt_x, float * zt_y, float * zt_z,
-    float * c11d, float * c12d, float * c13d,
-    float * c14d, float * c15d, float * c16d,
-                  float * c22d, float * c23d,
-    float * c24d, float * c25d, float * c26d,
-                                float * c33d,
-    float * c34d, float * c35d, float * c36d,
-    float * c44d, float * c45d, float * c46d,
-                  float * c55d, float * c56d,
-                                float * c66d,
-                                float * slw3d,
+    float * lam3d, float * mu3d, float * slw3d,
     float * matVx2Vz, float * matVy2Vz,
     int ni1, int ni, int nj1, int nj, int nk1, int nk2,
     size_t siz_line, size_t siz_slice,
@@ -557,20 +484,13 @@ sv_eq1st_curv_col_el_aniso_rhs_vlow_z2_gpu(
   float DxVx,DxVy,DxVz;
   float DyVx,DyVy,DyVz;
   float DzVx,DzVy,DzVz;
-  float slw;
-  float c11,c12,c13,c14,c15,c16;
-  float     c22,c23,c24,c25,c26;
-  float         c33,c34,c35,c36;
-  float             c44,c45,c46;
-  float                 c55,c56;
-  float                     c66;
+  float lam,mu,lam2mu,slw;
   float xix,xiy,xiz,etx,ety,etz,ztx,zty,ztz;
 
   float lfdz_coef[5] = {0.0};
   int   lfdz_shift[5] = {0};
   size_t ix = blockIdx.x * blockDim.x + threadIdx.x;
   size_t iy = blockIdx.y * blockDim.y + threadIdx.y;
-
   // loop near surface layers
   for (int n=0; n < num_of_fdz_op-1; n++)
   {
@@ -582,6 +502,7 @@ sv_eq1st_curv_col_el_aniso_rhs_vlow_z2_gpu(
       lfdz_shift[n_fd] = lfdz_shift_all[n*fdz_max_len+n_fd];
       lfdz_coef [n_fd]  = lfdz_coef_all [n*fdz_max_len+n_fd];
     }
+
     if(ix<ni && iy<nj)
     {
       size_t iptr   = (ix+ni1) + (iy+nj1) * siz_line + k * siz_slice;
@@ -598,28 +519,10 @@ sv_eq1st_curv_col_el_aniso_rhs_vlow_z2_gpu(
       ztz = zt_z[iptr];
 
       // medium
+      lam = lam3d[iptr];
+      mu  =  mu3d[iptr];
       slw = slw3d[iptr];
-      c11 = c11d[iptr];
-      c12 = c12d[iptr];
-      c13 = c13d[iptr];
-      c14 = c14d[iptr];
-      c15 = c15d[iptr];
-      c16 = c16d[iptr];
-      c22 = c22d[iptr];
-      c23 = c23d[iptr];
-      c24 = c24d[iptr];
-      c25 = c25d[iptr];
-      c26 = c26d[iptr];
-      c33 = c33d[iptr];
-      c34 = c34d[iptr];
-      c35 = c35d[iptr];
-      c36 = c36d[iptr];
-      c44 = c44d[iptr];
-      c45 = c45d[iptr];
-      c46 = c46d[iptr];
-      c55 = c55d[iptr];
-      c56 = c56d[iptr];
-      c66 = c66d[iptr];
+      lam2mu = lam + 2.0 * mu;
 
       // Vx derivatives
       M_FD_SHIFT(DxVx, Vx, iptr, fdx_len, lfdx_shift, lfdx_coef, n_fd);
@@ -665,30 +568,33 @@ sv_eq1st_curv_col_el_aniso_rhs_vlow_z2_gpu(
       }
 
       // Hooke's equatoin
-	    hTxx[iptr] = (c11*xix + c16*xiy + c15*xiz) * DxVx + (c16*xix + c12*xiy + c14*xiz) * DxVy + (c15*xix + c14*xiy + c13*xiz) * DxVz
-                 + (c11*etx + c16*ety + c15*etz) * DyVx + (c16*etx + c12*ety + c14*etz) * DyVy + (c15*etx + c14*ety + c13*etz) * DyVz
-                 + (c11*ztx + c16*zty + c15*ztz) * DzVx + (c16*ztx + c12*zty + c14*ztz) * DzVy + (c15*ztx + c14*zty + c13*ztz) * DzVz;
-      
-      hTyy[iptr] = (c12*xix + c26*xiy + c25*xiz) * DxVx + (c26*xix + c22*xiy + c24*xiz) * DxVy + (c25*xix + c24*xiy + c23*xiz) * DxVz
-                 + (c12*etx + c26*ety + c25*etz) * DyVx + (c26*etx + c22*ety + c24*etz) * DyVy + (c25*etx + c24*ety + c23*etz) * DyVz
-                 + (c12*ztx + c26*zty + c25*ztz) * DzVx + (c26*ztx + c22*zty + c24*ztz) * DzVy + (c25*ztx + c24*zty + c23*ztz) * DzVz;
-     
-      hTzz[iptr] = (c13*xix + c36*xiy + c35*xiz) * DxVx + (c36*xix + c23*xiy + c34*xiz) * DxVy + (c35*xix + c34*xiy + c33*xiz) * DxVz
-                 + (c13*etx + c36*ety + c35*etz) * DyVx + (c36*etx + c23*ety + c34*etz) * DyVy + (c35*etx + c34*ety + c33*etz) * DyVz
-                 + (c13*ztx + c36*zty + c35*ztz) * DzVx + (c36*ztx + c23*zty + c34*ztz) * DzVy + (c35*ztx + c34*zty + c33*ztz) * DzVz;
-  
+      hTxx[iptr] =  lam2mu * ( xix*DxVx  +etx*DyVx + ztx*DzVx)
+                  + lam    * ( xiy*DxVy + ety*DyVy + zty*DzVy
+                              +xiz*DxVz + etz*DyVz + ztz*DzVz);
 
-      hTyz[iptr] = (c14*xix + c46*xiy + c45*xiz) * DxVx + (c46*xix + c24*xiy + c44*xiz) * DxVy + (c45*xix + c44*xiy + c34*xiz) * DxVz
-                 + (c14*etx + c46*ety + c45*etz) * DyVx + (c46*etx + c24*ety + c44*etz) * DyVy + (c45*etx + c44*ety + c34*etz) * DyVz
-                 + (c14*ztx + c46*zty + c45*ztz) * DzVx + (c46*ztx + c24*zty + c44*ztz) * DzVy + (c45*ztx + c44*zty + c34*ztz) * DzVz;
-  
-      hTxz[iptr] = (c15*xix + c56*xiy + c55*xiz) * DxVx + (c56*xix + c25*xiy + c45*xiz) * DxVy + (c55*xix + c45*xiy + c35*xiz) * DxVz
-                 + (c15*etx + c56*ety + c55*etz) * DyVx + (c56*etx + c25*ety + c45*etz) * DyVy + (c55*etx + c45*ety + c35*etz) * DyVz
-                 + (c15*ztx + c56*zty + c55*ztz) * DzVx + (c56*ztx + c25*zty + c45*ztz) * DzVy + (c55*ztx + c45*zty + c35*ztz) * DzVz;
-  
-      hTxy[iptr] = (c16*xix + c66*xiy + c56*xiz) * DxVx + (c66*xix + c26*xiy + c46*xiz) * DxVy + (c56*xix + c46*xiy + c36*xiz) * DxVz
-                 + (c16*etx + c66*ety + c56*etz) * DyVx + (c66*etx + c26*ety + c46*etz) * DyVy + (c56*etx + c46*ety + c36*etz) * DyVz
-                 + (c16*ztx + c66*zty + c56*ztz) * DzVx + (c66*ztx + c26*zty + c46*ztz) * DzVy + (c56*ztx + c46*zty + c36*ztz) * DzVz;
+      hTyy[iptr] = lam2mu * ( xiy*DxVy + ety*DyVy + zty*DzVy)
+                  +lam    * ( xix*DxVx + etx*DyVx + ztx*DzVx
+                             +xiz*DxVz + etz*DyVz + ztz*DzVz);
+
+      hTzz[iptr] = lam2mu * ( xiz*DxVz + etz*DyVz + ztz*DzVz)
+                  +lam    * ( xix*DxVx  +etx*DyVx  +ztx*DzVx
+                             +xiy*DxVy + ety*DyVy + zty*DzVy);
+
+      hTxy[iptr] = mu *(
+                   xiy*DxVx + xix*DxVy
+                  +ety*DyVx + etx*DyVy
+                  +zty*DzVx + ztx*DzVy
+                  );
+      hTxz[iptr] = mu *(
+                   xiz*DxVx + xix*DxVz
+                  +etz*DyVx + etx*DyVz
+                  +ztz*DzVx + ztx*DzVz
+                  );
+      hTyz[iptr] = mu *(
+                   xiz*DxVy + xiy*DxVz
+                  +etz*DyVy + ety*DyVz
+                  +ztz*DzVy + zty*DzVz
+                  );
     }
   }
 
@@ -703,8 +609,8 @@ sv_eq1st_curv_col_el_aniso_rhs_vlow_z2_gpu(
  * cfspml, reference to each pml var inside function
  */
 
-void
-sv_eq1st_curv_col_el_aniso_rhs_cfspml(
+int
+sv_curv_col_el_iso_rhs_cfspml(
     float *  Vx , float *  Vy , float *  Vz ,
     float *  Txx, float *  Tyy, float *  Tzz,
     float *  Txz, float *  Tyz, float *  Txy,
@@ -714,21 +620,12 @@ sv_eq1st_curv_col_el_aniso_rhs_cfspml(
     float * xi_x, float * xi_y, float * xi_z,
     float * et_x, float * et_y, float * et_z,
     float * zt_x, float * zt_y, float * zt_z,
-    float * c11d, float * c12d, float * c13d,
-    float * c14d, float * c15d, float * c16d,
-                  float * c22d, float * c23d,
-    float * c24d, float * c25d, float * c26d,
-                                float * c33d,
-    float * c34d, float * c35d, float * c36d,
-    float * c44d, float * c45d, float * c46d,
-                  float * c55d, float * c56d,
-                                float * c66d,
-                                float * slw3d,
+    float * lam3d, float *  mu3d, float * slw3d,
     int nk2, size_t siz_line, size_t siz_slice,
     int fdx_len, size_t * lfdx_shift, float * lfdx_coef,
     int fdy_len, size_t * lfdy_shift, float * lfdy_coef,
     int fdz_len, size_t * lfdz_shift, float * lfdz_coef,
-    bdrypml_t bdrypml, bdryfree_t bdryfree,
+    bdry_t bdry_d, 
     const int myid, const int verbose)
 {
   // check each side
@@ -737,15 +634,15 @@ sv_eq1st_curv_col_el_aniso_rhs_cfspml(
     for (int iside=0; iside<2; iside++)
     {
       // skip to next face if not cfspml
-      if (bdrypml.is_at_sides[idim][iside] == 0) continue;
+      if (bdry_d.is_sides_pml[idim][iside] == 0) continue;
 
       // get index into local var
-      int abs_ni1 = bdrypml.ni1[idim][iside];
-      int abs_ni2 = bdrypml.ni2[idim][iside];
-      int abs_nj1 = bdrypml.nj1[idim][iside];
-      int abs_nj2 = bdrypml.nj2[idim][iside];
-      int abs_nk1 = bdrypml.nk1[idim][iside];
-      int abs_nk2 = bdrypml.nk2[idim][iside];
+      int abs_ni1 = bdry_d.ni1[idim][iside];
+      int abs_ni2 = bdry_d.ni2[idim][iside];
+      int abs_nj1 = bdry_d.nj1[idim][iside];
+      int abs_nj2 = bdry_d.nj2[idim][iside];
+      int abs_nk1 = bdry_d.nk1[idim][iside];
+      int abs_nk2 = bdry_d.nk2[idim][iside];
 
       
       int abs_ni = abs_ni2-abs_ni1+1; 
@@ -758,65 +655,50 @@ sv_eq1st_curv_col_el_aniso_rhs_cfspml(
         grid.y = (abs_nj+block.y-1)/block.y;
         grid.z = (abs_nk+block.z-1)/block.z;
 
-        sv_eq1st_curv_col_el_aniso_rhs_cfspml_gpu <<<grid, block>>> (
-                                idim, iside, Vx , Vy , Vz , 
-                                Txx, Tyy, Tzz, Txz, Tyz, Txy, 
-                                hVx, hVy, hVz, hTxx, hTyy, hTzz, 
-                                hTxz, hTyz, hTxy, xi_x, xi_y, xi_z,
-                                et_x, et_y, et_z, zt_x, zt_y, zt_z, 
-                                c11d,c12d,c13d,c14d,c15d,c16d,
-                                     c22d,c23d,c24d,c25d,c26d,
-                                          c33d,c34d,c35d,c36d,
-                                               c44d,c45d,c46d,
-                                                    c55d,c56d,
-                                                    c66d,slw3d,
+        sv_curv_col_el_iso_rhs_cfspml_gpu <<<grid, block>>> (
+                                idim, iside,
+                                Vx , Vy , Vz , Txx,  Tyy,  Tzz,
+                                Txz,  Tyz,  Txy, hVx , hVy , hVz,
+                                hTxx, hTyy, hTzz, hTxz, hTyz, hTxy,
+                                xi_x, xi_y, xi_z, et_x, et_y, et_z,
+                                zt_x, zt_y, zt_z, lam3d, mu3d, slw3d,
                                 nk2, siz_line, siz_slice,
                                 fdx_len, lfdx_shift,  lfdx_coef,
                                 fdy_len, lfdy_shift,  lfdy_coef,
                                 fdz_len, lfdz_shift,  lfdz_coef,
-                                bdrypml, bdryfree, myid, verbose);
+                                bdry_d, myid, verbose);
         //cudaDeviceSynchronize();
       }
     } // iside
   } // idim
 
-  return;
+  return 0;
 }
 
-
 __global__ void
-sv_eq1st_curv_col_el_aniso_rhs_cfspml_gpu(int idim, int iside,
-                                        float *  Vx , float *  Vy , float *  Vz ,
-                                        float *  Txx, float *  Tyy, float *  Tzz,
-                                        float *  Txz, float *  Tyz, float *  Txy,
-                                        float * hVx , float * hVy , float * hVz ,
-                                        float * hTxx, float * hTyy, float * hTzz,
-                                        float * hTxz, float * hTyz, float * hTxy,
-                                        float * xi_x, float * xi_y, float * xi_z,
-                                        float * et_x, float * et_y, float * et_z,
-                                        float * zt_x, float * zt_y, float * zt_z,
-                                        float * c11d, float * c12d, float * c13d,
-                                        float * c14d, float * c15d, float * c16d,
-                                                      float * c22d, float * c23d,
-                                        float * c24d, float * c25d, float * c26d,
-                                                                    float * c33d,
-                                        float * c34d, float * c35d, float * c36d,
-                                        float * c44d, float * c45d, float * c46d,
-                                                      float * c55d, float * c56d,
-                                                                    float * c66d,
-                                                                    float * slw3d,
-                                        int nk2, size_t siz_line, size_t siz_slice,
-                                        int fdx_len, size_t * lfdx_shift, float * lfdx_coef,
-                                        int fdy_len, size_t * lfdy_shift, float * lfdy_coef,
-                                        int fdz_len, size_t * lfdz_shift, float * lfdz_coef,
-                                        bdrypml_t bdrypml, bdryfree_t bdryfree,
-                                        const int myid, const int verbose)
+sv_curv_col_el_iso_rhs_cfspml_gpu(int idim, int iside,
+                                  float *  Vx , float *  Vy , float *  Vz ,
+                                  float *  Txx, float *  Tyy, float *  Tzz,
+                                  float *  Txz, float *  Tyz, float *  Txy,
+                                  float * hVx , float * hVy , float * hVz ,
+                                  float * hTxx, float * hTyy, float * hTzz,
+                                  float * hTxz, float * hTyz, float * hTxy,
+                                  float * xi_x, float * xi_y, float * xi_z,
+                                  float * et_x, float * et_y, float * et_z,
+                                  float * zt_x, float * zt_y, float * zt_z,
+                                  float * lam3d, float *  mu3d, float * slw3d,
+                                  int nk2, size_t siz_line, size_t siz_slice,
+                                  int fdx_len, size_t * lfdx_shift, float * lfdx_coef,
+                                  int fdy_len, size_t * lfdy_shift, float * lfdy_coef,
+                                  int fdz_len, size_t * lfdz_shift, float * lfdz_coef,
+                                  bdry_t bdry_d,
+                                  const int myid, const int verbose)
 {
   size_t ix = blockIdx.x * blockDim.x + threadIdx.x;
   size_t iy = blockIdx.y * blockDim.y + threadIdx.y;
   size_t iz = blockIdx.z * blockDim.z + threadIdx.z;
-  float *matVx2Vz = bdryfree.matVx2Vz2;
-  float *matVy2Vz = bdryfree.matVy2Vz2;
+  float *matVx2Vz = bdry_d.matVx2Vz2;
+  float *matVy2Vz = bdry_d.matVy2Vz2;
   // local
   size_t iptr, iptr_a;
   float coef_A, coef_B, coef_D, coef_B_minus_1;
@@ -824,12 +706,12 @@ sv_eq1st_curv_col_el_aniso_rhs_cfspml_gpu(int idim, int iside,
   int n_fd;
 
   // get index into local var
-  int abs_ni1 = bdrypml.ni1[idim][iside];
-  int abs_ni2 = bdrypml.ni2[idim][iside];
-  int abs_nj1 = bdrypml.nj1[idim][iside];
-  int abs_nj2 = bdrypml.nj2[idim][iside];
-  int abs_nk1 = bdrypml.nk1[idim][iside];
-  int abs_nk2 = bdrypml.nk2[idim][iside];
+  int abs_ni1 = bdry_d.ni1[idim][iside];
+  int abs_ni2 = bdry_d.ni2[idim][iside];
+  int abs_nj1 = bdry_d.nj1[idim][iside];
+  int abs_nj2 = bdry_d.nj2[idim][iside];
+  int abs_nk1 = bdry_d.nk1[idim][iside];
+  int abs_nk2 = bdry_d.nk2[idim][iside];
 
   
   int abs_ni = abs_ni2-abs_ni1+1; 
@@ -840,24 +722,18 @@ sv_eq1st_curv_col_el_aniso_rhs_cfspml_gpu(int idim, int iside,
   float DxTxx,DxTyy,DxTzz,DxTxy,DxTxz,DxTyz,DxVx,DxVy,DxVz;
   float DyTxx,DyTyy,DyTzz,DyTxy,DyTxz,DyTyz,DyVx,DyVy,DyVz;
   float DzTxx,DzTyy,DzTzz,DzTxy,DzTxz,DzTyz,DzVx,DzVy,DzVz;
-  float slw;
-  float c11,c12,c13,c14,c15,c16;
-  float     c22,c23,c24,c25,c26;
-  float         c33,c34,c35,c36;
-  float             c44,c45,c46;
-  float                 c55,c56;
-  float                     c66;
+  float lam,mu,lam2mu,slw;
   float xix,xiy,xiz,etx,ety,etz,ztx,zty,ztz;
   float hVx_rhs,hVy_rhs,hVz_rhs;
   float hTxx_rhs,hTyy_rhs,hTzz_rhs,hTxz_rhs,hTyz_rhs,hTxy_rhs;
   // for free surface
   float Dx_DzVx,Dy_DzVx,Dx_DzVy,Dy_DzVy,Dx_DzVz,Dy_DzVz;
   // get coef for this face
-  float * ptr_coef_A = bdrypml.A[idim][iside];
-  float * ptr_coef_B = bdrypml.B[idim][iside];
-  float * ptr_coef_D = bdrypml.D[idim][iside];
+  float * ptr_coef_A = bdry_d.A[idim][iside];
+  float * ptr_coef_B = bdry_d.B[idim][iside];
+  float * ptr_coef_D = bdry_d.D[idim][iside];
 
-  bdrypml_auxvar_t *auxvar = &(bdrypml.auxvar[idim][iside]);
+  bdrypml_auxvar_t *auxvar = &(bdry_d.auxvar[idim][iside]);
 
   // get pml vars
   float * abs_vars_cur = auxvar->cur;
@@ -882,8 +758,6 @@ sv_eq1st_curv_col_el_aniso_rhs_cfspml_gpu(int idim, int iside,
   float * pml_hTxz = abs_vars_rhs + auxvar->Txz_pos;
   float * pml_hTyz = abs_vars_rhs + auxvar->Tyz_pos;
   float * pml_hTxy = abs_vars_rhs + auxvar->Txy_pos;
-
-
   // for each dim
   if (idim == 0 ) // x direction
   {
@@ -904,28 +778,10 @@ sv_eq1st_curv_col_el_aniso_rhs_cfspml_gpu(int idim, int iside,
       xiz = xi_z[iptr];
 
       // medium
+      lam = lam3d[iptr];
+      mu  =  mu3d[iptr];
       slw = slw3d[iptr];
-      c11 = c11d[iptr];
-      c12 = c12d[iptr];
-      c13 = c13d[iptr];
-      c14 = c14d[iptr];
-      c15 = c15d[iptr];
-      c16 = c16d[iptr];
-      c22 = c22d[iptr];
-      c23 = c23d[iptr];
-      c24 = c24d[iptr];
-      c25 = c25d[iptr];
-      c26 = c26d[iptr];
-      c33 = c33d[iptr];
-      c34 = c34d[iptr];
-      c35 = c35d[iptr];
-      c36 = c36d[iptr];
-      c44 = c44d[iptr];
-      c45 = c45d[iptr];
-      c46 = c46d[iptr];
-      c55 = c55d[iptr];
-      c56 = c56d[iptr];
-      c66 = c66d[iptr];
+      lam2mu = lam + 2.0 * mu;
 
       // xi derivatives
       M_FD_SHIFT(DxVx , Vx , iptr, fdx_len, lfdx_shift, lfdx_coef, n_fd);
@@ -942,12 +798,12 @@ sv_eq1st_curv_col_el_aniso_rhs_cfspml_gpu(int idim, int iside,
        hVx_rhs = slw * ( xix*DxTxx + xiy*DxTxy + xiz*DxTxz );
        hVy_rhs = slw * ( xix*DxTxy + xiy*DxTyy + xiz*DxTyz );
        hVz_rhs = slw * ( xix*DxTxz + xiy*DxTyz + xiz*DxTzz );
-      hTxx_rhs = (c11*xix+c16*xiy+c15*xiz)*DxVx + (c16*xix+c12*xiy+c14*xiz)*DxVy + (c15*xix+c14*xiy+c13*xiz)*DxVz; 
-      hTyy_rhs = (c12*xix+c26*xiy+c25*xiz)*DxVx + (c26*xix+c22*xiy+c24*xiz)*DxVy + (c25*xix+c24*xiy+c23*xiz)*DxVz;
-      hTzz_rhs = (c13*xix+c36*xiy+c35*xiz)*DxVx + (c36*xix+c23*xiy+c34*xiz)*DxVy + (c35*xix+c34*xiy+c33*xiz)*DxVz;
-      hTyz_rhs = (c14*xix+c46*xiy+c45*xiz)*DxVx + (c46*xix+c24*xiy+c44*xiz)*DxVy + (c45*xix+c44*xiy+c34*xiz)*DxVz;
-      hTxz_rhs = (c15*xix+c56*xiy+c55*xiz)*DxVx + (c56*xix+c25*xiy+c45*xiz)*DxVy + (c55*xix+c45*xiy+c35*xiz)*DxVz;
-      hTxy_rhs = (c16*xix+c66*xiy+c56*xiz)*DxVx + (c66*xix+c26*xiy+c46*xiz)*DxVy + (c56*xix+c46*xiy+c36*xiz)*DxVz;
+      hTxx_rhs = lam2mu*xix*DxVx + lam*xiy*DxVy + lam*xiz*DxVz;
+      hTyy_rhs = lam*xix*DxVx + lam2mu*xiy*DxVy + lam*xiz*DxVz;
+      hTzz_rhs = lam*xix*DxVx + lam*xiy*DxVy + lam2mu*xiz*DxVz;
+      hTxy_rhs = mu*( xiy*DxVx + xix*DxVy );
+      hTxz_rhs = mu*( xiz*DxVx + xix*DxVz );
+      hTyz_rhs = mu*( xiz*DxVy + xiy*DxVz );
 
       // 1: make corr to moment equation
       hVx[iptr] += coef_B_minus_1 * hVx_rhs - coef_B * pml_Vx[iptr_a];
@@ -977,7 +833,7 @@ sv_eq1st_curv_col_el_aniso_rhs_cfspml_gpu(int idim, int iside,
       // add contributions from free surface condition
       //  not consider timg because conflict with main cfspml,
       //     need to revise in the future if required
-      if (bdryfree.is_at_sides[CONST_NDIM-1][1]==1 && (iz+abs_nk1)==nk2)
+      if (bdry_d.is_sides_free[CONST_NDIM-1][1]==1 && (iz+abs_nk1)==nk2)
       {
         // zeta derivatives
         size_t ij = ((ix+abs_ni1) + (iy+abs_nj1) * siz_line)*9;
@@ -999,12 +855,27 @@ sv_eq1st_curv_col_el_aniso_rhs_cfspml_gpu(int idim, int iside,
         ztz = zt_z[iptr];
 
         // keep xi derivative terms, including free surface convered
-        hTxx_rhs = (c11*ztx+c16*zty+c15*ztz)*Dx_DzVx + (c16*ztx+c12*zty+c14*ztz)*Dx_DzVy + (c15*ztx+c14*zty+c13*ztz)*Dx_DzVz; 
-        hTyy_rhs = (c12*ztx+c26*zty+c25*ztz)*Dx_DzVx + (c26*ztx+c22*zty+c24*ztz)*Dx_DzVy + (c25*ztx+c24*zty+c23*ztz)*Dx_DzVz;
-        hTzz_rhs = (c13*ztx+c36*zty+c35*ztz)*Dx_DzVx + (c36*ztx+c23*zty+c34*ztz)*Dx_DzVy + (c35*ztx+c34*zty+c33*ztz)*Dx_DzVz;
-        hTyz_rhs = (c14*ztx+c46*zty+c45*ztz)*Dx_DzVx + (c46*ztx+c24*zty+c44*ztz)*Dx_DzVy + (c45*ztx+c44*zty+c34*ztz)*Dx_DzVz;
-        hTxz_rhs = (c15*ztx+c56*zty+c55*ztz)*Dx_DzVx + (c56*ztx+c25*zty+c45*ztz)*Dx_DzVy + (c55*ztx+c45*zty+c35*ztz)*Dx_DzVz;
-        hTxy_rhs = (c16*ztx+c66*zty+c56*ztz)*Dx_DzVx + (c66*ztx+c26*zty+c46*ztz)*Dx_DzVy + (c56*ztx+c46*zty+c36*ztz)*Dx_DzVz;
+        hTxx_rhs =    lam2mu * (            ztx*Dx_DzVx)
+                    + lam    * (            zty*Dx_DzVy
+                                +           ztz*Dx_DzVz);
+
+        hTyy_rhs =   lam2mu * (            zty*Dx_DzVy)
+                    +lam    * (            ztx*Dx_DzVx
+                                          +ztz*Dx_DzVz);
+
+        hTzz_rhs =   lam2mu * (            ztz*Dx_DzVz)
+                    +lam    * (            ztx*Dx_DzVx
+                                          +zty*Dx_DzVy);
+
+        hTxy_rhs = mu *(
+                     zty*Dx_DzVx + ztx*Dx_DzVy
+                    );
+        hTxz_rhs = mu *(
+                     ztz*Dx_DzVx + ztx*Dx_DzVz
+                    );
+        hTyz_rhs = mu *(
+                     ztz*Dx_DzVy + zty*Dx_DzVz
+                    );
 
         // make corr to Hooke's equatoin
         hTxx[iptr] += (coef_B - 1.0) * hTxx_rhs;
@@ -1022,7 +893,7 @@ sv_eq1st_curv_col_el_aniso_rhs_cfspml_gpu(int idim, int iside,
         pml_hTxz[iptr_a] += coef_D * hTxz_rhs;
         pml_hTyz[iptr_a] += coef_D * hTyz_rhs;
         pml_hTxy[iptr_a] += coef_D * hTxy_rhs;
-      } // if nk2
+      }
     }
   }
   else if (idim == 1) // y direction
@@ -1045,28 +916,10 @@ sv_eq1st_curv_col_el_aniso_rhs_cfspml_gpu(int idim, int iside,
       etz = et_z[iptr];
 
       // medium
+      lam = lam3d[iptr];
+      mu  =  mu3d[iptr];
       slw = slw3d[iptr];
-      c11 = c11d[iptr];
-      c12 = c12d[iptr];
-      c13 = c13d[iptr];
-      c14 = c14d[iptr];
-      c15 = c15d[iptr];
-      c16 = c16d[iptr];
-      c22 = c22d[iptr];
-      c23 = c23d[iptr];
-      c24 = c24d[iptr];
-      c25 = c25d[iptr];
-      c26 = c26d[iptr];
-      c33 = c33d[iptr];
-      c34 = c34d[iptr];
-      c35 = c35d[iptr];
-      c36 = c36d[iptr];
-      c44 = c44d[iptr];
-      c45 = c45d[iptr];
-      c46 = c46d[iptr];
-      c55 = c55d[iptr];
-      c56 = c56d[iptr];
-      c66 = c66d[iptr];
+      lam2mu = lam + 2.0 * mu;
 
       // et derivatives
       M_FD_SHIFT(DyVx , Vx , iptr, fdy_len, lfdy_shift, lfdy_coef, n_fd);
@@ -1083,12 +936,12 @@ sv_eq1st_curv_col_el_aniso_rhs_cfspml_gpu(int idim, int iside,
        hVx_rhs = slw * ( etx*DyTxx + ety*DyTxy + etz*DyTxz );
        hVy_rhs = slw * ( etx*DyTxy + ety*DyTyy + etz*DyTyz );
        hVz_rhs = slw * ( etx*DyTxz + ety*DyTyz + etz*DyTzz );
-      hTxx_rhs = (c11*etx+c16*ety+c15*etz)*DyVx + (c16*etx+c12*ety+c14*etz)*DyVy + (c15*etx+c14*ety+c13*etz)*DyVz; 
-      hTyy_rhs = (c12*etx+c26*ety+c25*etz)*DyVx + (c26*etx+c22*ety+c24*etz)*DyVy + (c25*etx+c24*ety+c23*etz)*DyVz;
-      hTzz_rhs = (c13*etx+c36*ety+c35*etz)*DyVx + (c36*etx+c23*ety+c34*etz)*DyVy + (c35*etx+c34*ety+c33*etz)*DyVz;
-      hTyz_rhs = (c14*etx+c46*ety+c45*etz)*DyVx + (c46*etx+c24*ety+c44*etz)*DyVy + (c45*etx+c44*ety+c34*etz)*DyVz;
-      hTxz_rhs = (c15*etx+c56*ety+c55*etz)*DyVx + (c56*etx+c25*ety+c45*etz)*DyVy + (c55*etx+c45*ety+c35*etz)*DyVz;
-      hTxy_rhs = (c16*etx+c66*ety+c56*etz)*DyVx + (c66*etx+c26*ety+c46*etz)*DyVy + (c56*etx+c46*ety+c36*etz)*DyVz;
+      hTxx_rhs = lam2mu*etx*DyVx + lam*ety*DyVy + lam*etz*DyVz;
+      hTyy_rhs = lam*etx*DyVx + lam2mu*ety*DyVy + lam*etz*DyVz;
+      hTzz_rhs = lam*etx*DyVx + lam*ety*DyVy + lam2mu*etz*DyVz;
+      hTxy_rhs = mu*( ety*DyVx + etx*DyVy );
+      hTxz_rhs = mu*( etz*DyVx + etx*DyVz );
+      hTyz_rhs = mu*( etz*DyVy + ety*DyVz );
 
       // 1: make corr to moment equation
       hVx[iptr] += coef_B_minus_1 * hVx_rhs - coef_B * pml_Vx[iptr_a];
@@ -1116,7 +969,7 @@ sv_eq1st_curv_col_el_aniso_rhs_cfspml_gpu(int idim, int iside,
       pml_hTxy[iptr_a] = coef_D * hTxy_rhs - coef_A * pml_Txy[iptr_a];
 
       // add contributions from free surface condition
-      if (bdryfree.is_at_sides[CONST_NDIM-1][1]==1 && (iz+abs_nk1)==nk2)
+      if (bdry_d.is_sides_free[CONST_NDIM-1][1]==1 && (iz+abs_nk1)==nk2)
       {
         // zeta derivatives
         size_t ij = ((ix+abs_ni1) + (iy+abs_nj1) * siz_line)*9;
@@ -1137,13 +990,27 @@ sv_eq1st_curv_col_el_aniso_rhs_cfspml_gpu(int idim, int iside,
         zty = zt_y[iptr];
         ztz = zt_z[iptr];
 
-        // keep eta derivative terms, including free surface convered
-        hTxx_rhs = (c11*ztx+c16*zty+c15*ztz)*Dy_DzVx + (c16*ztx+c12*zty+c14*ztz)*Dy_DzVy + (c15*ztx+c14*zty+c13*ztz)*Dy_DzVz; 
-        hTyy_rhs = (c12*ztx+c26*zty+c25*ztz)*Dy_DzVx + (c26*ztx+c22*zty+c24*ztz)*Dy_DzVy + (c25*ztx+c24*zty+c23*ztz)*Dy_DzVz;
-        hTzz_rhs = (c13*ztx+c36*zty+c35*ztz)*Dy_DzVx + (c36*ztx+c23*zty+c34*ztz)*Dy_DzVy + (c35*ztx+c34*zty+c33*ztz)*Dy_DzVz;
-        hTyz_rhs = (c14*ztx+c46*zty+c45*ztz)*Dy_DzVx + (c46*ztx+c24*zty+c44*ztz)*Dy_DzVy + (c45*ztx+c44*zty+c34*ztz)*Dy_DzVz;
-        hTxz_rhs = (c15*ztx+c56*zty+c55*ztz)*Dy_DzVx + (c56*ztx+c25*zty+c45*ztz)*Dy_DzVy + (c55*ztx+c45*zty+c35*ztz)*Dy_DzVz;
-        hTxy_rhs = (c16*ztx+c66*zty+c56*ztz)*Dy_DzVx + (c66*ztx+c26*zty+c46*ztz)*Dy_DzVy + (c56*ztx+c46*zty+c36*ztz)*Dy_DzVz;
+        hTxx_rhs =    lam2mu * (             ztx*Dy_DzVx)
+                    + lam    * (             zty*Dy_DzVy
+                                            +ztz*Dy_DzVz);
+
+        hTyy_rhs =   lam2mu * (             zty*Dy_DzVy)
+                    +lam    * (             ztx*Dy_DzVx
+                                           +ztz*Dy_DzVz);
+
+        hTzz_rhs =   lam2mu * (             ztz*Dy_DzVz)
+                    +lam    * (             ztx*Dy_DzVx
+                                           +zty*Dy_DzVy);
+
+        hTxy_rhs = mu *(
+                     zty*Dy_DzVx + ztx*Dy_DzVy
+                    );
+        hTxz_rhs = mu *(
+                     ztz*Dy_DzVx + ztx*Dy_DzVz
+                    );
+        hTyz_rhs = mu *(
+                     ztz*Dy_DzVy + zty*Dy_DzVz
+                  );
 
         // make corr to Hooke's equatoin
         hTxx[iptr] += (coef_B - 1.0) * hTxx_rhs;
@@ -1183,28 +1050,10 @@ sv_eq1st_curv_col_el_aniso_rhs_cfspml_gpu(int idim, int iside,
       ztz = zt_z[iptr];
 
       // medium
+      lam = lam3d[iptr];
+      mu  =  mu3d[iptr];
       slw = slw3d[iptr];
-      c11 = c11d[iptr];
-      c12 = c12d[iptr];
-      c13 = c13d[iptr];
-      c14 = c14d[iptr];
-      c15 = c15d[iptr];
-      c16 = c16d[iptr];
-      c22 = c22d[iptr];
-      c23 = c23d[iptr];
-      c24 = c24d[iptr];
-      c25 = c25d[iptr];
-      c26 = c26d[iptr];
-      c33 = c33d[iptr];
-      c34 = c34d[iptr];
-      c35 = c35d[iptr];
-      c36 = c36d[iptr];
-      c44 = c44d[iptr];
-      c45 = c45d[iptr];
-      c46 = c46d[iptr];
-      c55 = c55d[iptr];
-      c56 = c56d[iptr];
-      c66 = c66d[iptr];
+      lam2mu = lam + 2.0 * mu;
 
       // zt derivatives
       M_FD_SHIFT(DzVx , Vx , iptr, fdz_len, lfdz_shift, lfdz_coef, n_fd);
@@ -1221,12 +1070,12 @@ sv_eq1st_curv_col_el_aniso_rhs_cfspml_gpu(int idim, int iside,
        hVx_rhs = slw * ( ztx*DzTxx + zty*DzTxy + ztz*DzTxz );
        hVy_rhs = slw * ( ztx*DzTxy + zty*DzTyy + ztz*DzTyz );
        hVz_rhs = slw * ( ztx*DzTxz + zty*DzTyz + ztz*DzTzz );
-      hTxx_rhs = (c11*ztx+c16*zty+c15*ztz)*DzVx + (c16*ztx+c12*zty+c14*ztz)*DzVy + (c15*ztx+c14*zty+c13*ztz)*DzVz; 
-      hTyy_rhs = (c12*ztx+c26*zty+c25*ztz)*DzVx + (c26*ztx+c22*zty+c24*ztz)*DzVy + (c25*ztx+c24*zty+c23*ztz)*DzVz;
-      hTzz_rhs = (c13*ztx+c36*zty+c35*ztz)*DzVx + (c36*ztx+c23*zty+c34*ztz)*DzVy + (c35*ztx+c34*zty+c33*ztz)*DzVz;
-      hTyz_rhs = (c14*ztx+c46*zty+c45*ztz)*DzVx + (c46*ztx+c24*zty+c44*ztz)*DzVy + (c45*ztx+c44*zty+c34*ztz)*DzVz;
-      hTxz_rhs = (c15*ztx+c56*zty+c55*ztz)*DzVx + (c56*ztx+c25*zty+c45*ztz)*DzVy + (c55*ztx+c45*zty+c35*ztz)*DzVz;
-      hTxy_rhs = (c16*ztx+c66*zty+c56*ztz)*DzVx + (c66*ztx+c26*zty+c46*ztz)*DzVy + (c56*ztx+c46*zty+c36*ztz)*DzVz;
+      hTxx_rhs = lam2mu*ztx*DzVx + lam*zty*DzVy + lam*ztz*DzVz;
+      hTyy_rhs = lam*ztx*DzVx + lam2mu*zty*DzVy + lam*ztz*DzVz;
+      hTzz_rhs = lam*ztx*DzVx + lam*zty*DzVy + lam2mu*ztz*DzVz;
+      hTxy_rhs = mu*( zty*DzVx + ztx*DzVy );
+      hTxz_rhs = mu*( ztz*DzVx + ztx*DzVz );
+      hTyz_rhs = mu*( ztz*DzVy + zty*DzVz );
 
       // 1: make corr to moment equation
       hVx[iptr] += coef_B_minus_1 * hVx_rhs - coef_B * pml_Vx[iptr_a];
@@ -1252,24 +1101,21 @@ sv_eq1st_curv_col_el_aniso_rhs_cfspml_gpu(int idim, int iside,
       pml_hTxz[iptr_a] = coef_D * hTxz_rhs - coef_A * pml_Txz[iptr_a];
       pml_hTyz[iptr_a] = coef_D * hTyz_rhs - coef_A * pml_Tyz[iptr_a];
       pml_hTxy[iptr_a] = coef_D * hTxy_rhs - coef_A * pml_Txy[iptr_a];
-    } 
-  } 
+    }
+  } // if which dim
 
   return;
 }
 
 /*******************************************************************************
  * free surface coef
- * converted matrix for velocity gradient
- *  only implement z2 (top) right now
  ******************************************************************************/
-
 __global__ void
-sv_eq1st_curv_col_el_aniso_dvh2dvz_gpu(gdinfo_t        gdinfo_d,
-                                     gdcurv_metric_t metric_d,
-                                     md_t       md_d,
-                                     bdryfree_t      bdryfree_d,
-                                     const int verbose)
+sv_curv_col_el_iso_dvh2dvz_gpu(gdinfo_t        gdinfo_d,
+                               gdcurv_metric_t metric_d,
+                               md_t       md_d,
+                               bdry_t     bdry_d,
+                               const int verbose)
 {
   int ni1 = gdinfo_d.ni1;
   int ni2 = gdinfo_d.ni2;
@@ -1295,113 +1141,70 @@ sv_eq1st_curv_col_el_aniso_dvh2dvz_gpu(gdinfo_t        gdinfo_d,
   float * zt_y = metric_d.zeta_y;
   float * zt_z = metric_d.zeta_z;
 
-  float * c11d = md_d.c11;
-  float * c12d = md_d.c12;
-  float * c13d = md_d.c13;
-  float * c14d = md_d.c14;
-  float * c15d = md_d.c15;
-  float * c16d = md_d.c16;
-  float * c22d = md_d.c22;
-  float * c23d = md_d.c23;
-  float * c24d = md_d.c24;
-  float * c25d = md_d.c25;
-  float * c26d = md_d.c26;
-  float * c33d = md_d.c33;
-  float * c34d = md_d.c34;
-  float * c35d = md_d.c35;
-  float * c36d = md_d.c36;
-  float * c44d = md_d.c44;
-  float * c45d = md_d.c45;
-  float * c46d = md_d.c46;
-  float * c55d = md_d.c55;
-  float * c56d = md_d.c56;
-  float * c66d = md_d.c66;
+  float * lam3d = md_d.lambda;
+  float *  mu3d = md_d.mu;
 
-  float *matVx2Vz = bdryfree_d.matVx2Vz2;
-  float *matVy2Vz = bdryfree_d.matVy2Vz2;
-
+  float *matVx2Vz = bdry_d.matVx2Vz2;
+  float *matVy2Vz = bdry_d.matVy2Vz2;
+  
   float A[3][3], B[3][3], C[3][3];
   float AB[3][3], AC[3][3];
 
-  float c11,c12,c13,c14,c15,c16;
-  float     c22,c23,c24,c25,c26;
-  float         c33,c34,c35,c36;
-  float             c44,c45,c46;
-  float                 c55,c56;
-  float                     c66;
-  float xix, xiy ,xiz, etx, ety, etz, ztx, zty, ztz;
+  float e11, e12, e13, e21, e22, e23, e31, e32, e33;
+  float lam2mu, lam, mu;
  
   int k = nk2;
-
   size_t ix = blockIdx.x * blockDim.x + threadIdx.x;
   size_t iy = blockIdx.y * blockDim.y + threadIdx.y;
   if(ix<(ni2-ni1+1) && iy<(nj2-nj1+1))
   {
     size_t iptr = (ix+ni1) + (iy+nj1) * siz_line + k * siz_slice;
+    e11 = xi_x[iptr];
+    e12 = xi_y[iptr];
+    e13 = xi_z[iptr];
+    e21 = et_x[iptr];
+    e22 = et_y[iptr];
+    e23 = et_z[iptr];
+    e31 = zt_x[iptr];
+    e32 = zt_y[iptr];
+    e33 = zt_z[iptr];
 
-    xix = xi_x[iptr];
-    xiy = xi_y[iptr];
-    xiz = xi_z[iptr];
-    etx = et_x[iptr];
-    ety = et_y[iptr];
-    etz = et_z[iptr];
-    ztx = zt_x[iptr];
-    zty = zt_y[iptr];
-    ztz = zt_z[iptr];
-    
-    c11 = c11d[iptr];
-    c12 = c12d[iptr];
-    c13 = c13d[iptr];
-    c14 = c14d[iptr];
-    c15 = c15d[iptr];
-    c16 = c16d[iptr];
-    c22 = c22d[iptr];
-    c23 = c23d[iptr];
-    c24 = c24d[iptr];
-    c25 = c25d[iptr];
-    c26 = c26d[iptr];
-    c33 = c33d[iptr];
-    c34 = c34d[iptr];
-    c35 = c35d[iptr];
-    c36 = c36d[iptr];
-    c44 = c44d[iptr];
-    c45 = c45d[iptr];
-    c46 = c46d[iptr];
-    c55 = c55d[iptr];
-    c56 = c56d[iptr];
-    c66 = c66d[iptr];
+    lam    = lam3d[iptr];
+    mu     =  mu3d[iptr];
+    lam2mu = lam + 2.0f * mu;
 
     // first dim: irow; sec dim: jcol, as Fortran code
-    A[0][0] = (c11*ztx+c16*zty+c15*ztz)*ztx + (c16*ztx+c66*zty+c56*ztz)*zty + (c15*ztx+c56*zty+c55*ztz)*ztz;
-    A[0][1] = (c16*ztx+c12*zty+c14*ztz)*ztx + (c66*ztx+c26*zty+c46*ztz)*zty + (c56*ztx+c25*zty+c45*ztz)*ztz;
-    A[0][2] = (c15*ztx+c14*zty+c13*ztz)*ztx + (c56*ztx+c46*zty+c36*ztz)*zty + (c55*ztx+c45*zty+c35*ztz)*ztz; 
-    A[1][0] = (c16*ztx+c66*zty+c56*ztz)*ztx + (c12*ztx+c26*zty+c25*ztz)*zty + (c14*ztx+c46*zty+c45*ztz)*ztz; 
-    A[1][1] = (c66*ztx+c26*zty+c46*ztz)*ztx + (c26*ztx+c22*zty+c24*ztz)*zty + (c46*ztx+c24*zty+c44*ztz)*ztz; 
-    A[1][2] = (c56*ztx+c46*zty+c36*ztz)*ztx + (c25*ztx+c24*zty+c23*ztz)*zty + (c45*ztx+c44*zty+c34*ztz)*ztz;
-    A[2][0] = (c15*ztx+c56*zty+c55*ztz)*ztx + (c14*ztx+c46*zty+c45*ztz)*zty + (c13*ztx+c36*zty+c35*ztz)*ztz;
-    A[2][1] = (c56*ztx+c25*zty+c45*ztz)*ztx + (c46*ztx+c24*zty+c44*ztz)*zty + (c36*ztx+c23*zty+c34*ztz)*ztz;
-    A[2][2] = (c55*ztx+c45*zty+c35*ztz)*ztx + (c45*ztx+c44*zty+c34*ztz)*zty + (c35*ztx+c34*zty+c33*ztz)*ztz; 
+    A[0][0] = lam2mu*e31*e31 + mu*(e32*e32+e33*e33);
+    A[0][1] = lam*e31*e32 + mu*e32*e31;
+    A[0][2] = lam*e31*e33 + mu*e33*e31;
+    A[1][0] = lam*e32*e31 + mu*e31*e32;
+    A[1][1] = lam2mu*e32*e32 + mu*(e31*e31+e33*e33);
+    A[1][2] = lam*e32*e33 + mu*e33*e32;
+    A[2][0] = lam*e33*e31 + mu*e31*e33;
+    A[2][1] = lam*e33*e32 + mu*e32*e33;
+    A[2][2] = lam2mu*e33*e33 + mu*(e31*e31+e32*e32);
     fdlib_math_invert3x3(A);
-                                                     
-    B[0][0] = (c11*xix+c16*xiy+c15*xiz)*ztx + (c16*xix+c66*xiy+c56*xiz)*zty + (c15*xix+c56*xiy+c55*xiz)*ztz;
-    B[0][1] = (c16*xix+c12*xiy+c14*xiz)*ztx + (c66*xix+c26*xiy+c46*xiz)*zty + (c56*xix+c25*xiy+c45*xiz)*ztz;
-    B[0][2] = (c15*xix+c14*xiy+c13*xiz)*ztx + (c56*xix+c46*xiy+c36*xiz)*zty + (c55*xix+c45*xiy+c35*xiz)*ztz; 
-    B[1][0] = (c16*xix+c66*xiy+c56*xiz)*ztx + (c12*xix+c26*xiy+c25*xiz)*zty + (c14*xix+c46*xiy+c45*xiz)*ztz; 
-    B[1][1] = (c66*xix+c26*xiy+c46*xiz)*ztx + (c26*xix+c22*xiy+c24*xiz)*zty + (c46*xix+c24*xiy+c44*xiz)*ztz; 
-    B[1][2] = (c56*xix+c46*xiy+c36*xiz)*ztx + (c25*xix+c24*xiy+c23*xiz)*zty + (c45*xix+c44*xiy+c34*xiz)*ztz;
-    B[2][0] = (c15*xix+c56*xiy+c55*xiz)*ztx + (c14*xix+c46*xiy+c45*xiz)*zty + (c13*xix+c36*xiy+c35*xiz)*ztz;
-    B[2][1] = (c56*xix+c25*xiy+c45*xiz)*ztx + (c46*xix+c24*xiy+c44*xiz)*zty + (c36*xix+c23*xiy+c34*xiz)*ztz;
-    B[2][2] = (c55*xix+c45*xiy+c35*xiz)*ztx + (c45*xix+c44*xiy+c34*xiz)*zty + (c35*xix+c34*xiy+c33*xiz)*ztz; 
-     
-    C[0][0] = (c11*etx+c16*ety+c15*etz)*ztx + (c16*etx+c66*ety+c56*etz)*zty + (c15*etx+c56*ety+c55*etz)*ztz;
-    C[0][1] = (c16*etx+c12*ety+c14*etz)*ztx + (c66*etx+c26*ety+c46*etz)*zty + (c56*etx+c25*ety+c45*etz)*ztz;
-    C[0][2] = (c15*etx+c14*ety+c13*etz)*ztx + (c56*etx+c46*ety+c36*etz)*zty + (c55*etx+c45*ety+c35*etz)*ztz; 
-    C[1][0] = (c16*etx+c66*ety+c56*etz)*ztx + (c12*etx+c26*ety+c25*etz)*zty + (c14*etx+c46*ety+c45*etz)*ztz; 
-    C[1][1] = (c66*etx+c26*ety+c46*etz)*ztx + (c26*etx+c22*ety+c24*etz)*zty + (c46*etx+c24*ety+c44*etz)*ztz; 
-    C[1][2] = (c56*etx+c46*ety+c36*etz)*ztx + (c25*etx+c24*ety+c23*etz)*zty + (c45*etx+c44*ety+c34*etz)*ztz;
-    C[2][0] = (c15*etx+c56*ety+c55*etz)*ztx + (c14*etx+c46*ety+c45*etz)*zty + (c13*etx+c36*ety+c35*etz)*ztz;
-    C[2][1] = (c56*etx+c25*ety+c45*etz)*ztx + (c46*etx+c24*ety+c44*etz)*zty + (c36*etx+c23*ety+c34*etz)*ztz;
-    C[2][2] = (c55*etx+c45*ety+c35*etz)*ztx + (c45*etx+c44*ety+c34*etz)*zty + (c35*etx+c34*ety+c33*etz)*ztz; 
+
+    B[0][0] = -lam2mu*e31*e11 - mu*(e32*e12+e33*e13);
+    B[0][1] = -lam*e31*e12 - mu*e32*e11;
+    B[0][2] = -lam*e31*e13 - mu*e33*e11;
+    B[1][0] = -lam*e32*e11 - mu*e31*e12;
+    B[1][1] = -lam2mu*e32*e12 - mu*(e31*e11+e33*e13);
+    B[1][2] = -lam*e32*e13 - mu*e33*e12;
+    B[2][0] = -lam*e33*e11 - mu*e31*e13;
+    B[2][1] = -lam*e33*e12 - mu*e32*e13;
+    B[2][2] = -lam2mu*e33*e13 - mu*(e31*e11+e32*e12);
+
+    C[0][0] = -lam2mu*e31*e21 - mu*(e32*e22+e33*e23);
+    C[0][1] = -lam*e31*e22 - mu*e32*e21;
+    C[0][2] = -lam*e31*e23 - mu*e33*e21;
+    C[1][0] = -lam*e32*e21 - mu*e31*e22;
+    C[1][1] = -lam2mu*e32*e22 - mu*(e31*e21+e33*e23);
+    C[1][2] = -lam*e32*e23 - mu*e33*e22;
+    C[2][0] = -lam*e33*e21 - mu*e31*e23;
+    C[2][1] = -lam*e33*e22 - mu*e32*e23;
+    C[2][2] = -lam2mu*e33*e23 - mu*(e31*e21+e32*e22);
+
     fdlib_math_matmul3x3(A, B, AB);
     fdlib_math_matmul3x3(A, C, AC);
 
@@ -1410,8 +1213,8 @@ sv_eq1st_curv_col_el_aniso_dvh2dvz_gpu(gdinfo_t        gdinfo_d,
     // save into mat
     for(int irow = 0; irow < 3; irow++){
       for(int jcol = 0; jcol < 3; jcol++){
-        matVx2Vz[ij + irow*3 + jcol] = -1.0f * AB[irow][jcol];
-        matVy2Vz[ij + irow*3 + jcol] = -1.0f * AC[irow][jcol];
+        matVx2Vz[ij + irow*3 + jcol] = AB[irow][jcol];
+        matVy2Vz[ij + irow*3 + jcol] = AC[irow][jcol];
       }
     }
   }

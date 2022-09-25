@@ -477,17 +477,16 @@ md_gen_test_el_vti(md_t *md)
 
         md->rho[iptr] = rho;
 
-	      md->c11[iptr] = 25.2*1e9;//lam + 2.0f*mu;
-	      md->c13[iptr] = 10.9620*1e9;//lam;
-	      md->c33[iptr] = 18.0*1e9;//lam + 2.0f*mu;
-	      md->c55[iptr] = 5.12*1e9;//mu;
+        md->c11[iptr] = 25.2*1e9;//lam + 2.0f*mu;
+        md->c13[iptr] = 10.9620*1e9;//lam;
+        md->c33[iptr] = 18.0*1e9;//lam + 2.0f*mu;
+        md->c55[iptr] = 5.12*1e9;//mu;
         md->c66[iptr] = 7.1680*1e9;//mu;
         //-- Vp ~ sqrt(c11/rho) = 4098
-        
       }
     }
   }
-
+ 
   return ierr;
 }
 

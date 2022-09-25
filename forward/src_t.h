@@ -115,6 +115,9 @@ float
 fun_gauss_deriv(float t, float a, float t0);
 
 float
+fun_klauder(float t, float t0, float f1, float f2, float T);
+
+float
 src_cal_wavelet(float t, char *wavelet_name, float *wavelet_coefs);
 
 void 
@@ -181,5 +184,9 @@ src_muDA_to_moment(float strike, float dip, float rake, float mu, float D, float
 
 int
 src_print(src_t *src, int verbose);
+
+float
+Blackman_window(float t, float dt,float t0);
+
 
 #endif

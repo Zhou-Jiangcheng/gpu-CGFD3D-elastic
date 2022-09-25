@@ -8,8 +8,7 @@
 #include "md_t.h"
 #include "wav_t.h"
 #include "src_t.h"
-#include "bdry_free.h"
-#include "bdry_pml.h"
+#include "bdry_t.h"
 
 int
 init_gdinfo_device(gdinfo_t *gdinfo, gdinfo_t *gdinfo_d);
@@ -31,10 +30,7 @@ int
 init_src_device(src_t *src, src_t *src_d);
 
 int 
-init_bdryfree_device(gdinfo_t *gdinfo, bdryfree_t *bdryfree, bdryfree_t *bdryfree_d);
-
-int
-init_bdrypml_device(gdinfo_t *gdinfo, bdrypml_t *bdrypml, bdrypml_t *bdrypml_d);
+init_bdry_device(gdinfo_t *gdinfo, bdry_t *bdry, bdry_t *bdry_d);
 
 int 
 init_wave_device(wav_t *wav, wav_t *wav_d);
@@ -64,12 +60,10 @@ int
 dealloc_src_device(src_t src_d);
 
 int 
-dealloc_bdryfree_device(bdryfree_t bdryfree_d);
-
-int 
-dealloc_bdrypml_device(bdrypml_t bdrypml_d);
+dealloc_bdry_device(bdry_t bdry_d);
 
 int 
 dealloc_wave_device(wav_t wav_d);
 
+int init_bdry_device(bdry_t *bdry, bdry_t *bdry_gpu);
 #endif

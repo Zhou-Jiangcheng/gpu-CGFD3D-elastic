@@ -1,6 +1,7 @@
 #ifndef GD_INFO_H
 #define GD_INFO_H
 
+
 #include "mympi_t.h"
 
 /*************************************************
@@ -111,13 +112,16 @@ gd_info_ind_glphy2lcext_j(int gj, gdinfo_t *gdinfo);
 int
 gd_info_ind_glphy2lcext_k(int gk, gdinfo_t *gdinfo);
 
-__host__ __device__ int
+__host__ __device__
+int
 gd_info_ind_lcext2glphy_i(int i, gdinfo_t *gdinfo);
 
-__host__ __device__ int
+__host__ __device__
+int
 gd_info_ind_lcext2glphy_j(int j, gdinfo_t *gdinfo);
 
-__host__ __device__ int
+__host__ __device__
+int
 gd_info_ind_lcext2glphy_k(int k, gdinfo_t *gdinfo);
 
 int

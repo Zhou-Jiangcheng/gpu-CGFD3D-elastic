@@ -193,78 +193,6 @@ typedef struct
   size_t *fdz_shift_all_d;
 } fd_wav_t;
 
-/*
- * staggered grid scheme
- */
-
-typedef struct {
-
-  float CFL; // 1d cfl value for the scheme
-
-  // ghost point required 
-  int fdx_nghosts;
-  int fdy_nghosts;
-  int fdz_nghosts;
-
-  // max total len of op
-  int fdx_max_len;
-  int fdy_max_len;
-  int fdz_max_len;
-
-  // max half len
-  int fdx_max_half_len;
-  int fdy_max_half_len;
-  int fdz_max_half_len;
-
-  // number of layers that need to use biased op near boundary
-  int num_of_fdx_op;
-  int num_of_fdy_op;
-  int num_of_fdz_op;
-
-  // set for integer point
-  fd_op_t *lay_fdx_op;
-  fd_op_t *lay_fdy_op;
-  fd_op_t *lay_fdz_op;
-
-  // for diff cmp, not used
-  fd_op_t *Vx_fdx_op; // [nlay]
-  fd_op_t *Vx_fdy_op;
-  fd_op_t *Vx_fdz_op;
-
-  fd_op_t *Vy_fdx_op; // [nlay]
-  fd_op_t *Vy_fdy_op;
-  fd_op_t *Vy_fdz_op;
-
-  fd_op_t *Vz_fdx_op; // [nlay]
-  fd_op_t *Vz_fdy_op;
-  fd_op_t *Vz_fdz_op;
-
-  fd_op_t *Txx_fdx_op; // [nlay]
-  fd_op_t *Txx_fdy_op;
-  fd_op_t *Txx_fdz_op;
-
-  fd_op_t *Tyy_fdx_op; // [nlay]
-  fd_op_t *Tyy_fdy_op;
-  fd_op_t *Tyy_fdz_op;
-
-  fd_op_t *Tzz_fdx_op; // [nlay]
-  fd_op_t *Tzz_fdy_op;
-  fd_op_t *Tzz_fdz_op;
-
-  fd_op_t *Tyz_fdx_op; // [nlay]
-  fd_op_t *Tyz_fdy_op;
-  fd_op_t *Tyz_fdz_op;
-
-  fd_op_t *Txz_fdx_op; // [nlay]
-  fd_op_t *Txz_fdy_op;
-  fd_op_t *Txz_fdz_op;
-
-  fd_op_t *Txy_fdx_op; // [nlay]
-  fd_op_t *Txy_fdy_op;
-  fd_op_t *Txy_fdz_op;
-
-} fdstg_t;
-
 /*******************************************************************************
  * function prototype
  ******************************************************************************/
@@ -274,8 +202,5 @@ fd_set_macdrp(fd_t *fd);
 
 void
 fd_print(fd_t *fd);
-
-int 
-fd_set_stg4(fdstg_t *fd);
 
 #endif

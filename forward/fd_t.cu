@@ -72,23 +72,24 @@ fd_set_macdrp(fd_t *fd)
 #define  m_mac_num_lay   4
 
   // op index at all layers, zero not used point
+
   int  mac_all_indx[m_mac_num_lay][2][m_mac_max_len] =
   {
-    { // back/forw at free, no use
-      { -1,0,0,0,0 },
-      {    0,1,0,0,0 } // 0, at free, no use
+    { // forw/back at free, no use
+      {    0,1,0,0,0 }, // 0, at free, no use
+      { -1,0,0,0,0 }
     },
     { // 1, 2nd
-      { -1,0,0,0,0 },
-      {    0,1,0,0,0 }
+      {    0,1,0,0,0 },
+      { -1,0,0,0,0 }
     }, 
     { // 2, 4th
-      { -2,-1, 0,0,0 },
-      {        0,1,2,0,0 }
+      {        0,1,2,0,0 }, 
+      { -2,-1, 0,0,0 }
     },
     { // 3, drp, normal op
-      { -3,-2,-1,0,1 }, 
-      {       -1,0,1,2,3 }
+      {       -1,0,1,2,3 },
+      { -3,-2,-1,0,1 } 
     }
   };
 
@@ -96,20 +97,20 @@ fd_set_macdrp(fd_t *fd)
   float mac_all_coef[m_mac_num_lay][2][m_mac_max_len] =
   {
     { // at free
-      {-1.0, 1.0, 0.0, 0.0, 0.0},
-      {     -1.0, 1.0, 0.0, 0.0, 0.0 }
+      {     -1.0, 1.0, 0.0, 0.0, 0.0 },
+      {-1.0, 1.0, 0.0, 0.0, 0.0}
     },
     { // 1, 2nd
-      {-1.0, 1.0, 0.0, 0.0, 0.0},
-      {     -1.0, 1.0, 0.0, 0.0, 0.0 }
+      {     -1.0, 1.0, 0.0, 0.0, 0.0 },
+      {-1.0, 1.0, 0.0, 0.0, 0.0}
     }, 
     { // 2, 4th
-      { 1.0/6.0, -8.0/6.0, 7.0/6.0, 0.0, 0.0 },
-      {                   -7.0/6.0, 8.0/6.0, -1.0/6.0, 0.0, 0.0 } 
+      {                   -7.0/6.0, 8.0/6.0, -1.0/6.0, 0.0, 0.0 }, 
+      { 1.0/6.0, -8.0/6.0, 7.0/6.0, 0.0, 0.0 }
     },
     { // 3, drp, normal op
-      { -0.04168 , 0.3334, -1.233 , 0.6326 , 0.30874 },
-      {                   -0.30874,-0.6326 ,1.233 ,-0.3334,0.04168 }
+      {                   -0.30874,-0.6326 ,1.233 ,-0.3334,0.04168 },
+      { -0.04168 , 0.3334, -1.233 , 0.6326 , 0.30874 }
     } 
   };
 
@@ -132,20 +133,19 @@ fd_set_macdrp(fd_t *fd)
 
   int  mac_all_left_len[m_mac_num_lay][2] = 
   { 
-    { 1, 0 },
-    { 1, 0 },
-    { 2, 0 },
-    { 3, 1 }
-  };
-
-  int  mac_all_right_len[m_mac_num_lay][2] = 
-  { 
     { 0, 1 },
     { 0, 1 },
     { 0, 2 },
     { 1, 3 }
   };
 
+  int  mac_all_right_len[m_mac_num_lay][2] = 
+  { 
+    { 1, 0 },
+    { 1, 0 },
+    { 2, 0 },
+    { 3, 1 }
+  };
   // center scheme for macdrp at diff layers, which is used in metric calculation
 #define  m_mac_center_max_len   7
 
@@ -179,8 +179,8 @@ fd_set_macdrp(fd_t *fd)
   //----------------------------------------------------------------------------
 
   fd->num_of_pairs = 8;
-  // BBB FFB FFF BBF
-  // BFB FBB FBF BFF
+  // FFF BBF BBB FFB
+  // FBF BFF BFB FBB
   int FD_Flags[8][CONST_NDIM] = // 8 pairs, x/y/z 3 dim
   {
     { 0,  0,  0 },
@@ -349,146 +349,5 @@ fd_print(fd_t *fd)
 
   fprintf(stdout, "  others info need to be coded\n");
   // rest
-}
-
-/*
- * set staggered-grid scheme 
- */
-
-int 
-fd_set_stg4(fdstg_t *fd)
-{
-  int ierr = 0;
-
-  // set max
-  fd->fdx_nghosts = 2;
-  fd->fdy_nghosts = 2;
-  fd->fdz_nghosts = 2;
-  fd->fdx_max_len = 4;
-  fd->fdy_max_len = 4;
-  fd->fdz_max_len = 4;
-  fd->fdx_max_half_len = 2;
-  fd->fdy_max_half_len = 2;
-  fd->fdz_max_half_len = 2;
-
-  // ~ 1 / (c1+c2), see Graves 1996
-  fd->CFL = 0.857;
-
-  //----------------------------------------------------------------------------
-  // 1d scheme for different points to surface, or different half length
-  //----------------------------------------------------------------------------
-#define  m_stg_max_len   4
-#define  m_stg_num_lay   2
-
-  // op index at all layers, zero not used point
-  int  stg_all_indx[m_stg_num_lay][m_stg_max_len] =
-  {
-    { -1, 0, 0,0 },
-    { -2,-1, 0,1 }
-  };
-
-  // op coef at all layers
-  float stg_all_coef[m_stg_num_lay][m_stg_max_len] =
-  {
-    { -1.0, 1.0, 0,0 },
-    { 0.0416666667, -1.125, 1.125, -0.0416666667 }
-  };
-
-  int  stg_all_total_len[m_stg_num_lay] = 
-  { 2, 4 };
-
-  // half len without cur point
-  int  stg_all_half_len[m_stg_num_lay] = 
-  { 1, 2 };
-
-  int  stg_all_left_len[m_stg_num_lay] = 
-  { 1, 2 }; 
-
-  int  stg_all_right_len[m_stg_num_lay] = 
-  { 0, 1 };
-
-  //----------------------------------------------------------------------------
-  // combine to fd op
-  //----------------------------------------------------------------------------
-
-  fd->num_of_fdx_op = 1;
-  fd->num_of_fdy_op = 1;
-  fd->num_of_fdz_op = 1;
-
-  // alloc
-
-  fd->lay_fdx_op = (fd_op_t *)malloc(fd->num_of_fdx_op * sizeof(fd_op_t));
-  fd->lay_fdy_op = (fd_op_t *)malloc(fd->num_of_fdy_op * sizeof(fd_op_t));
-  fd->lay_fdz_op = (fd_op_t *)malloc(fd->num_of_fdz_op * sizeof(fd_op_t));
-
-  // set fdx
-  fd_op_t *fdx_op = fd->lay_fdx_op;
-  fdx_op->total_len = stg_all_total_len[m_stg_num_lay-1];
-  fdx_op->half_len  = stg_all_half_len [m_stg_num_lay-1];
-  fdx_op->left_len  = stg_all_left_len [m_stg_num_lay-1];
-  fdx_op->right_len = stg_all_right_len[m_stg_num_lay-1];
-
-  fdx_op->indx = (int   *)malloc(fdx_op->total_len * sizeof(int));
-  fdx_op->coef = (float *)malloc(fdx_op->total_len * sizeof(float));
-
-  for (int n=0; n < fdx_op->total_len; n++)
-  {
-    fdx_op->indx[n] = stg_all_indx[m_stg_num_lay-1][n];
-    fdx_op->coef[n] = stg_all_coef[m_stg_num_lay-1][n];
-  }
-
-  // set fdy
-  fd_op_t *fdy_op = fd->lay_fdy_op;
-  fdy_op->total_len = stg_all_total_len[m_stg_num_lay-1];
-  fdy_op->half_len  = stg_all_half_len [m_stg_num_lay-1];
-  fdy_op->left_len  = stg_all_left_len [m_stg_num_lay-1];
-  fdy_op->right_len = stg_all_right_len[m_stg_num_lay-1];
-
-  fdy_op->indx = (int   *)malloc(fdy_op->total_len * sizeof(int));
-  fdy_op->coef = (float *)malloc(fdy_op->total_len * sizeof(float));
-
-  for (int n=0; n < fdy_op->total_len; n++)
-  {
-    fdy_op->indx[n] = stg_all_indx[m_stg_num_lay-1][n];
-    fdy_op->coef[n] = stg_all_coef[m_stg_num_lay-1][n];
-  }
-
-  // set fdz
-  fd_op_t *fdz_op = fd->lay_fdz_op;
-  fdz_op->total_len = stg_all_total_len[m_stg_num_lay-1];
-  fdz_op->half_len  = stg_all_half_len [m_stg_num_lay-1];
-  fdz_op->left_len  = stg_all_left_len [m_stg_num_lay-1];
-  fdz_op->right_len = stg_all_right_len[m_stg_num_lay-1];
-
-  fdz_op->indx = (int   *)malloc(fdz_op->total_len * sizeof(int));
-  fdz_op->coef = (float *)malloc(fdz_op->total_len * sizeof(float));
-
-  for (int n=0; n < fdz_op->total_len; n++)
-  {
-    fdz_op->indx[n] = stg_all_indx[m_stg_num_lay-1][n];
-    fdz_op->coef[n] = stg_all_coef[m_stg_num_lay-1][n];
-  }
-
-  //fd->num_of_fdz_op = 2;
-  //// for fdz at each layer near surface
-  //for (int ilay=0; ilay < fd->num_of_fdz_op; ilay++)
-  //{
-  //  fd_op_t *fdz_op = fd->lay_fdz_op + ilay;
-
-  //  fdz_op->total_len = stg_all_total_len[ilay];
-  //  fdz_op->half_len  = stg_all_half_len [ilay];
-  //  fdz_op->left_len  = stg_all_left_len [ilay];
-  //  fdz_op->right_len = stg_all_right_len[ilay];
-
-  //  fdz_op->indx = (int   *)malloc(fdz_op->total_len * sizeof(int));
-  //  fdz_op->coef = (float *)malloc(fdz_op->total_len * sizeof(float));
-  //  for (int n=0; n < fdz_op->total_len; n++)
-  //  {
-  //    fdz_op->indx[n] = stg_all_indx[ilay][n];
-  //    fdz_op->coef[n] = stg_all_coef[ilay][n];
-  //  }
-  //}
-
-  return ierr;
 }
 

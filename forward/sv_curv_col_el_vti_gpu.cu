@@ -10,8 +10,8 @@
 
 #include "fdlib_mem.h"
 #include "fdlib_math.h"
-#include "sv_eq1st_curv_col_el_iso_gpu.h"
-#include "sv_eq1st_curv_col_el_vti_gpu.h"
+#include "sv_curv_col_el_gpu.h"
+#include "sv_curv_col_el_vti_gpu.h"
 #include "cuda_common.h"
 
 /*******************************************************************************
@@ -19,7 +19,7 @@
  ******************************************************************************/
 
 void
-sv_eq1st_curv_col_el_vti_onestage(
+sv_curv_col_el_vti_onestage(
   float *w_cur_d,
   float *rhs_d, 
   wav_t  wav_d,
@@ -27,8 +27,7 @@ sv_eq1st_curv_col_el_vti_onestage(
   gdinfo_t  gdinfo_d,
   gdcurv_metric_t metric_d,
   md_t md_d,
-  bdryfree_t bdryfree_d,
-  bdrypml_t  bdrypml_d,
+  bdry_t bdry_d,
   src_t src_d,
   // include different order/stentil
   int num_of_fdx_op, fd_op_t *fdx_op,
@@ -93,8 +92,8 @@ sv_eq1st_curv_col_el_vti_onestage(
   size_t siz_slice  = gdinfo_d.siz_slice;
   size_t siz_volume = gdinfo_d.siz_volume;
 
-  float *matVx2Vz = bdryfree_d.matVx2Vz2;
-  float *matVy2Vz = bdryfree_d.matVy2Vz2;
+  float *matVx2Vz = bdry_d.matVx2Vz2;
+  float *matVy2Vz = bdry_d.matVy2Vz2;
 
   // local fd op
   int    fdx_len;
@@ -195,7 +194,7 @@ sv_eq1st_curv_col_el_vti_onestage(
     grid.x = (ni+block.x-1)/block.x;
     grid.y = (nj+block.y-1)/block.y;
     grid.z = (nk+block.z-1)/block.z;
-    sv_eq1st_curv_col_el_vti_rhs_inner_gpu <<<grid, block>>> (
+    sv_curv_col_el_vti_rhs_inner_gpu <<<grid, block>>> (
                         Vx,Vy,Vz,Txx,Tyy,Tzz,Txz,Tyz,Txy,
                         hVx,hVy,hVz,hTxx,hTyy,hTzz,hTxz,hTyz,hTxy,
                         xi_x, xi_y, xi_z, et_x, et_y, et_z, zt_x, zt_y, zt_z,
@@ -208,7 +207,7 @@ sv_eq1st_curv_col_el_vti_onestage(
   }
 
   // free surface at z2
-  if (bdryfree_d.is_at_sides[2][1] == 1)
+  if (bdry_d.is_sides_free[2][1] == 1)
   {
     // tractiong
     {
@@ -216,7 +215,7 @@ sv_eq1st_curv_col_el_vti_onestage(
       dim3 grid;
       grid.x = (ni+block.x-1)/block.x;
       grid.y = (nj+block.y-1)/block.y;
-      sv_eq1st_curv_col_el_iso_rhs_timg_z2_gpu  <<<grid, block>>> (
+      sv_curv_col_el_iso_rhs_timg_z2_gpu  <<<grid, block>>> (
                           Txx,Tyy,Tzz,Txz,Tyz,Txy,hVx,hVy,hVz,
                           xi_x, xi_y, xi_z, et_x, et_y, et_z, zt_x, zt_y, zt_z,
                           jac3d, slw3d,
@@ -233,7 +232,7 @@ sv_eq1st_curv_col_el_vti_onestage(
       dim3 grid;
       grid.x = (ni+block.x-1)/block.x;
       grid.y = (nj+block.y-1)/block.y;
-      sv_eq1st_curv_col_el_vti_rhs_vlow_z2_gpu  <<<grid, block>>> (
+      sv_curv_col_el_vti_rhs_vlow_z2_gpu  <<<grid, block>>> (
                         Vx,Vy,Vz,hTxx,hTyy,hTzz,hTxz,hTyz,hTxy,
                         xi_x, xi_y, xi_z, et_x, et_y, et_z, zt_x, zt_y, zt_z,
                         c11, c13, c33, c55, c66, slw3d,
@@ -249,18 +248,18 @@ sv_eq1st_curv_col_el_vti_onestage(
   }
 
   // cfs-pml, loop face inside
-  if (bdrypml_d.is_enable == 1)
+  if (bdry_d.is_enable_pml == 1)
   {
-    sv_eq1st_curv_col_el_vti_rhs_cfspml(Vx,Vy,Vz,Txx,Tyy,Tzz,Txz,Tyz,Txy,
-                                        hVx,hVy,hVz,hTxx,hTyy,hTzz,hTxz,hTyz,hTxy,
-                                        xi_x, xi_y, xi_z, et_x, et_y, et_z, zt_x, zt_y, zt_z,
-                                        c11, c13, c33, c55, c66, slw3d,
-                                        nk2, siz_line,siz_slice,
-                                        fdx_len, lfdx_shift_d, lfdx_coef_d,
-                                        fdy_len, lfdy_shift_d, lfdy_coef_d,
-                                        fdz_len, lfdz_shift_d, lfdz_coef_d,
-                                        bdrypml_d, bdryfree_d,
-                                        myid, verbose);
+    sv_curv_col_el_vti_rhs_cfspml(Vx,Vy,Vz,Txx,Tyy,Tzz,Txz,Tyz,Txy,
+                                  hVx,hVy,hVz,hTxx,hTyy,hTzz,hTxz,hTyz,hTxy,
+                                  xi_x, xi_y, xi_z, et_x, et_y, et_z, zt_x, zt_y, zt_z,
+                                  c11, c13, c33, c55, c66, slw3d,
+                                  nk2, siz_line,siz_slice,
+                                  fdx_len, lfdx_shift_d, lfdx_coef_d,
+                                  fdy_len, lfdy_shift_d, lfdy_coef_d,
+                                  fdz_len, lfdz_shift_d, lfdz_coef_d,
+                                  bdry_d,
+                                  myid, verbose);
   }
 
   // add source term
@@ -270,7 +269,7 @@ sv_eq1st_curv_col_el_vti_onestage(
       dim3 block(256);
       dim3 grid;
       grid.x = (src_d.total_number+block.x-1) / block.x;
-      sv_eq1st_curv_col_el_iso_rhs_src_gpu  <<< grid,block >>> (
+      sv_curv_col_el_iso_rhs_src_gpu  <<< grid,block >>> (
                         hVx, hVy, hVz, hTxx, hTyy, hTzz, hTxz, hTyz, hTxy,
                         jac3d, slw3d, 
                         src_d,
@@ -287,7 +286,7 @@ sv_eq1st_curv_col_el_vti_onestage(
  ******************************************************************************/
 
 __global__ void
-sv_eq1st_curv_col_el_vti_rhs_inner_gpu(
+sv_curv_col_el_vti_rhs_inner_gpu(
     float *  Vx , float *  Vy , float *  Vz ,
     float *  Txx, float *  Tyy, float *  Tzz,
     float *  Txz, float *  Tyz, float *  Txy,
@@ -459,7 +458,7 @@ sv_eq1st_curv_col_el_vti_rhs_inner_gpu(
  * implement vlow boundary
  */
 __global__ void
-sv_eq1st_curv_col_el_vti_rhs_vlow_z2_gpu(
+sv_curv_col_el_vti_rhs_vlow_z2_gpu(
     float *  Vx , float *  Vy , float *  Vz ,
     float * hTxx, float * hTyy, float * hTzz,
     float * hTxz, float * hTyz, float * hTxy,
@@ -611,8 +610,8 @@ sv_eq1st_curv_col_el_vti_rhs_vlow_z2_gpu(
 /*
  * cfspml, reference to each pml var inside function
  */
-void
-sv_eq1st_curv_col_el_vti_rhs_cfspml(
+int
+sv_curv_col_el_vti_rhs_cfspml(
     float *  Vx , float *  Vy , float *  Vz ,
     float *  Txx, float *  Tyy, float *  Tzz,
     float *  Txz, float *  Tyz, float *  Txy,
@@ -628,7 +627,7 @@ sv_eq1st_curv_col_el_vti_rhs_cfspml(
     int fdx_len, size_t * lfdx_shift, float * lfdx_coef,
     int fdy_len, size_t * lfdy_shift, float * lfdy_coef,
     int fdz_len, size_t * lfdz_shift, float * lfdz_coef,
-    bdrypml_t bdrypml, bdryfree_t bdryfree,
+    bdry_t bdry_d,
     const int myid, const int verbose)
 {
   // check each side
@@ -637,15 +636,15 @@ sv_eq1st_curv_col_el_vti_rhs_cfspml(
     for (int iside=0; iside<2; iside++)
     {
       // skip to next face if not cfspml
-      if (bdrypml.is_at_sides[idim][iside] == 0) continue;
+      if (bdry_d.is_sides_pml[idim][iside] == 0) continue;
 
       // get index into local var
-      int abs_ni1 = bdrypml.ni1[idim][iside];
-      int abs_ni2 = bdrypml.ni2[idim][iside];
-      int abs_nj1 = bdrypml.nj1[idim][iside];
-      int abs_nj2 = bdrypml.nj2[idim][iside];
-      int abs_nk1 = bdrypml.nk1[idim][iside];
-      int abs_nk2 = bdrypml.nk2[idim][iside];
+      int abs_ni1 = bdry_d.ni1[idim][iside];
+      int abs_ni2 = bdry_d.ni2[idim][iside];
+      int abs_nj1 = bdry_d.nj1[idim][iside];
+      int abs_nj2 = bdry_d.nj2[idim][iside];
+      int abs_nk1 = bdry_d.nk1[idim][iside];
+      int abs_nk2 = bdry_d.nk2[idim][iside];
 
       
       int abs_ni = abs_ni2-abs_ni1+1; 
@@ -658,7 +657,7 @@ sv_eq1st_curv_col_el_vti_rhs_cfspml(
         grid.y = (abs_nj+block.y-1)/block.y;
         grid.z = (abs_nk+block.z-1)/block.z;
 
-        sv_eq1st_curv_col_el_vti_rhs_cfspml_gpu <<<grid, block>>> (
+        sv_curv_col_el_vti_rhs_cfspml_gpu <<<grid, block>>> (
                                 idim, iside, Vx , Vy , Vz , 
                                 Txx, Tyy, Tzz, Txz, Tyz, Txy, 
                                 hVx, hVy, hVz, hTxx, hTyy, hTzz, 
@@ -669,40 +668,40 @@ sv_eq1st_curv_col_el_vti_rhs_cfspml(
                                 fdx_len, lfdx_shift,  lfdx_coef,
                                 fdy_len, lfdy_shift,  lfdy_coef,
                                 fdz_len, lfdz_shift,  lfdz_coef,
-                                bdrypml, bdryfree, myid, verbose);
+                                bdry_d, myid, verbose);
         //cudaDeviceSynchronize();
       }
     } // iside
   } // idim
 
-  return;
+  return 0;
 }
 
 __global__ void
-sv_eq1st_curv_col_el_vti_rhs_cfspml_gpu(int idim, int iside,
-                                        float *  Vx , float *  Vy , float *  Vz ,
-                                        float *  Txx, float *  Tyy, float *  Tzz,
-                                        float *  Txz, float *  Tyz, float *  Txy,
-                                        float * hVx , float * hVy , float * hVz ,
-                                        float * hTxx, float * hTyy, float * hTzz,
-                                        float * hTxz, float * hTyz, float * hTxy,
-                                        float * xi_x, float * xi_y, float * xi_z,
-                                        float * et_x, float * et_y, float * et_z,
-                                        float * zt_x, float * zt_y, float * zt_z,
-                                        float *c11d, float *c13d, float *c33d,
-                                        float *c55d, float *c66d, float *slw3d,
-                                        int nk2, size_t siz_line, size_t siz_slice,
-                                        int fdx_len, size_t * lfdx_shift, float * lfdx_coef,
-                                        int fdy_len, size_t * lfdy_shift, float * lfdy_coef,
-                                        int fdz_len, size_t * lfdz_shift, float * lfdz_coef,
-                                        bdrypml_t bdrypml, bdryfree_t bdryfree,
-                                        const int myid, const int verbose)
+sv_curv_col_el_vti_rhs_cfspml_gpu(int idim, int iside,
+                                  float *  Vx , float *  Vy , float *  Vz ,
+                                  float *  Txx, float *  Tyy, float *  Tzz,
+                                  float *  Txz, float *  Tyz, float *  Txy,
+                                  float * hVx , float * hVy , float * hVz ,
+                                  float * hTxx, float * hTyy, float * hTzz,
+                                  float * hTxz, float * hTyz, float * hTxy,
+                                  float * xi_x, float * xi_y, float * xi_z,
+                                  float * et_x, float * et_y, float * et_z,
+                                  float * zt_x, float * zt_y, float * zt_z,
+                                  float *c11d, float *c13d, float *c33d,
+                                  float *c55d, float *c66d, float *slw3d,
+                                  int nk2, size_t siz_line, size_t siz_slice,
+                                  int fdx_len, size_t * lfdx_shift, float * lfdx_coef,
+                                  int fdy_len, size_t * lfdy_shift, float * lfdy_coef,
+                                  int fdz_len, size_t * lfdz_shift, float * lfdz_coef,
+                                  bdry_t bdry_d, 
+                                  const int myid, const int verbose)
 {
   size_t ix = blockIdx.x * blockDim.x + threadIdx.x;
   size_t iy = blockIdx.y * blockDim.y + threadIdx.y;
   size_t iz = blockIdx.z * blockDim.z + threadIdx.z;
-  float *matVx2Vz = bdryfree.matVx2Vz2;
-  float *matVy2Vz = bdryfree.matVy2Vz2;
+  float *matVx2Vz = bdry_d.matVx2Vz2;
+  float *matVy2Vz = bdry_d.matVy2Vz2;
   // local
   size_t iptr, iptr_a;
   float coef_A, coef_B, coef_D, coef_B_minus_1;
@@ -710,12 +709,12 @@ sv_eq1st_curv_col_el_vti_rhs_cfspml_gpu(int idim, int iside,
   int n_fd;
 
   // get index into local var
-  int abs_ni1 = bdrypml.ni1[idim][iside];
-  int abs_ni2 = bdrypml.ni2[idim][iside];
-  int abs_nj1 = bdrypml.nj1[idim][iside];
-  int abs_nj2 = bdrypml.nj2[idim][iside];
-  int abs_nk1 = bdrypml.nk1[idim][iside];
-  int abs_nk2 = bdrypml.nk2[idim][iside];
+  int abs_ni1 = bdry_d.ni1[idim][iside];
+  int abs_ni2 = bdry_d.ni2[idim][iside];
+  int abs_nj1 = bdry_d.nj1[idim][iside];
+  int abs_nj2 = bdry_d.nj2[idim][iside];
+  int abs_nk1 = bdry_d.nk1[idim][iside];
+  int abs_nk2 = bdry_d.nk2[idim][iside];
 
   
   int abs_ni = abs_ni2-abs_ni1+1; 
@@ -733,11 +732,11 @@ sv_eq1st_curv_col_el_vti_rhs_cfspml_gpu(int idim, int iside,
   // for free surface
   float Dx_DzVx,Dy_DzVx,Dx_DzVy,Dy_DzVy,Dx_DzVz,Dy_DzVz;
   // get coef for this face
-  float * ptr_coef_A = bdrypml.A[idim][iside];
-  float * ptr_coef_B = bdrypml.B[idim][iside];
-  float * ptr_coef_D = bdrypml.D[idim][iside];
+  float * ptr_coef_A = bdry_d.A[idim][iside];
+  float * ptr_coef_B = bdry_d.B[idim][iside];
+  float * ptr_coef_D = bdry_d.D[idim][iside];
 
-  bdrypml_auxvar_t *auxvar = &(bdrypml.auxvar[idim][iside]);
+  bdrypml_auxvar_t *auxvar = &(bdry_d.auxvar[idim][iside]);
 
   // get pml vars
   float * abs_vars_cur = auxvar->cur;
@@ -841,7 +840,7 @@ sv_eq1st_curv_col_el_vti_rhs_cfspml_gpu(int idim, int iside,
       // add contributions from free surface condition
       //  not consider timg because conflict with main cfspml,
       //     need to revise in the future if required
-      if (bdryfree.is_at_sides[CONST_NDIM-1][1]==1 && (iz+abs_nk1)==nk2)
+      if (bdry_d.is_sides_free[CONST_NDIM-1][1]==1 && (iz+abs_nk1)==nk2)
       {
         // zeta derivatives
         size_t ij = ((ix+abs_ni1) + (iy+abs_nj1) * siz_line)*9;
@@ -965,7 +964,7 @@ sv_eq1st_curv_col_el_vti_rhs_cfspml_gpu(int idim, int iside,
       pml_hTxy[iptr_a] = coef_D * hTxy_rhs - coef_A * pml_Txy[iptr_a];
 
       // add contributions from free surface condition
-      if (bdryfree.is_at_sides[CONST_NDIM-1][1]==1 && (iz+abs_nk1)==nk2)
+      if (bdry_d.is_sides_free[CONST_NDIM-1][1]==1 && (iz+abs_nk1)==nk2)
       {
         // zeta derivatives
         size_t ij = ((ix+abs_ni1) + (iy+abs_nj1) * siz_line)*9;
@@ -1099,11 +1098,11 @@ sv_eq1st_curv_col_el_vti_rhs_cfspml_gpu(int idim, int iside,
  ******************************************************************************/
 
 __global__ void
-sv_eq1st_curv_col_el_vti_dvh2dvz_gpu(gdinfo_t        gdinfo_d,
-                                     gdcurv_metric_t metric_d,
-                                     md_t       md_d,
-                                     bdryfree_t      bdryfree_d,
-                                     const int verbose)
+sv_curv_col_el_vti_dvh2dvz_gpu(gdinfo_t        gdinfo_d,
+                               gdcurv_metric_t metric_d,
+                               md_t       md_d,
+                               bdry_t     bdry_d,
+                               const int verbose)
 {
   int ni1 = gdinfo_d.ni1;
   int ni2 = gdinfo_d.ni2;
@@ -1135,8 +1134,8 @@ sv_eq1st_curv_col_el_vti_dvh2dvz_gpu(gdinfo_t        gdinfo_d,
   float * c55d = md_d.c55;
   float * c66d = md_d.c66;
 
-  float *matVx2Vz = bdryfree_d.matVx2Vz2;
-  float *matVy2Vz = bdryfree_d.matVy2Vz2;
+  float *matVx2Vz = bdry_d.matVx2Vz2;
+  float *matVy2Vz = bdry_d.matVy2Vz2;
 
   float A[3][3], B[3][3], C[3][3];
   float AB[3][3], AC[3][3];

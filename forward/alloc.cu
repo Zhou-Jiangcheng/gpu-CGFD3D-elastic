@@ -223,60 +223,70 @@ int init_src_device(src_t *src, src_t *src_d)
   return 0;
 }
 
-int init_bdryfree_device(gdinfo_t *gdinfo, bdryfree_t *bdryfree, bdryfree_t *bdryfree_d)
+int init_bdry_device(gdinfo_t *gdinfo, bdry_t *bdry, bdry_t *bdry_d)
 {
   int nx = gdinfo->nx;
   int ny = gdinfo->ny;
+  int nz = gdinfo->nz;
 
-  memcpy(bdryfree_d,bdryfree,sizeof(bdryfree_t));
-  
-  if (bdryfree->is_at_sides[CONST_NDIM-1][1] == 1)
+  memcpy(bdry_d,bdry,sizeof(bdry_t));
+  // copy bdryfree
+  if (bdry_d->is_sides_free[CONST_NDIM-1][1] == 1)
   {
-    bdryfree_d->matVx2Vz2   = (float *) cuda_malloc(sizeof(float)*nx*ny*CONST_NDIM*CONST_NDIM);
-    bdryfree_d->matVy2Vz2   = (float *) cuda_malloc(sizeof(float)*nx*ny*CONST_NDIM*CONST_NDIM);
+    bdry_d->matVx2Vz2   = (float *) cuda_malloc(sizeof(float)*nx*ny*CONST_NDIM*CONST_NDIM);
+    bdry_d->matVy2Vz2   = (float *) cuda_malloc(sizeof(float)*nx*ny*CONST_NDIM*CONST_NDIM);
 
-    CUDACHECK(cudaMemcpy(bdryfree_d->matVx2Vz2, bdryfree->matVx2Vz2, sizeof(float)*nx*ny*CONST_NDIM*CONST_NDIM, cudaMemcpyHostToDevice));
-    CUDACHECK(cudaMemcpy(bdryfree_d->matVy2Vz2, bdryfree->matVy2Vz2, sizeof(float)*nx*ny*CONST_NDIM*CONST_NDIM, cudaMemcpyHostToDevice));
+    CUDACHECK(cudaMemcpy(bdry_d->matVx2Vz2, bdry->matVx2Vz2, sizeof(float)*nx*ny*CONST_NDIM*CONST_NDIM, cudaMemcpyHostToDevice));
+    CUDACHECK(cudaMemcpy(bdry_d->matVy2Vz2, bdry->matVy2Vz2, sizeof(float)*nx*ny*CONST_NDIM*CONST_NDIM, cudaMemcpyHostToDevice));
   }
 
-  return 0;
-}
+  // copy bdrypml
+  if (bdry_d->is_enable_pml == 1)
+  {
+    for(int idim=0; idim<CONST_NDIM; idim++){
+      for(int iside=0; iside<2; iside++){
+        if(bdry_d->is_sides_pml[idim][iside] == 1){
+          int npoints = bdry_d->num_of_layers[idim][iside] + 1;
+          bdry_d->A[idim][iside]   = (float *) cuda_malloc(npoints * sizeof(float));
+          bdry_d->B[idim][iside]   = (float *) cuda_malloc(npoints * sizeof(float));
+          bdry_d->D[idim][iside]   = (float *) cuda_malloc(npoints * sizeof(float));
+          CUDACHECK(cudaMemcpy(bdry_d->A[idim][iside],bdry->A[idim][iside],npoints*sizeof(float),cudaMemcpyHostToDevice));
+          CUDACHECK(cudaMemcpy(bdry_d->B[idim][iside],bdry->B[idim][iside],npoints*sizeof(float),cudaMemcpyHostToDevice));
+          CUDACHECK(cudaMemcpy(bdry_d->D[idim][iside],bdry->D[idim][iside],npoints*sizeof(float),cudaMemcpyHostToDevice));
+          } else {
+          bdry_d->A[idim][iside] = NULL;
+          bdry_d->B[idim][iside] = NULL;
+          bdry_d->D[idim][iside] = NULL;
+        }
+      }
+    }
 
-int init_bdrypml_device(gdinfo_t *gdinfo, bdrypml_t *bdrypml, bdrypml_t *bdrypml_d)
-{
-  memcpy(bdrypml_d,bdrypml,sizeof(bdrypml_t));
-  for(int idim=0; idim<CONST_NDIM; idim++){
-    for(int iside=0; iside<2; iside++){
-      if(bdrypml_d->is_at_sides[idim][iside] == 1){
-        int npoints = bdrypml_d->num_of_layers[idim][iside] + 1;
-        bdrypml_d->A[idim][iside]   = (float *) cuda_malloc(npoints * sizeof(float));
-        bdrypml_d->B[idim][iside]   = (float *) cuda_malloc(npoints * sizeof(float));
-        bdrypml_d->D[idim][iside]   = (float *) cuda_malloc(npoints * sizeof(float));
-        CUDACHECK(cudaMemcpy(bdrypml_d->A[idim][iside],bdrypml->A[idim][iside],npoints*sizeof(float),cudaMemcpyHostToDevice));
-        CUDACHECK(cudaMemcpy(bdrypml_d->B[idim][iside],bdrypml->B[idim][iside],npoints*sizeof(float),cudaMemcpyHostToDevice));
-        CUDACHECK(cudaMemcpy(bdrypml_d->D[idim][iside],bdrypml->D[idim][iside],npoints*sizeof(float),cudaMemcpyHostToDevice));
+    for(int idim=0; idim<CONST_NDIM; idim++){
+      for(int iside=0; iside<2; iside++){
+        bdrypml_auxvar_t *auxvar_d = &(bdry_d->auxvar[idim][iside]);
+        if(auxvar_d->siz_icmp > 0){
+          auxvar_d->var = (float *) cuda_malloc(sizeof(float)*auxvar_d->siz_ilevel*auxvar_d->nlevel); 
+          CUDACHECK(cudaMemset(auxvar_d->var,0,sizeof(float)*auxvar_d->siz_ilevel*auxvar_d->nlevel));
         } else {
-        bdrypml_d->A[idim][iside]   = NULL;
-        bdrypml_d->B[idim][iside]   = NULL;
-        bdrypml_d->D[idim][iside]   = NULL;
+        auxvar_d->var = NULL;
+        }
       }
     }
   }
-
-  for(int idim=0; idim<CONST_NDIM; idim++){
-    for(int iside=0; iside<2; iside++){
-      bdrypml_auxvar_t *auxvar_d = &(bdrypml_d->auxvar[idim][iside]);
-      if(auxvar_d->siz_icmp > 0){
-        auxvar_d->var = (float *) cuda_malloc(sizeof(float)*auxvar_d->siz_ilevel*auxvar_d->nlevel); 
-        CUDACHECK(cudaMemset(auxvar_d->var,0,sizeof(float)*auxvar_d->siz_ilevel*auxvar_d->nlevel));
-      } else {
-      auxvar_d->var = NULL;
-      }
-    }
+  // copy bdryexp
+  if (bdry_d->is_enable_ablexp == 1)
+  {
+    bdry_d->ablexp_Ex = (float *) cuda_malloc(nx * sizeof(float));
+    bdry_d->ablexp_Ey = (float *) cuda_malloc(ny * sizeof(float));
+    bdry_d->ablexp_Ez = (float *) cuda_malloc(nz * sizeof(float));
+    CUDACHECK(cudaMemcpy(bdry_d->ablexp_Ex,bdry->ablexp_Ex,nx*sizeof(float),cudaMemcpyHostToDevice));
+    CUDACHECK(cudaMemcpy(bdry_d->ablexp_Ey,bdry->ablexp_Ey,ny*sizeof(float),cudaMemcpyHostToDevice));
+    CUDACHECK(cudaMemcpy(bdry_d->ablexp_Ez,bdry->ablexp_Ez,nz*sizeof(float),cudaMemcpyHostToDevice));
   }
 
   return 0;
 }
+
 
 int init_wave_device(wav_t *wav, wav_t *wav_d)
 {
@@ -443,35 +453,39 @@ int dealloc_src_device(src_t src_d)
   return 0;
 }
 
-int dealloc_bdryfree_device(bdryfree_t bdryfree_d)
+int dealloc_bdry_device(bdry_t bdry_d)
 {
-  if (bdryfree_d.is_at_sides[CONST_NDIM-1][1] == 1)
+  if (bdry_d.is_sides_free[CONST_NDIM-1][1] == 1)
   {
-    CUDACHECK(cudaFree(bdryfree_d.matVx2Vz2)); 
-    CUDACHECK(cudaFree(bdryfree_d.matVy2Vz2)); 
+    CUDACHECK(cudaFree(bdry_d.matVx2Vz2)); 
+    CUDACHECK(cudaFree(bdry_d.matVy2Vz2)); 
   }
-  return 0;
-}
-
-int dealloc_bdrypml_device(bdrypml_t bdrypml_d)
-{
-  for(int idim=0; idim<CONST_NDIM; idim++){
-    for(int iside=0; iside<2; iside++){
-      if(bdrypml_d.is_at_sides[idim][iside] == 1){
-        CUDACHECK(cudaFree(bdrypml_d.A[idim][iside])); 
-        CUDACHECK(cudaFree(bdrypml_d.B[idim][iside])); 
-        CUDACHECK(cudaFree(bdrypml_d.D[idim][iside])); 
+  if (bdry_d.is_enable_pml == 1)
+  {
+    for(int idim=0; idim<CONST_NDIM; idim++){
+      for(int iside=0; iside<2; iside++){
+        if(bdry_d.is_sides_pml[idim][iside] == 1){
+          CUDACHECK(cudaFree(bdry_d.A[idim][iside])); 
+          CUDACHECK(cudaFree(bdry_d.B[idim][iside])); 
+          CUDACHECK(cudaFree(bdry_d.D[idim][iside])); 
+        }
       }
-    }
-  }  
-  for(int idim=0; idim<CONST_NDIM; idim++){
-    for(int iside=0; iside<2; iside++){
-      bdrypml_auxvar_t *auxvar_d = &(bdrypml_d.auxvar[idim][iside]);
-      if(auxvar_d->siz_icmp > 0){
-        CUDACHECK(cudaFree(auxvar_d->var)); 
+    }  
+    for(int idim=0; idim<CONST_NDIM; idim++){
+      for(int iside=0; iside<2; iside++){
+        bdrypml_auxvar_t *auxvar_d = &(bdry_d.auxvar[idim][iside]);
+        if(auxvar_d->siz_icmp > 0){
+          CUDACHECK(cudaFree(auxvar_d->var)); 
+        }
       }
-    }
-  }  
+    }  
+  }
+  if (bdry_d.is_enable_ablexp == 1)
+  {
+    CUDACHECK(cudaFree(bdry_d.ablexp_Ex)); 
+    CUDACHECK(cudaFree(bdry_d.ablexp_Ey));
+    CUDACHECK(cudaFree(bdry_d.ablexp_Ez));
+  }
   return 0;
 }
 
@@ -480,4 +494,3 @@ int dealloc_wave_device(wav_t wav_d)
   CUDACHECK(cudaFree(wav_d.v5d)); 
   return 0;
 }
-

@@ -20,7 +20,7 @@
 #include "blk_t.h"
 
 #include "media_discrete_model.h"
-#include "sv_eq1st_curv_col.h"
+#include "drv_rk_curv_col.h"
 #include "cuda_common.h"
 
 int main(int argc, char** argv)
@@ -104,8 +104,7 @@ int main(int argc, char** argv)
   md_t            *md            = blk->md;
   wav_t           *wav           = blk->wav;
   src_t           *src           = blk->src;
-  bdryfree_t      *bdryfree      = blk->bdryfree;
-  bdrypml_t       *bdrypml       = blk->bdrypml;
+  bdry_t          *bdry          = blk->bdry;
   iorecv_t        *iorecv        = blk->iorecv;
   ioline_t        *ioline        = blk->ioline;
   ioslice_t       *ioslice       = blk->ioslice;
@@ -400,7 +399,7 @@ int main(int argc, char** argv)
 
         if (md->medium_type == CONST_MEDIUM_ELASTIC_ISO)
         {
-            media_bin2model_el_iso(md->rho,md->lambda, md->mu, 
+          media_bin2model_el_iso(md->rho,md->lambda, md->mu, 
                                    gdcurv->x3d, gdcurv->y3d, gdcurv->z3d,
                                    gdcurv->nx, gdcurv->ny, gdcurv->nz,
                                    gdcurv->xmin,gdcurv->xmax,
@@ -412,14 +411,14 @@ int main(int argc, char** argv)
                                    par->bin_origin,
                                    par->bin_file_rho,
                                    par->bin_file_vp,
-                                   par->bin_file_vs);
+                                   par->bin_file_vs);//*/
         }
         else if (md->medium_type == CONST_MEDIUM_ELASTIC_VTI)
         {
-          fprintf(stdout,"error: not implement reading bin file for MEDIUM_ELASTIC_VTI\n");
-          fflush(stdout);
-          exit(1);
-            /*
+          fprintf(stdout," implement reading bin file for MEDIUM_ELASTIC_VTI\n");
+         // fflush(stdout);
+         // exit(1);
+            
             media_bin2model_el_vti_thomsen(md->rho, md->c11, md->c33,
                                      md->c55,md->c66,md->c13,
                                      gdcurv->x3d, gdcurv->y3d, gdcurv->z3d,
@@ -433,10 +432,11 @@ int main(int argc, char** argv)
                                      par->bin_origin,
                                      par->bin_file_rho,
                                      par->bin_file_vp,
+				                             par->bin_file_vs,
                                      par->bin_file_epsilon,
-                                     par->bin_file_delta,
-                                     par->bin_file_gamma);
-          */
+                                     par->bin_file_delta);
+                                    // par->bin_file_gamma);//*/
+          
         }
         else if (md->medium_type == CONST_MEDIUM_ELASTIC_ANISO)
         {
@@ -666,10 +666,11 @@ int main(int argc, char** argv)
 //-------------------------------------------------------------------------------
 
   if (myid==0 && verbose>0) fprintf(stdout,"setup absorbingg boundary ...\n"); 
-  
+  bdry_init(bdry, gdinfo->nx, gdinfo->ny, gdinfo->nz);
+
   if (par->bdry_has_cfspml == 1)
   {
-    bdry_pml_set(gdinfo, gdcurv, wav, bdrypml,
+    bdry_pml_set(gdinfo, gdcurv, wav, bdry,
                  mympi->neighid,
                  par->cfspml_is_sides,
                  par->abs_num_of_layers,
@@ -678,16 +679,29 @@ int main(int argc, char** argv)
                  par->cfspml_velocity,
                  verbose);
   }
+  
+  if (par->bdry_has_ablexp == 1)
+  {
+    if (myid==0 && verbose>0) fprintf(stdout,"setup sponge layer ...\n"); 
+
+    bdry_ablexp_set(gdinfo, gdcurv, wav, bdry,
+                    mympi->neighid,
+                    par->ablexp_is_sides,
+                    par->abs_num_of_layers,
+                    par->ablexp_velocity,
+                    dt,
+                    mympi->topoid,
+                    verbose);
+  }
 
 //-------------------------------------------------------------------------------
 //-- free surface preproc
 //-------------------------------------------------------------------------------
 
-  if (myid==0 && verbose>0) fprintf(stdout,"cal free surface matrix ...\n"); 
-
   if (par->bdry_has_free == 1)
   {
-    bdry_free_set(gdinfo,bdryfree, mympi->neighid, par->free_is_sides, verbose);
+    if (myid==0 && verbose>0) fprintf(stdout,"cal free surface matrix ...\n"); 
+    bdry_free_set(gdinfo, bdry, mympi->neighid, par->free_is_sides, verbose);
   }
 
 //-------------------------------------------------------------------------------
@@ -723,16 +737,15 @@ int main(int argc, char** argv)
   
   time_t t_start = time(NULL);
   
-  sv_eq1st_curv_col_allstep(fd,gdinfo,gdcurv_metric,md,
-                            src,bdryfree,bdrypml,
-                            wav, mympi,
-                            iorecv,ioline,ioslice,iosnap,
-                            dt,nt_total,t0,
-                            blk->output_fname_part,
-                            blk->output_dir,
-                            par->check_nan_every_nummber_of_steps,
-                            par->output_all,
-                            verbose);
+  drv_rk_curv_col_allstep(fd, gdinfo, gdcurv_metric, md,
+                          src, bdry, wav, mympi,
+                          iorecv, ioline, ioslice, iosnap,
+                          dt, nt_total, t0,
+                          blk->output_fname_part,
+                          blk->output_dir,
+                          par->check_nan_every_nummber_of_steps,
+                          par->output_all,
+                          verbose);
   
   time_t t_end = time(NULL);
   

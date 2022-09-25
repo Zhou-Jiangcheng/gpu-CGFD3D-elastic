@@ -9,6 +9,7 @@
 #define GD_TILE_NX 4
 #define GD_TILE_NY 4
 #define GD_TILE_NZ 4
+
 /*************************************************
  * structure
  *************************************************/
@@ -231,17 +232,6 @@ gd_cart_init_set(gdinfo_t *gdinfo, gd_t *gdcart,
   float dy, float y0_glob,
   float dz, float z0_glob);
 
-__host__ __device__ int
-gd_cart_coord_to_glob_indx(gdinfo_t *gdinfo,
-                           gd_t *gdcart,
-                           float sx,
-                           float sy,
-                           float sz,
-                           MPI_Comm comm,
-                           int myid,
-                           int   *ou_si, int *ou_sj, int *ou_sk,
-                           float *ou_sx_inc, float *ou_sy_inc, float *ou_sz_inc);
-
 int
 gd_curv_coord_to_glob_indx(gdinfo_t *gdinfo,
                            gd_t *gdcurv,
@@ -252,62 +242,6 @@ gd_curv_coord_to_glob_indx(gdinfo_t *gdinfo,
                            int myid,
                            int   *ou_si, int *ou_sj, int *ou_sk,
                            float *ou_sx_inc, float *ou_sy_inc, float *ou_sz_inc);
-__device__ int
-gd_curv_coord_to_glob_indx_gpu(gdinfo_t *gdinfo,
-                               gd_t *gdcurv,
-                               float sx,
-                               float sy,
-                               float sz,
-                               MPI_Comm comm,
-                               int myid,
-                               int *ou_si, int *ou_sj, int *ou_sk,
-                               float *ou_sx_inc, float *ou_sy_inc, float *ou_sz_inc);
-
-
-__host__ __device__ int
-gd_curv_coord_to_local_indx(gdinfo_t *gdinfo,
-                            gd_t *gd,
-                            float sx, float sy, float sz,
-                            int *si, int *sj, int *sk,
-                            float *sx_inc, float *sy_inc, float *sz_inc);
-
-__host__ __device__
-int gd_curv_depth_to_axis(gdinfo_t *gdinfo,
-                          gd_t  *gd,
-                          float sx,
-                          float sy,
-                          float *sz,
-                          MPI_Comm comm,
-                          int myid);
-
-__host__ __device__ int
-gd_curv_coord2shift_sample(float sx, float sy, float sz, 
-    int num_points,
-    float *points_x, 
-    float *points_y,
-    float *points_z,
-    int    nx_sample,
-    int    ny_sample,
-    int    nz_sample,
-    float *si_shift, 
-    float *sj_shift,
-    float *sk_shift);
-
-__host__ __device__ int
-gd_curv_coord2index_sample(float sx, float sy, float sz, 
-    int num_points,
-    float *points_x, // x coord of all points
-    float *points_y,
-    float *points_z,
-    float *points_i, // curv coord of all points
-    float *points_j,
-    float *points_k,
-    int    nx_sample,
-    int    ny_sample,
-    int    nz_sample,
-    float *si_curv, // interped curv coord
-    float *sj_curv,
-    float *sk_curv);
 
   int
 gd_curv_coord2index_rdinterp(float sx, float sy, float sz, 
@@ -331,6 +265,69 @@ gd_coord_get_y(gd_t *gd, int i, int j, int k);
 float
 gd_coord_get_z(gd_t *gd, int i, int j, int k);
 
+int
+gd_print(gd_t *gd);
+
+
+__host__ __device__
+int
+gd_cart_coord_to_glob_indx(gdinfo_t *gdinfo,
+                           gd_t *gdcart,
+                           float sx,
+                           float sy,
+                           float sz,
+                           MPI_Comm comm,
+                           int myid,
+                           int   *ou_si, int *ou_sj, int *ou_sk,
+                           float *ou_sx_inc, float *ou_sy_inc, float *ou_sz_inc);
+
+
+__host__ __device__
+int
+gd_curv_coord_to_local_indx(gdinfo_t *gdinfo,
+                            gd_t *gd,
+                            float sx, float sy, float sz,
+                            int *si, int *sj, int *sk,
+                            float *sx_inc, float *sy_inc, float *sz_inc);
+
+__host__ __device__
+int gd_curv_depth_to_axis(gdinfo_t *gdinfo,
+                          gd_t  *gd,
+                          float sx,
+                          float sy,
+                          float *sz,
+                          MPI_Comm comm,
+                          int myid);
+
+__host__ __device__
+int gd_curv_coord2shift_sample(float sx, float sy, float sz, 
+                               int num_points,
+                               float *points_x, 
+                               float *points_y,
+                               float *points_z,
+                               int    nx_sample,
+                               int    ny_sample,
+                               int    nz_sample,
+                               float *si_shift, 
+                               float *sj_shift,
+                               float *sk_shift);
+
+__host__ __device__
+int gd_curv_coord2index_sample(float sx, float sy, float sz, 
+                int num_points,
+                float *points_x, // x coord of all points
+                float *points_y,
+                float *points_z,
+                float *points_i, // curv coord of all points
+                float *points_j,
+                float *points_k,
+                int    nx_sample,
+                int    ny_sample,
+                int    nz_sample,
+                float *si_curv, // interped curv coord
+                float *sj_curv,
+                float *sk_curv);
+
 __host__ __device__
 int isPointInHexahedron_c(float px,  float py,  float pz,
                         float *vx, float *vy, float *vz);
@@ -341,7 +338,16 @@ int point2face(float *hexa1d,float *point, float *p2f);
 __host__ __device__
 int face_normal(float (*hexa2d)[3], float *normal_unit);
 
-int
-gd_print(gd_t *gd);
+__device__ int
+gd_curv_coord_to_glob_indx_gpu(gdinfo_t *gdinfo,
+                               gd_t *gdcurv,
+                               float sx,
+                               float sy,
+                               float sz,
+                               MPI_Comm comm,
+                               int myid,
+                               int *ou_si, int *ou_sj, int *ou_sk,
+                               float *ou_sx_inc, float *ou_sy_inc, float *ou_sz_inc);
+
 
 #endif

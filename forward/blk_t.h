@@ -9,8 +9,7 @@
 #include "md_t.h"
 #include "wav_t.h"
 #include "src_t.h"
-#include "bdry_free.h"
-#include "bdry_pml.h"
+#include "bdry_t.h"
 #include "io_funcs.h"
 
 /*******************************************************************************
@@ -27,7 +26,6 @@ typedef struct
 
   // fd
   fd_t    *fd;     // collocated grid fd
-  fdstg_t *fdstg;  // staggered gridfd
 
   // mpi
   mympi_t *mympi;
@@ -50,14 +48,7 @@ typedef struct
   // source term
   src_t *src;
   
-  // free surface
-  bdryfree_t *bdryfree;
-  
-  // pml
-  bdrypml_t *bdrypml;
-  // exp
-  //bdryexp_t *bdryexp;
-  
+  bdry_t *bdry;
   // io
   iorecv_t  *iorecv;
   ioline_t  *ioline;
@@ -107,25 +98,6 @@ blk_set_output(blk_t *blk,
                char *grid_export_dir,
                char *media_export_dir,
                const int verbose);
-
-void
-blk_colcent_mesg_init(mympi_t *mympi,
-                int ni,
-                int nj,
-                int nk,
-                int fdx_nghosts,
-                int fdy_nghosts,
-                int num_of_vars);
-
-void
-blk_colcent_pack_mesg(float *w_cur,float *sbuff,
-                 int num_of_vars, gdinfo_t *gdinfo,
-                 int   fdx_nghosts, int   fdy_nghosts);
-
-void
-blk_colcent_unpack_mesg(float *rbuff,float *w_cur,
-                 int num_of_vars, gdinfo_t *gdinfo,
-                 int   fdx_nghosts, int   fdy_nghosts);
 
 void
 blk_macdrp_mesg_init(mympi_t *mympi,
@@ -197,64 +169,11 @@ blk_macdrp_unpack_mesg_y2(
            float *w_cur, float *rbuff_y2, size_t siz_line, size_t siz_slice, size_t siz_volume,
            int ni1, int nj2, int nk1, int ni, int ny1_g, int nk, int *neighid);
 
-
 int
 blk_print(blk_t *blk);
 
-void
-blk_stg_el1st_mesg_init(mympi_t *mympi,
-                int ni,
-                int nj,
-                int nk,
-                int fdx_nghosts,
-                int fdy_nghosts);
-
-void
-blk_stg_el1st_pack_mesg_stress(fdstg_t *fd, 
-            gdinfo_t *gdinfo, wav_t *wav, float *sbuff);
-
-void
-blk_stg_el1st_unpack_mesg_stress(fdstg_t *fd,mympi_t *mympi, gdinfo_t *gdinfo, wav_t *wav,
-    float *rbuff, size_t siz_rbuff);
-
-void
-blk_stg_el1st_pack_mesg_vel(fdstg_t *fd, 
-            gdinfo_t *gdinfo, wav_t *wav, float *sbuff);
-
-void
-blk_stg_el1st_unpack_mesg_vel(fdstg_t *fd,mympi_t *mympi, gdinfo_t *gdinfo, wav_t *wav,
-      float *rbuff, size_t siz_rbuff);
-
-void
-blk_stg_ac_mesg_init(mympi_t *mympi,
-                int ni,
-                int nj,
-                int nk,
-                int fdx_nghosts,
-                int fdy_nghosts);
-
-void
-blk_stg_ac1st_pack_mesg_pressure(fdstg_t *fd, gdinfo_t *gdinfo, wav_t *wav,
-      float *sbuff);
-
-void
-blk_stg_ac1st_unpack_mesg_pressure(fdstg_t *fd,mympi_t *mympi, gdinfo_t *gdinfo, wav_t *wav,
-    float *rbuff, size_t siz_rbuff);
-
-void
-blk_stg_ac1st_pack_mesg_vel(fdstg_t *fd, 
-            gdinfo_t *gdinfo, wav_t *wav, float *sbuff);
-
-void
-blk_stg_ac1st_unpack_mesg_vel(fdstg_t *fd,mympi_t *mympi, gdinfo_t *gdinfo, wav_t *wav,
-      float *rbuff, size_t siz_rbuff);
 int
 blk_dt_esti_curv(gdinfo_t *gdinfo, gd_t *gdcurv, md_t *md,
-    float CFL, float *dtmax, float *dtmaxVp, float *dtmaxL,
-    int *dtmaxi, int *dtmaxj, int *dtmaxk);
-
-int
-blk_dt_esti_cart(gdinfo_t *gdinfo, gd_t *gdcart, md_t *md,
     float CFL, float *dtmax, float *dtmaxVp, float *dtmaxL,
     int *dtmaxi, int *dtmaxj, int *dtmaxk);
 

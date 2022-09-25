@@ -207,10 +207,6 @@ par_read_from_str(const char *str, par_t *par)
     par->time_window_length = par->size_of_time_step * par->number_of_time_steps;
   }
 
-  //par->time_end   = par->time_start + 
-  //        par->number_of_time_steps * par->size_of_time_step;
-  //int     nt_total = (int) ((par->time_end - par->time_start) / dt+0.5);
-
   //
   // boundary default values
   //
@@ -219,93 +215,143 @@ par_read_from_str(const char *str, par_t *par)
       par->abs_num_of_layers[idim][iside] = 0;
       par->cfspml_is_sides[idim][iside] = 0;
       par->free_is_sides  [idim][iside] = 0;
+      par->ablexp_is_sides[idim][iside] = 0;
     }
   }
   par->bdry_has_cfspml = 0;
   par->bdry_has_free   = 0;
+  par->bdry_has_ablexp = 0;
 
   // x1 boundary, no default yet
   if (item = cJSON_GetObjectItem(root, "boundary_x_left"))
   {
     if (subitem = cJSON_GetObjectItem(item, "cfspml")) {
-       sprintf(par->boundary_type_name[0], "%s", "cfspml");
-       par_read_json_cfspml(subitem,
-                            &(par->abs_num_of_layers[0][0]),
-                            &(par->cfspml_alpha_max [0][0]),
-                            &(par->cfspml_beta_max  [0][0]),
-                            &(par->cfspml_velocity  [0][0]));
+      sprintf(par->boundary_type_name[0], "%s", "cfspml");
+      par_read_json_cfspml(subitem,
+                           &(par->abs_num_of_layers[0][0]),
+                           &(par->cfspml_alpha_max [0][0]),
+                           &(par->cfspml_beta_max  [0][0]),
+                           &(par->cfspml_velocity  [0][0]));
       par->cfspml_is_sides[0][0] = 1;
       par->bdry_has_cfspml = 1;
+    }
+	  if (subitem = cJSON_GetObjectItem(item, "ablexp")) {
+      sprintf(par->boundary_type_name[0], "%s", "ablexp");
+      par_read_json_ablexp(subitem,
+                           &(par->abs_num_of_layers[0][0]),
+                           &(par->ablexp_velocity  [0][0]));
+      par->ablexp_is_sides[0][0] = 1;
+      par->bdry_has_ablexp = 1;
     }
   }
   // x2 boundary, no default yet
   if (item = cJSON_GetObjectItem(root, "boundary_x_right"))
   {
     if (subitem = cJSON_GetObjectItem(item, "cfspml")) {
-       sprintf(par->boundary_type_name[1], "%s", "cfspml");
-       par_read_json_cfspml(subitem,
-                            &(par->abs_num_of_layers[0][1]),
-                            &(par->cfspml_alpha_max [0][1]),
-                            &(par->cfspml_beta_max  [0][1]),
-                            &(par->cfspml_velocity  [0][1]));
+      sprintf(par->boundary_type_name[1], "%s", "cfspml");
+      par_read_json_cfspml(subitem,
+                           &(par->abs_num_of_layers[0][1]),
+                           &(par->cfspml_alpha_max [0][1]),
+                           &(par->cfspml_beta_max  [0][1]),
+                           &(par->cfspml_velocity  [0][1]));
       par->cfspml_is_sides[0][1] = 1;
       par->bdry_has_cfspml = 1;
+    }
+	  if (subitem = cJSON_GetObjectItem(item, "ablexp")) {
+      sprintf(par->boundary_type_name[1], "%s", "ablexp");
+      par_read_json_ablexp(subitem,
+                           &(par->abs_num_of_layers[0][1]),
+                           &(par->ablexp_velocity  [0][1]));
+      par->ablexp_is_sides[0][1] = 1;
+      par->bdry_has_ablexp = 1;
     }
   }
   // y1 boundary, no default yet
   if (item = cJSON_GetObjectItem(root, "boundary_y_front"))
   {
     if (subitem = cJSON_GetObjectItem(item, "cfspml")) {
-       sprintf(par->boundary_type_name[2], "%s", "cfspml");
-       par_read_json_cfspml(subitem,
-                            &(par->abs_num_of_layers[1][0]),
-                            &(par->cfspml_alpha_max [1][0]),
-                            &(par->cfspml_beta_max  [1][0]),
-                            &(par->cfspml_velocity  [1][0]));
+      sprintf(par->boundary_type_name[2], "%s", "cfspml");
+      par_read_json_cfspml(subitem,
+                           &(par->abs_num_of_layers[1][0]),
+                           &(par->cfspml_alpha_max [1][0]),
+                           &(par->cfspml_beta_max  [1][0]),
+                           &(par->cfspml_velocity  [1][0]));
       par->cfspml_is_sides[1][0] = 1;
       par->bdry_has_cfspml = 1;
+    }
+	  if (subitem = cJSON_GetObjectItem(item, "ablexp")) {
+      sprintf(par->boundary_type_name[2], "%s", "ablexp");
+      par_read_json_ablexp(subitem,
+                           &(par->abs_num_of_layers[1][0]),
+                           &(par->ablexp_velocity  [1][0]));
+      par->ablexp_is_sides[1][0] = 1;
+      par->bdry_has_ablexp = 1;
     }
   }
   // y2 boundary, no default yet
   if (item = cJSON_GetObjectItem(root, "boundary_y_back"))
   {
     if (subitem = cJSON_GetObjectItem(item, "cfspml")) {
-       sprintf(par->boundary_type_name[3], "%s", "cfspml");
-       par_read_json_cfspml(subitem,
-                            &(par->abs_num_of_layers[1][1]),
-                            &(par->cfspml_alpha_max [1][1]),
-                            &(par->cfspml_beta_max  [1][1]),
-                            &(par->cfspml_velocity  [1][1]));
+      sprintf(par->boundary_type_name[3], "%s", "cfspml");
+      par_read_json_cfspml(subitem,
+                           &(par->abs_num_of_layers[1][1]),
+                           &(par->cfspml_alpha_max [1][1]),
+                           &(par->cfspml_beta_max  [1][1]),
+                           &(par->cfspml_velocity  [1][1]));
       par->cfspml_is_sides[1][1] = 1;
       par->bdry_has_cfspml = 1;
+    }
+	  if (subitem = cJSON_GetObjectItem(item, "ablexp")) {
+      sprintf(par->boundary_type_name[3], "%s", "ablexp");
+      par_read_json_ablexp(subitem,
+                           &(par->abs_num_of_layers[1][1]),
+                           &(par->ablexp_velocity  [1][1]));
+      par->ablexp_is_sides[1][1] = 1;
+      par->bdry_has_ablexp = 1;
     }
   }
   // z1 boundary, no default yet
   if (item = cJSON_GetObjectItem(root, "boundary_z_bottom"))
   {
     if (subitem = cJSON_GetObjectItem(item, "cfspml")) {
-       sprintf(par->boundary_type_name[4], "%s", "cfspml");
-       par_read_json_cfspml(subitem,
-                            &(par->abs_num_of_layers[2][0]),
-                            &(par->cfspml_alpha_max [2][0]),
-                            &(par->cfspml_beta_max  [2][0]),
-                            &(par->cfspml_velocity  [2][0]));
+      sprintf(par->boundary_type_name[4], "%s", "cfspml");
+      par_read_json_cfspml(subitem,
+                           &(par->abs_num_of_layers[2][0]),
+                           &(par->cfspml_alpha_max [2][0]),
+                           &(par->cfspml_beta_max  [2][0]),
+                           &(par->cfspml_velocity  [2][0]));
       par->cfspml_is_sides[2][0] = 1;
       par->bdry_has_cfspml = 1;
+    }
+	  if (subitem = cJSON_GetObjectItem(item, "ablexp")) {
+      sprintf(par->boundary_type_name[4], "%s", "ablexp");
+      par_read_json_ablexp(subitem,
+                           &(par->abs_num_of_layers[2][0]),
+                           &(par->ablexp_velocity  [2][0]));
+      par->ablexp_is_sides[2][0] = 1;
+      par->bdry_has_ablexp = 1;
     }
   }
   // z2 boundary, no default yet
   if (item = cJSON_GetObjectItem(root, "boundary_z_top"))
   {
     if (subitem = cJSON_GetObjectItem(item, "cfspml")) {
-       sprintf(par->boundary_type_name[5], "%s", "cfspml");
-       par_read_json_cfspml(subitem,
-                            &(par->abs_num_of_layers[2][1]),
-                            &(par->cfspml_alpha_max [2][1]),
-                            &(par->cfspml_beta_max  [2][1]),
-                            &(par->cfspml_velocity  [2][1]));
+      sprintf(par->boundary_type_name[5], "%s", "cfspml");
+      par_read_json_cfspml(subitem,
+                           &(par->abs_num_of_layers[2][1]),
+                           &(par->cfspml_alpha_max [2][1]),
+                           &(par->cfspml_beta_max  [2][1]),
+                           &(par->cfspml_velocity  [2][1]));
       par->cfspml_is_sides[2][1] = 1;
       par->bdry_has_cfspml = 1;
+    }
+	  if (subitem = cJSON_GetObjectItem(item, "ablexp")) {
+      sprintf(par->boundary_type_name[5], "%s", "ablexp");
+      par_read_json_ablexp(subitem,
+                           &(par->abs_num_of_layers[2][1]),
+                           &(par->ablexp_velocity  [2][1]));
+      par->ablexp_is_sides[2][1] = 1;
+      par->bdry_has_ablexp = 1;
     }
     if (subitem = cJSON_GetObjectItem(item, "free")) {
       sprintf(par->boundary_type_name[5], "%s", "free");
@@ -313,7 +359,6 @@ par_read_from_str(const char *str, par_t *par)
       par->bdry_has_free = 1;
     }
   }
-
   //
   //-- grid
   //
@@ -926,6 +971,23 @@ par_read_json_cfspml(cJSON *item,
   if (subitem = cJSON_GetObjectItem(item, "beta_max"))
   {
     *bmax = subitem->valuedouble;
+  }
+  if (subitem = cJSON_GetObjectItem(item, "ref_vel"))
+  {
+    *vel = subitem->valuedouble;
+  }
+}
+/*
+ * funcs to read ablexp para from json str
+ */
+void 
+par_read_json_ablexp(cJSON *item, int *nlay, float *vel)
+{
+  cJSON *subitem;
+
+  if (subitem = cJSON_GetObjectItem(item, "number_of_layers"))
+  {
+    *nlay = subitem->valueint;
   }
   if (subitem = cJSON_GetObjectItem(item, "ref_vel"))
   {

@@ -3,7 +3,7 @@
  */
 
 // todo:
-
+#include <unistd.h> 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -491,7 +491,9 @@ src_read_locate_file(gdinfo_t *gdinfo,
             sk = gd_info_ind_glphy2lcext_k(all_index[3*is+2], gdinfo);
             size_t iptr = si + sj * siz_line + sk * siz_slice;   
             float *mu3d = md->mu;
-            float mu =  mu3d[iptr]; 
+            float mu =  myz;
+            // mu < 0 means to use internal model mu value
+            if (mu < 0.0) { mu =  mu3d[iptr]; }
             //mxz is D, mxy is A,
             M0 += mu*mxz*mxy;
             src_muDA_to_moment(mxx,myy,mzz,mu,mxz,mxy,
@@ -531,7 +533,11 @@ src_read_locate_file(gdinfo_t *gdinfo,
               sk = gd_info_ind_glphy2lcext_k(all_index[3*is+2], gdinfo);
               size_t iptr = si + sj * siz_line + sk * siz_slice;   
               float *mu3d = md->mu;
-              float mu =  mu3d[iptr]; 
+
+              float mu =  m23[it];
+              // mu < 0 means to use internal model mu value
+              if (mu < 0.0) { mu =  mu3d[iptr]; }
+
               //m13[it] is v, m12[it] is A,
               M0 += mu*m13[it]*in_stf_dt*m12[it];
               src_muDA_to_moment(m11[it],m22[it],m33[it],mu,m13[it],m12[it],
@@ -596,10 +602,10 @@ src_read_locate_file(gdinfo_t *gdinfo,
       // time step, considering t0
       it_begin = (int) ( (wavelet_tstart - t0) / dt);
       it_end   = it_begin + max_nt - 1;
-
+  
       src->it_begin[is_local] = it_begin;
       src->it_end  [is_local] = it_end  ;
-
+    
       // set input t vector for interp 
       for(int it=0; it<in_stf_nt; it++)
       {
@@ -622,9 +628,14 @@ src_read_locate_file(gdinfo_t *gdinfo,
           {
             // time relative to start time of this source, considering diff from int conversion
             float t = it_to_it1 * dt + rk_stage_time[istage] * dt - t_shift;
-
-            float stf_val = src_cal_wavelet(t,wavelet_name,wavelet_coefs);
-            if (force_actived==1) {
+            float stf_val =src_cal_wavelet(t,wavelet_name,wavelet_coefs);
+	  /* if (strcmp(wavelet_name, "klauder")==0) {
+               float  B = Blackman_window(t, dt, wavelet_coefs[0]);
+               float  stf_val = stf_val*B;
+            }*/
+	     //printf("t,stf=%f, %g\n",t, stf_val);sleep(1);
+             //printf("wavname=%s\n",wavelet_name); 
+           if (force_actived==1) {
               src->Fx[iptr]  = stf_val * fx;
               src->Fy[iptr]  = stf_val * fy;
               src->Fz[iptr]  = stf_val * fz;
@@ -795,7 +806,16 @@ fun_gauss_deriv(float t, float a, float t0)
   f = exp(-(t-t0)*(t-t0)/(a*a))/(sqrtf(PI)*a)*(-2*(t-t0)/(a*a));
   return f;
 }
-
+//klauder
+float
+fun_klauder(float t, float t0, float f1, float f2, float T)
+{
+  float K = (f2-f1)/T;
+  float fM = (f2+f1)/2.0;
+  float f;
+  f = (sin(PI*K*t*(T-(t-t0))) * cos(2*PI*fM*(t-t0))) / (PI*K*(t-t0));
+    return f;
+}
 /*
  * get stf value at a given t
  */
@@ -813,6 +833,8 @@ src_cal_wavelet(float t, char *wavelet_name, float *wavelet_coefs)
     stf_val = fun_ricker_deriv(t, wavelet_coefs[0], wavelet_coefs[1]);
   } else if (strcmp(wavelet_name, "gaussian_deriv")==0) {
     stf_val = fun_gauss_deriv(t, wavelet_coefs[0], wavelet_coefs[1]);
+  }else if (strcmp(wavelet_name, "klauder")==0) {
+    stf_val = fun_klauder(t, 0.2, 1.5, 41.5, 20);
   } else{
     fprintf(stderr,"wavelet_name=%s\n", wavelet_name); 
     fprintf(stderr,"   not implemented yet\n"); 
@@ -998,3 +1020,14 @@ src_print(src_t *src, int verbose)
 
   return ierr;
 }
+float Blackman_window(float t, float dt, float t0)
+{
+    float i = t/dt;
+    float n = t0/dt;
+    float B = 0.42-0.5*cos(2*PI*(i-1)/(2*n-1)) + 0.08*cos(4*PI*(i-1)/(2*n-1));
+
+    if (i>2*n) { B=0.0; }
+
+    return B;
+}
+
