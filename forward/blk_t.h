@@ -119,24 +119,24 @@ blk_macdrp_pack_mesg_gpu(float *w_cur,
 
 __global__ void
 blk_macdrp_pack_mesg_x1(
-           float* w_cur,float *sbuff_x1, size_t siz_line, size_t siz_slice, size_t siz_volume,
+           float* w_cur,float *sbuff_x1, size_t siz_iy, size_t siz_iz, size_t siz_icmp,
            int ni1, int nj1, int nk1, int nx1_g, int nj, int nk);
 
 
 __global__ void
 blk_macdrp_pack_mesg_x2(
-           float* w_cur,float *sbuff_x2, size_t siz_line, size_t siz_slice, size_t siz_volume,
+           float* w_cur,float *sbuff_x2, size_t siz_iy, size_t siz_iz, size_t siz_icmp,
            int ni2, int nj1, int nk1, int nx2_g, int nj, int nk);
 
 
 __global__ void
 blk_macdrp_pack_mesg_y1(
-           float* w_cur,float *sbuff_y1, size_t siz_line, size_t siz_slice, size_t siz_volume,
+           float* w_cur,float *sbuff_y1, size_t siz_iy, size_t siz_iz, size_t siz_icmp,
            int ni1, int nj1, int nk1, int ni, int ny1_g, int nk);
 
 __global__ void
 blk_macdrp_pack_mesg_y2(
-           float* w_cur,float *sbuff_y2, size_t siz_line, size_t siz_slice, size_t siz_volume,
+           float* w_cur,float *sbuff_y2, size_t siz_iy, size_t siz_iz, size_t siz_icmp,
            int ni1, int nj2, int nk1, int ni, int ny2_g, int nk);
 
 int 
@@ -150,23 +150,23 @@ blk_macdrp_unpack_mesg_gpu(float *w_cur,
 
 __global__ void
 blk_macdrp_unpack_mesg_x1(
-           float *w_cur, float *rbuff_x1, size_t siz_line, size_t siz_slice, size_t siz_volume,
+           float *w_cur, float *rbuff_x1, size_t siz_iy, size_t siz_iz, size_t siz_icmp,
            int ni1, int nj1, int nk1, int nx2_g, int nj, int nk, int *neighid);
 
 
 __global__ void
 blk_macdrp_unpack_mesg_x2(
-           float *w_cur, float *rbuff_x2, size_t siz_line, size_t siz_slice, size_t siz_volume,
+           float *w_cur, float *rbuff_x2, size_t siz_iy, size_t siz_iz, size_t siz_icmp,
            int ni2, int nj1, int nk1, int nx1_g, int nj, int nk, int *neighid);
 
 __global__ void
 blk_macdrp_unpack_mesg_y1(
-           float *w_cur, float *rbuff_y1, size_t siz_line, size_t siz_slice, size_t siz_volume,
+           float *w_cur, float *rbuff_y1, size_t siz_iy, size_t siz_iz, size_t siz_icmp,
            int ni1, int nj1, int nk1, int ni, int ny2_g, int nk, int *neighid);
 
 __global__ void
 blk_macdrp_unpack_mesg_y2(
-           float *w_cur, float *rbuff_y2, size_t siz_line, size_t siz_slice, size_t siz_volume,
+           float *w_cur, float *rbuff_y2, size_t siz_iy, size_t siz_iz, size_t siz_icmp,
            int ni1, int nj2, int nk1, int ni, int ny1_g, int nk, int *neighid);
 
 int

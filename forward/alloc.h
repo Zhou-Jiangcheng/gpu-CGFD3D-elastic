@@ -65,5 +65,4 @@ dealloc_bdry_device(bdry_t bdry_d);
 int 
 dealloc_wave_device(wav_t wav_d);
 
-int init_bdry_device(bdry_t *bdry, bdry_t *bdry_gpu);
 #endif

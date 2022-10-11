@@ -233,6 +233,6 @@ void
 bdry_ablexp_apply_gpu(float *Ex, float *Ey, float *Ez, 
                       float *w_end, int ncmp, 
                       int ni1, int nj1, int nk1, int ni, int nj, int nk,
-                      size_t siz_line, size_t siz_slice, size_t siz_volume);
+                      size_t siz_iy, size_t siz_iz, size_t siz_icmp);
 
 #endif

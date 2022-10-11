@@ -95,9 +95,9 @@ int
 md_gen_test_el_aniso(md_t *md);
 
 int
-md_rho_to_slow(float *rho, size_t siz_volume);
+md_rho_to_slow(float *rho, size_t siz_icmp);
 
 int
-md_ac_Vp_to_kappa(float *rho, float *kappa, size_t siz_volume);
+md_ac_Vp_to_kappa(float *rho, float *kappa, size_t siz_icmp);
 
 #endif

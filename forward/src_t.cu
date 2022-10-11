@@ -146,8 +146,8 @@ src_read_locate_file(gdinfo_t *gdinfo,
   int   ny  = gdinfo->ny ;
   int   nz  = gdinfo->nz ;
   int   npoint_ghosts = gdinfo->npoint_ghosts;
-  size_t   siz_line = gdinfo->siz_iy;
-  size_t   siz_slice= gdinfo->siz_iz;
+  size_t   siz_iy = gdinfo->siz_iy;
+  size_t   siz_iz= gdinfo->siz_iz;
 
   // get total elem of exted src region for a single point
   //    int max_ext = 7 * 7 * 7;
@@ -489,7 +489,7 @@ src_read_locate_file(gdinfo_t *gdinfo,
             si = gd_info_ind_glphy2lcext_i(all_index[3*is+0], gdinfo);
             sj = gd_info_ind_glphy2lcext_j(all_index[3*is+1], gdinfo);
             sk = gd_info_ind_glphy2lcext_k(all_index[3*is+2], gdinfo);
-            size_t iptr = si + sj * siz_line + sk * siz_slice;   
+            size_t iptr = si + sj * siz_iy + sk * siz_iz;   
             float *mu3d = md->mu;
             float mu =  myz;
             // mu < 0 means to use internal model mu value
@@ -531,7 +531,7 @@ src_read_locate_file(gdinfo_t *gdinfo,
               si = gd_info_ind_glphy2lcext_i(all_index[3*is+0], gdinfo);
               sj = gd_info_ind_glphy2lcext_j(all_index[3*is+1], gdinfo);
               sk = gd_info_ind_glphy2lcext_k(all_index[3*is+2], gdinfo);
-              size_t iptr = si + sj * siz_line + sk * siz_slice;   
+              size_t iptr = si + sj * siz_iy + sk * siz_iz;   
               float *mu3d = md->mu;
 
               float mu =  m23[it];
@@ -581,7 +581,7 @@ src_read_locate_file(gdinfo_t *gdinfo,
             if (gd_info_lindx_is_inner(i,j,k,gdinfo)==1)
             {
               // Note index need match coef
-              int iptr_grid = i + j * siz_line + k * siz_slice;
+              int iptr_grid = i + j * siz_iy + k * siz_iz;
               int iptr_coef =  (i-(si-npoint_half_ext))
                               + len_ext * (j-(sj-npoint_half_ext)) 
                               + len_ext * len_ext *(k-(sk-npoint_half_ext));

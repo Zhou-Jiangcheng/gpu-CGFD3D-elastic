@@ -57,14 +57,9 @@ typedef struct {
   //int glob_phys_iz2;
 
   // size of a single var
-  //  the following two naming are same
   size_t siz_iy;
   size_t siz_iz;
   size_t siz_icmp;
-
-  size_t siz_line;
-  size_t siz_slice;
-  size_t siz_volume; // number of points per var
 
   // curvilinear coord name,
   char **index_name;

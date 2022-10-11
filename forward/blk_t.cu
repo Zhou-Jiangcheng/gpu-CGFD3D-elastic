@@ -322,9 +322,9 @@ blk_macdrp_pack_mesg_gpu(float * w_cur,
   int nj2 = gdinfo->nj2;
   int nk1 = gdinfo->nk1;
   int nk2 = gdinfo->nk2;
-  size_t siz_line   = gdinfo->siz_line;
-  size_t siz_slice  = gdinfo->siz_slice;
-  size_t siz_volume = gdinfo->siz_volume;
+  size_t siz_iy   = gdinfo->siz_iy;
+  size_t siz_iz  = gdinfo->siz_iz;
+  size_t siz_icmp = gdinfo->siz_icmp;
   int ni = ni2-ni1+1;
   int nj = nj2-nj1+1;
   int nk = nk2-nk1+1;
@@ -350,7 +350,7 @@ blk_macdrp_pack_mesg_gpu(float * w_cur,
     grid.y = (nj + block.y - 1) / block.y;
     grid.z = (nk + block.z - 1) / block.z;
     blk_macdrp_pack_mesg_x1<<<grid, block >>>(
-           w_cur, sbuff_x1, siz_line, siz_slice, siz_volume,
+           w_cur, sbuff_x1, siz_iy, siz_iz, siz_icmp,
            ni1, nj1, nk1, nx1_g, nj, nk);
     CUDACHECK(cudaDeviceSynchronize());
   }
@@ -361,7 +361,7 @@ blk_macdrp_pack_mesg_gpu(float * w_cur,
     grid.y = (nj + block.y - 1) / block.y;
     grid.z = (nk + block.z - 1) / block.z;
     blk_macdrp_pack_mesg_x2<<<grid, block >>>(
-           w_cur, sbuff_x2, siz_line, siz_slice, siz_volume,
+           w_cur, sbuff_x2, siz_iy, siz_iz, siz_icmp,
            ni2, nj1, nk1, nx2_g, nj, nk);
     CUDACHECK(cudaDeviceSynchronize());
   }
@@ -372,7 +372,7 @@ blk_macdrp_pack_mesg_gpu(float * w_cur,
     grid.y = (ny1_g + block.y -1) / block.y;
     grid.z = (nk + block.z - 1) / block.z;
     blk_macdrp_pack_mesg_y1<<<grid, block >>>(
-           w_cur, sbuff_y1, siz_line, siz_slice, siz_volume,
+           w_cur, sbuff_y1, siz_iy, siz_iz, siz_icmp,
            ni1, nj1, nk1, ni, ny1_g, nk);
     CUDACHECK(cudaDeviceSynchronize());
   }
@@ -383,7 +383,7 @@ blk_macdrp_pack_mesg_gpu(float * w_cur,
     grid.y = (ny2_g + block.y -1) / block.y;
     grid.z = (nk + block.z - 1) / block.z;
     blk_macdrp_pack_mesg_y2<<<grid, block >>>(
-           w_cur, sbuff_y2, siz_line, siz_slice, siz_volume,
+           w_cur, sbuff_y2, siz_iy, siz_iz, siz_icmp,
            ni1, nj2, nk1, ni, ny2_g, nk);
     CUDACHECK(cudaDeviceSynchronize());
   }
@@ -393,7 +393,7 @@ blk_macdrp_pack_mesg_gpu(float * w_cur,
 
 __global__ void
 blk_macdrp_pack_mesg_x1(
-           float *w_cur, float *sbuff_x1, size_t siz_line, size_t siz_slice, size_t siz_volume,
+           float *w_cur, float *sbuff_x1, size_t siz_iy, size_t siz_iz, size_t siz_icmp,
            int ni1, int nj1, int nk1, int nx1_g, int nj, int nk)
 {
   int ix = blockIdx.x * blockDim.x + threadIdx.x;
@@ -403,24 +403,24 @@ blk_macdrp_pack_mesg_x1(
   size_t iptr;
   if(ix<nx1_g && iy<nj && iz<nk)
   {
-    iptr     = (iz+nk1) * siz_slice + (iy+nj1) * siz_line + (ix+ni1);
+    iptr     = (iz+nk1) * siz_iz + (iy+nj1) * siz_iy + (ix+ni1);
     iptr_b   = iz*nj*nx1_g + iy*nx1_g + ix;
-    sbuff_x1[iptr_b + 0*nx1_g*nj*nk] = w_cur[iptr + 0*siz_volume];
-    sbuff_x1[iptr_b + 1*nx1_g*nj*nk] = w_cur[iptr + 1*siz_volume];
-    sbuff_x1[iptr_b + 2*nx1_g*nj*nk] = w_cur[iptr + 2*siz_volume];
-    sbuff_x1[iptr_b + 3*nx1_g*nj*nk] = w_cur[iptr + 3*siz_volume];
-    sbuff_x1[iptr_b + 4*nx1_g*nj*nk] = w_cur[iptr + 4*siz_volume];
-    sbuff_x1[iptr_b + 5*nx1_g*nj*nk] = w_cur[iptr + 5*siz_volume];
-    sbuff_x1[iptr_b + 6*nx1_g*nj*nk] = w_cur[iptr + 6*siz_volume];
-    sbuff_x1[iptr_b + 7*nx1_g*nj*nk] = w_cur[iptr + 7*siz_volume];
-    sbuff_x1[iptr_b + 8*nx1_g*nj*nk] = w_cur[iptr + 8*siz_volume];
+    sbuff_x1[iptr_b + 0*nx1_g*nj*nk] = w_cur[iptr + 0*siz_icmp];
+    sbuff_x1[iptr_b + 1*nx1_g*nj*nk] = w_cur[iptr + 1*siz_icmp];
+    sbuff_x1[iptr_b + 2*nx1_g*nj*nk] = w_cur[iptr + 2*siz_icmp];
+    sbuff_x1[iptr_b + 3*nx1_g*nj*nk] = w_cur[iptr + 3*siz_icmp];
+    sbuff_x1[iptr_b + 4*nx1_g*nj*nk] = w_cur[iptr + 4*siz_icmp];
+    sbuff_x1[iptr_b + 5*nx1_g*nj*nk] = w_cur[iptr + 5*siz_icmp];
+    sbuff_x1[iptr_b + 6*nx1_g*nj*nk] = w_cur[iptr + 6*siz_icmp];
+    sbuff_x1[iptr_b + 7*nx1_g*nj*nk] = w_cur[iptr + 7*siz_icmp];
+    sbuff_x1[iptr_b + 8*nx1_g*nj*nk] = w_cur[iptr + 8*siz_icmp];
   }
   return;
 }
 
 __global__ void
 blk_macdrp_pack_mesg_x2(
-           float *w_cur, float *sbuff_x2, size_t siz_line, size_t siz_slice, size_t siz_volume,
+           float *w_cur, float *sbuff_x2, size_t siz_iy, size_t siz_iz, size_t siz_icmp,
            int ni2, int nj1, int nk1, int nx2_g, int nj, int nk)
 {
   int ix = blockIdx.x * blockDim.x + threadIdx.x;
@@ -430,24 +430,24 @@ blk_macdrp_pack_mesg_x2(
   size_t iptr;
   if(ix<nx2_g && iy<nj && iz<nk)
   {
-    iptr     = (iz+nk1) * siz_slice + (iy+nj1) * siz_line + (ix+ni2-nx2_g+1);
+    iptr     = (iz+nk1) * siz_iz + (iy+nj1) * siz_iy + (ix+ni2-nx2_g+1);
     iptr_b   = iz*nj*nx2_g + iy*nx2_g + ix;
-    sbuff_x2[iptr_b + 0*nx2_g*nj*nk] = w_cur[iptr + 0*siz_volume];
-    sbuff_x2[iptr_b + 1*nx2_g*nj*nk] = w_cur[iptr + 1*siz_volume];
-    sbuff_x2[iptr_b + 2*nx2_g*nj*nk] = w_cur[iptr + 2*siz_volume];
-    sbuff_x2[iptr_b + 3*nx2_g*nj*nk] = w_cur[iptr + 3*siz_volume];
-    sbuff_x2[iptr_b + 4*nx2_g*nj*nk] = w_cur[iptr + 4*siz_volume];
-    sbuff_x2[iptr_b + 5*nx2_g*nj*nk] = w_cur[iptr + 5*siz_volume];
-    sbuff_x2[iptr_b + 6*nx2_g*nj*nk] = w_cur[iptr + 6*siz_volume];
-    sbuff_x2[iptr_b + 7*nx2_g*nj*nk] = w_cur[iptr + 7*siz_volume];
-    sbuff_x2[iptr_b + 8*nx2_g*nj*nk] = w_cur[iptr + 8*siz_volume];
+    sbuff_x2[iptr_b + 0*nx2_g*nj*nk] = w_cur[iptr + 0*siz_icmp];
+    sbuff_x2[iptr_b + 1*nx2_g*nj*nk] = w_cur[iptr + 1*siz_icmp];
+    sbuff_x2[iptr_b + 2*nx2_g*nj*nk] = w_cur[iptr + 2*siz_icmp];
+    sbuff_x2[iptr_b + 3*nx2_g*nj*nk] = w_cur[iptr + 3*siz_icmp];
+    sbuff_x2[iptr_b + 4*nx2_g*nj*nk] = w_cur[iptr + 4*siz_icmp];
+    sbuff_x2[iptr_b + 5*nx2_g*nj*nk] = w_cur[iptr + 5*siz_icmp];
+    sbuff_x2[iptr_b + 6*nx2_g*nj*nk] = w_cur[iptr + 6*siz_icmp];
+    sbuff_x2[iptr_b + 7*nx2_g*nj*nk] = w_cur[iptr + 7*siz_icmp];
+    sbuff_x2[iptr_b + 8*nx2_g*nj*nk] = w_cur[iptr + 8*siz_icmp];
   }
   return;
 }
 
 __global__ void
 blk_macdrp_pack_mesg_y1(
-           float *w_cur, float *sbuff_y1, size_t siz_line, size_t siz_slice, size_t siz_volume,
+           float *w_cur, float *sbuff_y1, size_t siz_iy, size_t siz_iz, size_t siz_icmp,
            int ni1, int nj1, int nk1, int ni, int ny1_g, int nk)
 {
   int ix = blockIdx.x * blockDim.x + threadIdx.x;
@@ -457,17 +457,17 @@ blk_macdrp_pack_mesg_y1(
   size_t iptr;
   if(ix<ni && iy<ny1_g && iz<nk)
   {
-    iptr     = (iz+nk1) * siz_slice + (iy+nj1) * siz_line + (ix+ni1);
+    iptr     = (iz+nk1) * siz_iz + (iy+nj1) * siz_iy + (ix+ni1);
     iptr_b   = iz*ni*ny1_g + iy*ni + ix;
-    sbuff_y1[iptr_b + 0*ny1_g*ni*nk] = w_cur[iptr + 0*siz_volume];
-    sbuff_y1[iptr_b + 1*ny1_g*ni*nk] = w_cur[iptr + 1*siz_volume];
-    sbuff_y1[iptr_b + 2*ny1_g*ni*nk] = w_cur[iptr + 2*siz_volume];
-    sbuff_y1[iptr_b + 3*ny1_g*ni*nk] = w_cur[iptr + 3*siz_volume];
-    sbuff_y1[iptr_b + 4*ny1_g*ni*nk] = w_cur[iptr + 4*siz_volume];
-    sbuff_y1[iptr_b + 5*ny1_g*ni*nk] = w_cur[iptr + 5*siz_volume];
-    sbuff_y1[iptr_b + 6*ny1_g*ni*nk] = w_cur[iptr + 6*siz_volume];
-    sbuff_y1[iptr_b + 7*ny1_g*ni*nk] = w_cur[iptr + 7*siz_volume];
-    sbuff_y1[iptr_b + 8*ny1_g*ni*nk] = w_cur[iptr + 8*siz_volume];
+    sbuff_y1[iptr_b + 0*ny1_g*ni*nk] = w_cur[iptr + 0*siz_icmp];
+    sbuff_y1[iptr_b + 1*ny1_g*ni*nk] = w_cur[iptr + 1*siz_icmp];
+    sbuff_y1[iptr_b + 2*ny1_g*ni*nk] = w_cur[iptr + 2*siz_icmp];
+    sbuff_y1[iptr_b + 3*ny1_g*ni*nk] = w_cur[iptr + 3*siz_icmp];
+    sbuff_y1[iptr_b + 4*ny1_g*ni*nk] = w_cur[iptr + 4*siz_icmp];
+    sbuff_y1[iptr_b + 5*ny1_g*ni*nk] = w_cur[iptr + 5*siz_icmp];
+    sbuff_y1[iptr_b + 6*ny1_g*ni*nk] = w_cur[iptr + 6*siz_icmp];
+    sbuff_y1[iptr_b + 7*ny1_g*ni*nk] = w_cur[iptr + 7*siz_icmp];
+    sbuff_y1[iptr_b + 8*ny1_g*ni*nk] = w_cur[iptr + 8*siz_icmp];
   }
 
   return;
@@ -475,7 +475,7 @@ blk_macdrp_pack_mesg_y1(
 
 __global__ void
 blk_macdrp_pack_mesg_y2(
-           float *w_cur, float *sbuff_y2, size_t siz_line, size_t siz_slice, size_t siz_volume,
+           float *w_cur, float *sbuff_y2, size_t siz_iy, size_t siz_iz, size_t siz_icmp,
            int ni1, int nj2, int nk1, int ni, int ny2_g, int nk)
 {
   int ix = blockIdx.x * blockDim.x + threadIdx.x;
@@ -485,17 +485,17 @@ blk_macdrp_pack_mesg_y2(
   size_t iptr;
   if(ix<ni && iy<ny2_g && iz<nk)
   {
-    iptr     = (iz+nk1) * siz_slice + (iy+nj2-ny2_g+1) * siz_line + (ix+ni1);
+    iptr     = (iz+nk1) * siz_iz + (iy+nj2-ny2_g+1) * siz_iy + (ix+ni1);
     iptr_b   = iz*ni*ny2_g + iy*ni + ix;
-    sbuff_y2[iptr_b + 0*ny2_g*ni*nk] = w_cur[iptr + 0*siz_volume];
-    sbuff_y2[iptr_b + 1*ny2_g*ni*nk] = w_cur[iptr + 1*siz_volume];
-    sbuff_y2[iptr_b + 2*ny2_g*ni*nk] = w_cur[iptr + 2*siz_volume];
-    sbuff_y2[iptr_b + 3*ny2_g*ni*nk] = w_cur[iptr + 3*siz_volume];
-    sbuff_y2[iptr_b + 4*ny2_g*ni*nk] = w_cur[iptr + 4*siz_volume];
-    sbuff_y2[iptr_b + 5*ny2_g*ni*nk] = w_cur[iptr + 5*siz_volume];
-    sbuff_y2[iptr_b + 6*ny2_g*ni*nk] = w_cur[iptr + 6*siz_volume];
-    sbuff_y2[iptr_b + 7*ny2_g*ni*nk] = w_cur[iptr + 7*siz_volume];
-    sbuff_y2[iptr_b + 8*ny2_g*ni*nk] = w_cur[iptr + 8*siz_volume];
+    sbuff_y2[iptr_b + 0*ny2_g*ni*nk] = w_cur[iptr + 0*siz_icmp];
+    sbuff_y2[iptr_b + 1*ny2_g*ni*nk] = w_cur[iptr + 1*siz_icmp];
+    sbuff_y2[iptr_b + 2*ny2_g*ni*nk] = w_cur[iptr + 2*siz_icmp];
+    sbuff_y2[iptr_b + 3*ny2_g*ni*nk] = w_cur[iptr + 3*siz_icmp];
+    sbuff_y2[iptr_b + 4*ny2_g*ni*nk] = w_cur[iptr + 4*siz_icmp];
+    sbuff_y2[iptr_b + 5*ny2_g*ni*nk] = w_cur[iptr + 5*siz_icmp];
+    sbuff_y2[iptr_b + 6*ny2_g*ni*nk] = w_cur[iptr + 6*siz_icmp];
+    sbuff_y2[iptr_b + 7*ny2_g*ni*nk] = w_cur[iptr + 7*siz_icmp];
+    sbuff_y2[iptr_b + 8*ny2_g*ni*nk] = w_cur[iptr + 8*siz_icmp];
   }
   return;
 }
@@ -521,9 +521,9 @@ blk_macdrp_unpack_mesg_gpu(float *w_cur,
   int nj2 = gdinfo->nj2;
   int nk1 = gdinfo->nk1;
   int nk2 = gdinfo->nk2;
-  size_t siz_line   = gdinfo->siz_line;
-  size_t siz_slice  = gdinfo->siz_slice;
-  size_t siz_volume = gdinfo->siz_volume;
+  size_t siz_iy   = gdinfo->siz_iy;
+  size_t siz_iz  = gdinfo->siz_iz;
+  size_t siz_icmp = gdinfo->siz_icmp;
 
   int ni = ni2-ni1+1;
   int nj = nj2-nj1+1;
@@ -548,7 +548,7 @@ blk_macdrp_unpack_mesg_gpu(float *w_cur,
     grid.y = (nj + block.y - 1) / block.y;
     grid.z = (nk + block.z - 1) / block.z;
     blk_macdrp_unpack_mesg_x1<<< grid, block >>>(
-           w_cur, rbuff_x1, siz_line, siz_slice, siz_volume,
+           w_cur, rbuff_x1, siz_iy, siz_iz, siz_icmp,
            ni1, nj1, nk1, nx2_g, nj, nk, neighid);
     CUDACHECK(cudaDeviceSynchronize());
   }
@@ -559,7 +559,7 @@ blk_macdrp_unpack_mesg_gpu(float *w_cur,
     grid.y = (nj + block.y - 1) / block.y;
     grid.z = (nk + block.z - 1) / block.z;
     blk_macdrp_unpack_mesg_x2<<< grid, block >>>(
-           w_cur, rbuff_x2, siz_line, siz_slice, siz_volume,
+           w_cur, rbuff_x2, siz_iy, siz_iz, siz_icmp,
            ni2, nj1, nk1, nx1_g, nj, nk, neighid);
     CUDACHECK(cudaDeviceSynchronize());
   }
@@ -570,7 +570,7 @@ blk_macdrp_unpack_mesg_gpu(float *w_cur,
     grid.y = (ny2_g + block.y -1) / block.y;
     grid.z = (nk + block.z - 1) / block.z;
     blk_macdrp_unpack_mesg_y1<<< grid, block >>>(
-           w_cur, rbuff_y1, siz_line, siz_slice, siz_volume,
+           w_cur, rbuff_y1, siz_iy, siz_iz, siz_icmp,
            ni1, nj1, nk1, ni, ny2_g, nk, neighid);
     CUDACHECK(cudaDeviceSynchronize());
   }
@@ -581,7 +581,7 @@ blk_macdrp_unpack_mesg_gpu(float *w_cur,
     grid.y = (ny1_g + block.y -1) / block.y;
     grid.z = (nk + block.z - 1) / block.z;
     blk_macdrp_unpack_mesg_y2<<< grid, block >>>(
-           w_cur, rbuff_y2, siz_line, siz_slice, siz_volume,
+           w_cur, rbuff_y2, siz_iy, siz_iz, siz_icmp,
            ni1, nj2, nk1, ni, ny1_g, nk, neighid);
     CUDACHECK(cudaDeviceSynchronize());
   }
@@ -591,7 +591,7 @@ blk_macdrp_unpack_mesg_gpu(float *w_cur,
 //from x2
 __global__ void
 blk_macdrp_unpack_mesg_x1(
-           float *w_cur, float *rbuff_x1, size_t siz_line, size_t siz_slice, size_t siz_volume,
+           float *w_cur, float *rbuff_x1, size_t siz_iy, size_t siz_iz, size_t siz_icmp,
            int ni1, int nj1, int nk1, int nx2_g, int nj, int nk, int *neighid)
 {
   int ix = blockIdx.x * blockDim.x + threadIdx.x;
@@ -601,17 +601,17 @@ blk_macdrp_unpack_mesg_x1(
   size_t iptr;
   if (neighid[0] != MPI_PROC_NULL) {
     if(ix<nx2_g && iy<nj && iz<nk){
-      iptr   = (iz+nk1) * siz_slice + (iy+nj1) * siz_line + (ix+ni1-nx2_g);
+      iptr   = (iz+nk1) * siz_iz + (iy+nj1) * siz_iy + (ix+ni1-nx2_g);
       iptr_b = iz*nj*nx2_g + iy*nx2_g + ix;
-      w_cur[iptr + 0*siz_volume] = rbuff_x1[iptr_b+ 0*nx2_g*nj*nk];
-      w_cur[iptr + 1*siz_volume] = rbuff_x1[iptr_b+ 1*nx2_g*nj*nk];
-      w_cur[iptr + 2*siz_volume] = rbuff_x1[iptr_b+ 2*nx2_g*nj*nk];
-      w_cur[iptr + 3*siz_volume] = rbuff_x1[iptr_b+ 3*nx2_g*nj*nk];
-      w_cur[iptr + 4*siz_volume] = rbuff_x1[iptr_b+ 4*nx2_g*nj*nk];
-      w_cur[iptr + 5*siz_volume] = rbuff_x1[iptr_b+ 5*nx2_g*nj*nk];
-      w_cur[iptr + 6*siz_volume] = rbuff_x1[iptr_b+ 6*nx2_g*nj*nk];
-      w_cur[iptr + 7*siz_volume] = rbuff_x1[iptr_b+ 7*nx2_g*nj*nk];
-      w_cur[iptr + 8*siz_volume] = rbuff_x1[iptr_b+ 8*nx2_g*nj*nk];
+      w_cur[iptr + 0*siz_icmp] = rbuff_x1[iptr_b+ 0*nx2_g*nj*nk];
+      w_cur[iptr + 1*siz_icmp] = rbuff_x1[iptr_b+ 1*nx2_g*nj*nk];
+      w_cur[iptr + 2*siz_icmp] = rbuff_x1[iptr_b+ 2*nx2_g*nj*nk];
+      w_cur[iptr + 3*siz_icmp] = rbuff_x1[iptr_b+ 3*nx2_g*nj*nk];
+      w_cur[iptr + 4*siz_icmp] = rbuff_x1[iptr_b+ 4*nx2_g*nj*nk];
+      w_cur[iptr + 5*siz_icmp] = rbuff_x1[iptr_b+ 5*nx2_g*nj*nk];
+      w_cur[iptr + 6*siz_icmp] = rbuff_x1[iptr_b+ 6*nx2_g*nj*nk];
+      w_cur[iptr + 7*siz_icmp] = rbuff_x1[iptr_b+ 7*nx2_g*nj*nk];
+      w_cur[iptr + 8*siz_icmp] = rbuff_x1[iptr_b+ 8*nx2_g*nj*nk];
     }
   }
   return;
@@ -620,7 +620,7 @@ blk_macdrp_unpack_mesg_x1(
 //from x1
 __global__ void
 blk_macdrp_unpack_mesg_x2(
-           float *w_cur, float *rbuff_x2, size_t siz_line, size_t siz_slice, size_t siz_volume,
+           float *w_cur, float *rbuff_x2, size_t siz_iy, size_t siz_iz, size_t siz_icmp,
            int ni2, int nj1, int nk1, int nx1_g, int nj, int nk, int *neighid)
 {
   int ix = blockIdx.x * blockDim.x + threadIdx.x;
@@ -630,17 +630,17 @@ blk_macdrp_unpack_mesg_x2(
   size_t iptr;
   if (neighid[1] != MPI_PROC_NULL) {
     if(ix<nx1_g && iy<nj && iz<nk){
-      iptr   = (iz+nk1) * siz_slice + (iy+nj1) * siz_line + (ix+ni2+1);
+      iptr   = (iz+nk1) * siz_iz + (iy+nj1) * siz_iy + (ix+ni2+1);
       iptr_b = iz*nj*nx1_g + iy*nx1_g + ix;
-      w_cur[iptr + 0*siz_volume] = rbuff_x2[iptr_b+ 0*nx1_g*nj*nk];
-      w_cur[iptr + 1*siz_volume] = rbuff_x2[iptr_b+ 1*nx1_g*nj*nk];
-      w_cur[iptr + 2*siz_volume] = rbuff_x2[iptr_b+ 2*nx1_g*nj*nk];
-      w_cur[iptr + 3*siz_volume] = rbuff_x2[iptr_b+ 3*nx1_g*nj*nk];
-      w_cur[iptr + 4*siz_volume] = rbuff_x2[iptr_b+ 4*nx1_g*nj*nk];
-      w_cur[iptr + 5*siz_volume] = rbuff_x2[iptr_b+ 5*nx1_g*nj*nk];
-      w_cur[iptr + 6*siz_volume] = rbuff_x2[iptr_b+ 6*nx1_g*nj*nk];
-      w_cur[iptr + 7*siz_volume] = rbuff_x2[iptr_b+ 7*nx1_g*nj*nk];
-      w_cur[iptr + 8*siz_volume] = rbuff_x2[iptr_b+ 8*nx1_g*nj*nk];
+      w_cur[iptr + 0*siz_icmp] = rbuff_x2[iptr_b+ 0*nx1_g*nj*nk];
+      w_cur[iptr + 1*siz_icmp] = rbuff_x2[iptr_b+ 1*nx1_g*nj*nk];
+      w_cur[iptr + 2*siz_icmp] = rbuff_x2[iptr_b+ 2*nx1_g*nj*nk];
+      w_cur[iptr + 3*siz_icmp] = rbuff_x2[iptr_b+ 3*nx1_g*nj*nk];
+      w_cur[iptr + 4*siz_icmp] = rbuff_x2[iptr_b+ 4*nx1_g*nj*nk];
+      w_cur[iptr + 5*siz_icmp] = rbuff_x2[iptr_b+ 5*nx1_g*nj*nk];
+      w_cur[iptr + 6*siz_icmp] = rbuff_x2[iptr_b+ 6*nx1_g*nj*nk];
+      w_cur[iptr + 7*siz_icmp] = rbuff_x2[iptr_b+ 7*nx1_g*nj*nk];
+      w_cur[iptr + 8*siz_icmp] = rbuff_x2[iptr_b+ 8*nx1_g*nj*nk];
     }
   }
   return;
@@ -649,7 +649,7 @@ blk_macdrp_unpack_mesg_x2(
 //from y2
 __global__ void
 blk_macdrp_unpack_mesg_y1(
-           float *w_cur, float *rbuff_y1, size_t siz_line, size_t siz_slice, size_t siz_volume,
+           float *w_cur, float *rbuff_y1, size_t siz_iy, size_t siz_iz, size_t siz_icmp,
            int ni1, int nj1, int nk1, int ni, int ny2_g, int nk, int *neighid)
 {
   int ix = blockIdx.x * blockDim.x + threadIdx.x;
@@ -659,17 +659,17 @@ blk_macdrp_unpack_mesg_y1(
   size_t iptr;
   if (neighid[2] != MPI_PROC_NULL) {
     if(ix<ni && iy<ny2_g && iz<nk){
-      iptr   = (iz+nk1) * siz_slice + (iy+nj1-ny2_g) * siz_line + (ix+ni1);
+      iptr   = (iz+nk1) * siz_iz + (iy+nj1-ny2_g) * siz_iy + (ix+ni1);
       iptr_b = iz*ni*ny2_g + iy*ni + ix;
-      w_cur[iptr + 0*siz_volume] = rbuff_y1[iptr_b+ 0*ny2_g*ni*nk];
-      w_cur[iptr + 1*siz_volume] = rbuff_y1[iptr_b+ 1*ny2_g*ni*nk];
-      w_cur[iptr + 2*siz_volume] = rbuff_y1[iptr_b+ 2*ny2_g*ni*nk];
-      w_cur[iptr + 3*siz_volume] = rbuff_y1[iptr_b+ 3*ny2_g*ni*nk];
-      w_cur[iptr + 4*siz_volume] = rbuff_y1[iptr_b+ 4*ny2_g*ni*nk];
-      w_cur[iptr + 5*siz_volume] = rbuff_y1[iptr_b+ 5*ny2_g*ni*nk];
-      w_cur[iptr + 6*siz_volume] = rbuff_y1[iptr_b+ 6*ny2_g*ni*nk];
-      w_cur[iptr + 7*siz_volume] = rbuff_y1[iptr_b+ 7*ny2_g*ni*nk];
-      w_cur[iptr + 8*siz_volume] = rbuff_y1[iptr_b+ 8*ny2_g*ni*nk];
+      w_cur[iptr + 0*siz_icmp] = rbuff_y1[iptr_b+ 0*ny2_g*ni*nk];
+      w_cur[iptr + 1*siz_icmp] = rbuff_y1[iptr_b+ 1*ny2_g*ni*nk];
+      w_cur[iptr + 2*siz_icmp] = rbuff_y1[iptr_b+ 2*ny2_g*ni*nk];
+      w_cur[iptr + 3*siz_icmp] = rbuff_y1[iptr_b+ 3*ny2_g*ni*nk];
+      w_cur[iptr + 4*siz_icmp] = rbuff_y1[iptr_b+ 4*ny2_g*ni*nk];
+      w_cur[iptr + 5*siz_icmp] = rbuff_y1[iptr_b+ 5*ny2_g*ni*nk];
+      w_cur[iptr + 6*siz_icmp] = rbuff_y1[iptr_b+ 6*ny2_g*ni*nk];
+      w_cur[iptr + 7*siz_icmp] = rbuff_y1[iptr_b+ 7*ny2_g*ni*nk];
+      w_cur[iptr + 8*siz_icmp] = rbuff_y1[iptr_b+ 8*ny2_g*ni*nk];
     }
   }
   return;
@@ -678,7 +678,7 @@ blk_macdrp_unpack_mesg_y1(
 //from y1
 __global__ void
 blk_macdrp_unpack_mesg_y2(
-           float *w_cur, float *rbuff_y2, size_t siz_line, size_t siz_slice, size_t siz_volume,
+           float *w_cur, float *rbuff_y2, size_t siz_iy, size_t siz_iz, size_t siz_icmp,
            int ni1, int nj2, int nk1, int ni, int ny1_g, int nk, int *neighid)
 {
   int ix = blockIdx.x * blockDim.x + threadIdx.x;
@@ -688,17 +688,17 @@ blk_macdrp_unpack_mesg_y2(
   size_t iptr;
   if (neighid[3] != MPI_PROC_NULL) {
     if(ix<ni && iy<ny1_g && iz<nk){
-      iptr   = (iz+nk1) * siz_slice + (iy+nj2+1) * siz_line + (ix+ni1);
+      iptr   = (iz+nk1) * siz_iz + (iy+nj2+1) * siz_iy + (ix+ni1);
       iptr_b = iz*ni*ny1_g + iy*ni + ix;
-      w_cur[iptr + 0*siz_volume] = rbuff_y2[iptr_b+ 0*ny1_g*ni*nk];
-      w_cur[iptr + 1*siz_volume] = rbuff_y2[iptr_b+ 1*ny1_g*ni*nk];
-      w_cur[iptr + 2*siz_volume] = rbuff_y2[iptr_b+ 2*ny1_g*ni*nk];
-      w_cur[iptr + 3*siz_volume] = rbuff_y2[iptr_b+ 3*ny1_g*ni*nk];
-      w_cur[iptr + 4*siz_volume] = rbuff_y2[iptr_b+ 4*ny1_g*ni*nk];
-      w_cur[iptr + 5*siz_volume] = rbuff_y2[iptr_b+ 5*ny1_g*ni*nk];
-      w_cur[iptr + 6*siz_volume] = rbuff_y2[iptr_b+ 6*ny1_g*ni*nk];
-      w_cur[iptr + 7*siz_volume] = rbuff_y2[iptr_b+ 7*ny1_g*ni*nk];
-      w_cur[iptr + 8*siz_volume] = rbuff_y2[iptr_b+ 8*ny1_g*ni*nk];
+      w_cur[iptr + 0*siz_icmp] = rbuff_y2[iptr_b+ 0*ny1_g*ni*nk];
+      w_cur[iptr + 1*siz_icmp] = rbuff_y2[iptr_b+ 1*ny1_g*ni*nk];
+      w_cur[iptr + 2*siz_icmp] = rbuff_y2[iptr_b+ 2*ny1_g*ni*nk];
+      w_cur[iptr + 3*siz_icmp] = rbuff_y2[iptr_b+ 3*ny1_g*ni*nk];
+      w_cur[iptr + 4*siz_icmp] = rbuff_y2[iptr_b+ 4*ny1_g*ni*nk];
+      w_cur[iptr + 5*siz_icmp] = rbuff_y2[iptr_b+ 5*ny1_g*ni*nk];
+      w_cur[iptr + 6*siz_icmp] = rbuff_y2[iptr_b+ 6*ny1_g*ni*nk];
+      w_cur[iptr + 7*siz_icmp] = rbuff_y2[iptr_b+ 7*ny1_g*ni*nk];
+      w_cur[iptr + 8*siz_icmp] = rbuff_y2[iptr_b+ 8*ny1_g*ni*nk];
     }
   }
   return;

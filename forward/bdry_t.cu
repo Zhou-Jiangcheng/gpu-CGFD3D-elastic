@@ -49,7 +49,7 @@ bdry_free_set(gdinfo_t    *gdinfo,
 {
   int ierr = 0;
 
-  size_t siz_slice  = gdinfo->siz_iz;
+  size_t siz_iz  = gdinfo->siz_iz;
 
   // default disable
   bdryfree->is_enable_free = 0;
@@ -78,12 +78,12 @@ bdry_free_set(gdinfo_t    *gdinfo,
 
   // following only implement z2 (top) right now
   float *matVx2Vz = (float *)fdlib_mem_calloc_1d_float(
-                                      siz_slice * CONST_NDIM * CONST_NDIM,
+                                      siz_iz * CONST_NDIM * CONST_NDIM,
                                       0.0,
                                       "bdry_free_set");
 
   float *matVy2Vz = (float *)fdlib_mem_calloc_1d_float(
-                                      siz_slice * CONST_NDIM * CONST_NDIM,
+                                      siz_iz * CONST_NDIM * CONST_NDIM,
                                       0.0,
                                       "bdry_free_set");
 
@@ -118,8 +118,8 @@ bdry_pml_set(gdinfo_t *gdinfo,
   int    nx  = gdinfo->nx ;
   int    ny  = gdinfo->ny ;
   int    nz  = gdinfo->nz ;
-  int    siz_line = gdinfo->siz_iy;
-  int    siz_slice = gdinfo->siz_iz;
+  int    siz_iy = gdinfo->siz_iy;
+  int    siz_iz = gdinfo->siz_iz;
 
   // default disable
   bdrypml->is_enable_pml = 0;
@@ -358,8 +358,8 @@ bdry_cal_abl_len_dh(gd_t *gd,
 {
   int ierr = 0;
 
-  int siz_line  = gd->siz_iy;
-  int siz_slice = gd->siz_iz;
+  int siz_iy  = gd->siz_iy;
+  int siz_iz = gd->siz_iz;
 
   // cartesian grid is simple
   if (gd->type == GD_TYPE_CART)
@@ -392,13 +392,13 @@ bdry_cal_abl_len_dh(gd_t *gd,
       {
         for (int j=abs_nj1; j<=abs_nj2; j++)
         {
-          int iptr = abs_ni1 + j * siz_line + k * siz_slice;
+          int iptr = abs_ni1 + j * siz_iy + k * siz_iz;
           double x0 = x3d[iptr];
           double y0 = y3d[iptr];
           double z0 = z3d[iptr];
           for (int i=abs_ni1+1; i<=abs_ni2; i++)
           {
-            int iptr = i + j * siz_line + k * siz_slice;
+            int iptr = i + j * siz_iy + k * siz_iz;
 
             double x1 = x3d[iptr];
             double y1 = y3d[iptr];
@@ -423,13 +423,13 @@ bdry_cal_abl_len_dh(gd_t *gd,
       {
         for (int i=abs_ni1; i<=abs_ni2; i++)
         {
-          int iptr = i + abs_nj1 * siz_line + k * siz_slice;
+          int iptr = i + abs_nj1 * siz_iy + k * siz_iz;
           double x0 = x3d[iptr];
           double y0 = y3d[iptr];
           double z0 = z3d[iptr];
           for (int j=abs_nj1+1; j<=abs_nj2; j++)
           {
-            int iptr = i + j * siz_line + k * siz_slice;
+            int iptr = i + j * siz_iy + k * siz_iz;
 
             double x1 = x3d[iptr];
             double y1 = y3d[iptr];
@@ -454,13 +454,13 @@ bdry_cal_abl_len_dh(gd_t *gd,
       {
         for (int i=abs_ni1; i<=abs_ni2; i++)
         {
-          int iptr = i + j * siz_line + abs_nk1 * siz_slice;
+          int iptr = i + j * siz_iy + abs_nk1 * siz_iz;
           double x0 = x3d[iptr];
           double y0 = y3d[iptr];
           double z0 = z3d[iptr];
           for (int k=abs_nk1+1; k<=abs_nk2; k++)
           {
-            int iptr = i + j * siz_line + k * siz_slice;
+            int iptr = i + j * siz_iy + k * siz_iz;
 
             double x1 = x3d[iptr];
             double y1 = y3d[iptr];
@@ -516,8 +516,8 @@ bdry_ablexp_set(gdinfo_t *gdinfo,
   int nx  = gdinfo->nx ;
   int ny  = gdinfo->ny ;
   int nz  = gdinfo->nz ;
-  int siz_line = gdinfo->siz_iy;
-  int siz_slice = gdinfo->siz_iz;
+  int siz_iy = gdinfo->siz_iy;
+  int siz_iz = gdinfo->siz_iz;
   int abs_number[CONST_NDIM][2];
   int n;
 
@@ -798,9 +798,9 @@ bdry_ablexp_apply(bdry_t bdry, gdinfo_t *gdinfo, float *w_end, int ncmp)
   float *Ey = bdry.ablexp_Ey;
   float *Ez = bdry.ablexp_Ez;
 
-  size_t siz_line   = gdinfo->siz_line;
-  size_t siz_slice  = gdinfo->siz_slice;
-  size_t siz_volume = gdinfo->siz_volume;
+  size_t siz_iy   = gdinfo->siz_iy;
+  size_t siz_iz  = gdinfo->siz_iz;
+  size_t siz_icmp = gdinfo->siz_icmp;
 
 
   bdry_block_t *D = bdry.bdry_blk;
@@ -826,7 +826,7 @@ bdry_ablexp_apply(bdry_t bdry, gdinfo_t *gdinfo, float *w_end, int ncmp)
                             Ex, Ey, Ez, 
                             w_end, ncmp, 
                             ni1, nj1, nk1, ni, nj, nk,  
-                            siz_line, siz_slice, siz_volume);
+                            siz_iy, siz_iz, siz_icmp);
     }
   }
 
@@ -837,7 +837,7 @@ __global__ void
 bdry_ablexp_apply_gpu(float *Ex, float *Ey, float *Ez, 
                       float *w_end, int ncmp, 
                       int ni1, int nj1, int nk1, int ni, int nj, int nk,
-                      size_t siz_line, size_t siz_slice, size_t siz_volume)
+                      size_t siz_iy, size_t siz_iz, size_t siz_icmp)
 {
   size_t ix = blockIdx.x * blockDim.x + threadIdx.x;
   size_t iy = blockIdx.y * blockDim.y + threadIdx.y;
@@ -846,20 +846,20 @@ bdry_ablexp_apply_gpu(float *Ex, float *Ey, float *Ez,
   size_t iptr;
   if(ix<ni && iy<nj && iz<nk)
   {
-    iptr = (iz+nk1) * siz_slice + (iy+nj1) * siz_line + (ix+ni1);
+    iptr = (iz+nk1) * siz_iz + (iy+nj1) * siz_iy + (ix+ni1);
     mask = (Ex[ix+ni1]<Ey[iy+nj1]) ? Ex[ix+ni1] : Ey[iy+nj1];
     if (mask > Ez[iz+nk1]) mask = Ez[iz+nk1];
     // unroll for accelate 
     // ncmp=9
-    w_end[iptr + 0 * siz_volume] *= mask;
-    w_end[iptr + 1 * siz_volume] *= mask;
-    w_end[iptr + 2 * siz_volume] *= mask;
-    w_end[iptr + 3 * siz_volume] *= mask;
-    w_end[iptr + 4 * siz_volume] *= mask;
-    w_end[iptr + 5 * siz_volume] *= mask;
-    w_end[iptr + 6 * siz_volume] *= mask;
-    w_end[iptr + 7 * siz_volume] *= mask;
-    w_end[iptr + 8 * siz_volume] *= mask;
+    w_end[iptr + 0 * siz_icmp] *= mask;
+    w_end[iptr + 1 * siz_icmp] *= mask;
+    w_end[iptr + 2 * siz_icmp] *= mask;
+    w_end[iptr + 3 * siz_icmp] *= mask;
+    w_end[iptr + 4 * siz_icmp] *= mask;
+    w_end[iptr + 5 * siz_icmp] *= mask;
+    w_end[iptr + 6 * siz_icmp] *= mask;
+    w_end[iptr + 7 * siz_icmp] *= mask;
+    w_end[iptr + 8 * siz_icmp] *= mask;
   }
 
   return;

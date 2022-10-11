@@ -21,7 +21,7 @@ sv_curv_col_el_iso_rhs_timg_z2_gpu(
     float * zt_x, float * zt_y, float * zt_z,
     float * jac3d, float * slw3d,
     int ni1, int ni, int nj1, int nj, int nk1, int nk2,
-    size_t siz_line, size_t siz_slice, 
+    size_t siz_iy, size_t siz_iz, 
     int fdx_len, int * lfdx_indx, float * lfdx_coef,
     int fdy_len, int * lfdy_indx, float * lfdy_coef,
     int fdz_len, int * lfdz_indx, float * lfdz_coef,

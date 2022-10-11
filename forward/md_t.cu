@@ -362,8 +362,8 @@ md_gen_test_ac_iso(md_t *md)
   int nx = md->nx;
   int ny = md->ny;
   int nz = md->nz;
-  size_t siz_line  = md->siz_iy;
-  size_t siz_slice = md->siz_iz;
+  size_t siz_iy  = md->siz_iy;
+  size_t siz_iz = md->siz_iz;
 
   float *kappa3d = md->kappa;
   float *rho3d = md->rho;
@@ -374,7 +374,7 @@ md_gen_test_ac_iso(md_t *md)
     {
       for (size_t i=0; i<nx; i++)
       {
-        size_t iptr = i + j * siz_line + k * siz_slice;
+        size_t iptr = i + j * siz_iy + k * siz_iz;
         float Vp=3000.0;
         float rho=1500.0;
         float kappa = Vp*Vp*rho;
@@ -395,8 +395,8 @@ md_gen_test_el_iso(md_t *md)
   int nx = md->nx;
   int ny = md->ny;
   int nz = md->nz;
-  size_t siz_line  = md->siz_iy;
-  size_t siz_slice = md->siz_iz;
+  size_t siz_iy  = md->siz_iy;
+  size_t siz_iz = md->siz_iz;
 
   float *lam3d = md->lambda;
   float  *mu3d = md->mu;
@@ -408,7 +408,7 @@ md_gen_test_el_iso(md_t *md)
     {
       for (size_t i=0; i<nx; i++)
       {
-        size_t iptr = i + j * siz_line + k * siz_slice;
+        size_t iptr = i + j * siz_iy + k * siz_iz;
         float Vp=3000.0;
         float Vs=2000.0;
         float rho=1500.0;
@@ -432,8 +432,8 @@ md_gen_test_Qs(md_t *md, float Qs_freq)
   int nx = md->nx;
   int ny = md->ny;
   int nz = md->nz;
-  size_t siz_line  = md->siz_iy;
-  size_t siz_slice = md->siz_iz;
+  size_t siz_iy  = md->siz_iy;
+  size_t siz_iz = md->siz_iz;
 
   md->visco_Qs_freq = Qs_freq;
 
@@ -445,7 +445,7 @@ md_gen_test_Qs(md_t *md, float Qs_freq)
     {
       for (size_t i=0; i<nx; i++)
       {
-        size_t iptr = i + j * siz_line + k * siz_slice;
+        size_t iptr = i + j * siz_iy + k * siz_iz;
         Qs[iptr] = 20;
       }
     }
@@ -462,8 +462,8 @@ md_gen_test_el_vti(md_t *md)
   int nx = md->nx;
   int ny = md->ny;
   int nz = md->nz;
-  size_t siz_line  = md->siz_iy;
-  size_t siz_slice = md->siz_iz;
+  size_t siz_iy  = md->siz_iy;
+  size_t siz_iz = md->siz_iz;
 
   for (size_t k=0; k<nz; k++)
   {
@@ -471,7 +471,7 @@ md_gen_test_el_vti(md_t *md)
     {
       for (size_t i=0; i<nx; i++)
       {
-        size_t iptr = i + j * siz_line + k * siz_slice;
+        size_t iptr = i + j * siz_iy + k * siz_iz;
 
         float rho=1500.0;
 
@@ -498,8 +498,8 @@ md_gen_test_el_aniso(md_t *md)
   int nx = md->nx;
   int ny = md->ny;
   int nz = md->nz;
-  size_t siz_line  = md->siz_iy;
-  size_t siz_slice = md->siz_iz;
+  size_t siz_iy  = md->siz_iy;
+  size_t siz_iz = md->siz_iz;
 
   for (size_t k=0; k<nz; k++)
   {
@@ -507,7 +507,7 @@ md_gen_test_el_aniso(md_t *md)
     {
       for (size_t i=0; i<nx; i++)
       {
-        size_t iptr = i + j * siz_line + k * siz_slice;
+        size_t iptr = i + j * siz_iy + k * siz_iz;
 
         float rho=1500.0;
 
@@ -554,7 +554,7 @@ md_gen_test_el_aniso(md_t *md)
  */
 
 int
-md_rho_to_slow(float *rho, size_t siz_volume)
+md_rho_to_slow(float *rho, size_t siz_icmp)
 {
   int ierr = 0;
 
@@ -566,7 +566,7 @@ md_rho_to_slow(float *rho, size_t siz_volume)
     }
   }
   */
-  for (size_t iptr=0; iptr<siz_volume; iptr++) {
+  for (size_t iptr=0; iptr<siz_icmp; iptr++) {
     if (rho[iptr] > 1e-10) {
       rho[iptr] = 1.0 / rho[iptr];
     } else {
@@ -578,11 +578,11 @@ md_rho_to_slow(float *rho, size_t siz_volume)
 }
 
 int
-md_ac_Vp_to_kappa(float *rho, float *kappa, size_t siz_volume)
+md_ac_Vp_to_kappa(float *rho, float *kappa, size_t siz_icmp)
 {
   int ierr = 0;
 
-  for (size_t iptr=0; iptr<siz_volume; iptr++) {
+  for (size_t iptr=0; iptr<siz_icmp; iptr++) {
     if (rho[iptr] > 1e-10) {
       float Vp = kappa[iptr];
       kappa[iptr] = Vp * Vp * rho[iptr];

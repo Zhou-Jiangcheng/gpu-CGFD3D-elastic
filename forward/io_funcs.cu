@@ -1074,8 +1074,8 @@ io_slice_nc_put(ioslice_t    *ioslice,
   int   ni  = gdinfo->ni ;
   int   nj  = gdinfo->nj ;
   int   nk  = gdinfo->nk ;
-  size_t   siz_line = gdinfo->siz_iy;
-  size_t   siz_slice= gdinfo->siz_iz;
+  size_t   siz_iy = gdinfo->siz_iy;
+  size_t   siz_iz= gdinfo->siz_iz;
   size_t   siz_icmp = gdinfo->siz_icmp;
 
   int  num_of_vars = ioslice_nc->num_of_vars;
@@ -1101,7 +1101,7 @@ io_slice_nc_put(ioslice_t    *ioslice,
     for (int ivar=i1_cmp; ivar <= i2_cmp; ivar++)
     {
       float *var = w_end_d + ivar * siz_icmp;
-      io_slice_pack_buff_x<<<grid, block>>>(i,nj,nk,siz_line,siz_slice,var,buff_d);
+      io_slice_pack_buff_x<<<grid, block>>>(i,nj,nk,siz_iy,siz_iz,var,buff_d);
       CUDACHECK(cudaMemcpy(buff,buff_d,size,cudaMemcpyDeviceToHost));
 
       nc_put_vara_float(ioslice_nc->ncid_slx[n], 
@@ -1131,7 +1131,7 @@ io_slice_nc_put(ioslice_t    *ioslice,
     for (int ivar=i1_cmp; ivar <= i2_cmp; ivar++)
     {
       float *var = w_end_d + ivar * siz_icmp;
-      io_slice_pack_buff_y<<<grid, block>>>(j,ni,nk,siz_line,siz_slice,var,buff_d);
+      io_slice_pack_buff_y<<<grid, block>>>(j,ni,nk,siz_iy,siz_iz,var,buff_d);
       CUDACHECK(cudaMemcpy(buff,buff_d,size,cudaMemcpyDeviceToHost));
 
       nc_put_vara_float(ioslice_nc->ncid_sly[n], 
@@ -1162,7 +1162,7 @@ io_slice_nc_put(ioslice_t    *ioslice,
     for (int ivar=i1_cmp; ivar <= i2_cmp; ivar++)
     {
       float *var = w_end_d + ivar * siz_icmp;
-      io_slice_pack_buff_z<<<grid, block>>>(k,ni,nj,siz_line,siz_slice,var,buff_d);
+      io_slice_pack_buff_z<<<grid, block>>>(k,ni,nj,siz_iy,siz_iz,var,buff_d);
       CUDACHECK(cudaMemcpy(buff,buff_d,size,cudaMemcpyDeviceToHost));
 
       nc_put_vara_float(ioslice_nc->ncid_slz[n], 
@@ -1197,9 +1197,9 @@ io_snap_nc_put(iosnap_t *iosnap,
   int ierr = 0;
 
   int num_of_snap = iosnap->num_of_snap;
-  size_t siz_line  = gdinfo->siz_iy;
-  size_t siz_slice = gdinfo->siz_iz;
-  size_t siz_volume = gdinfo->siz_icmp;
+  size_t siz_iy  = gdinfo->siz_iy;
+  size_t siz_iz = gdinfo->siz_iz;
+  size_t siz_icmp = gdinfo->siz_icmp;
 
   for (int n=0; n<num_of_snap; n++)
   {
@@ -1245,104 +1245,103 @@ io_snap_nc_put(iosnap_t *iosnap,
       // vel
       if (is_run_out_vel == 1 && snap_out_V==1)
       {
-
         io_snap_pack_buff<<<grid, block>>> (w_end_d + wav->Vx_pos,
-                 siz_line,siz_slice,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
+                 siz_iy,siz_iz,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
                  snap_dj,snap_k1,snap_nk,snap_dk,buff_d);
-        CUDACHECK(cudaMemcpy(buff+0*siz_volume,buff_d,size,cudaMemcpyDeviceToHost));
+        CUDACHECK(cudaMemcpy(buff+0*siz_icmp,buff_d,size,cudaMemcpyDeviceToHost));
         nc_put_vara_float(iosnap_nc->ncid[n],iosnap_nc->varid_V[n*CONST_NDIM+0],
-              startp,countp,buff+0*siz_volume);
+              startp,countp,buff+0*siz_icmp);
 
         io_snap_pack_buff<<<grid, block>>> (w_end_d + wav->Vy_pos,
-                 siz_line,siz_slice,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
+                 siz_iy,siz_iz,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
                  snap_dj,snap_k1,snap_nk,snap_dk,buff_d);
-        CUDACHECK(cudaMemcpy(buff+1*siz_volume,buff_d,size,cudaMemcpyDeviceToHost));
+        CUDACHECK(cudaMemcpy(buff+1*siz_icmp,buff_d,size,cudaMemcpyDeviceToHost));
         nc_put_vara_float(iosnap_nc->ncid[n],iosnap_nc->varid_V[n*CONST_NDIM+1],
-              startp,countp,buff+1*siz_volume);
+              startp,countp,buff+1*siz_icmp);
 
         io_snap_pack_buff<<<grid, block>>> (w_end_d + wav->Vz_pos,
-                 siz_line,siz_slice,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
+                 siz_iy,siz_iz,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
                  snap_dj,snap_k1,snap_nk,snap_dk,buff_d);
-        CUDACHECK(cudaMemcpy(buff+2*siz_volume,buff_d,size,cudaMemcpyDeviceToHost));
+        CUDACHECK(cudaMemcpy(buff+2*siz_icmp,buff_d,size,cudaMemcpyDeviceToHost));
         nc_put_vara_float(iosnap_nc->ncid[n],iosnap_nc->varid_V[n*CONST_NDIM+2],
-              startp,countp,buff+2*siz_volume);
+              startp,countp,buff+2*siz_icmp);
       }
 
       if (is_run_out_stress==1 && snap_out_T==1)
       {
         io_snap_pack_buff<<<grid, block>>> (w_end_d + wav->Txx_pos,
-                 siz_line,siz_slice,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
+                 siz_iy,siz_iz,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
                  snap_dj,snap_k1,snap_nk,snap_dk,buff_d);
-        CUDACHECK(cudaMemcpy(buff+3*siz_volume,buff_d,size,cudaMemcpyDeviceToHost));
+        CUDACHECK(cudaMemcpy(buff+3*siz_icmp,buff_d,size,cudaMemcpyDeviceToHost));
         nc_put_vara_float(iosnap_nc->ncid[n],iosnap_nc->varid_T[n*CONST_NDIM_2+0],
-              startp,countp,buff+3*siz_volume);
+              startp,countp,buff+3*siz_icmp);
 
         io_snap_pack_buff<<<grid, block>>> (w_end_d + wav->Tyy_pos,
-                 siz_line,siz_slice,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
+                 siz_iy,siz_iz,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
                  snap_dj,snap_k1,snap_nk,snap_dk,buff_d);
-        CUDACHECK(cudaMemcpy(buff+4*siz_volume,buff_d,size,cudaMemcpyDeviceToHost));
+        CUDACHECK(cudaMemcpy(buff+4*siz_icmp,buff_d,size,cudaMemcpyDeviceToHost));
         nc_put_vara_float(iosnap_nc->ncid[n],iosnap_nc->varid_T[n*CONST_NDIM_2+1],
-              startp,countp,buff+4*siz_volume);
+              startp,countp,buff+4*siz_icmp);
         
         io_snap_pack_buff<<<grid, block>>> (w_end_d + wav->Tzz_pos,
-                 siz_line,siz_slice,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
+                 siz_iy,siz_iz,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
                  snap_dj,snap_k1,snap_nk,snap_dk,buff_d);
-        CUDACHECK(cudaMemcpy(buff+5*siz_volume,buff_d,size,cudaMemcpyDeviceToHost));
+        CUDACHECK(cudaMemcpy(buff+5*siz_icmp,buff_d,size,cudaMemcpyDeviceToHost));
         nc_put_vara_float(iosnap_nc->ncid[n],iosnap_nc->varid_T[n*CONST_NDIM_2+2],
-              startp,countp,buff+5*siz_volume);
+              startp,countp,buff+5*siz_icmp);
         
         io_snap_pack_buff<<<grid, block>>> (w_end_d + wav->Txz_pos,
-                 siz_line,siz_slice,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
+                 siz_iy,siz_iz,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
                  snap_dj,snap_k1,snap_nk,snap_dk,buff_d);
-        CUDACHECK(cudaMemcpy(buff+6*siz_volume,buff_d,size,cudaMemcpyDeviceToHost));
+        CUDACHECK(cudaMemcpy(buff+6*siz_icmp,buff_d,size,cudaMemcpyDeviceToHost));
         nc_put_vara_float(iosnap_nc->ncid[n],iosnap_nc->varid_T[n*CONST_NDIM_2+3],
-              startp,countp,buff+6*siz_volume);
+              startp,countp,buff+6*siz_icmp);
 
         io_snap_pack_buff<<<grid, block>>> (w_end_d + wav->Tyz_pos,
-                 siz_line,siz_slice,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
+                 siz_iy,siz_iz,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
                  snap_dj,snap_k1,snap_nk,snap_dk,buff_d);
-        CUDACHECK(cudaMemcpy(buff+7*siz_volume,buff_d,size,cudaMemcpyDeviceToHost));
+        CUDACHECK(cudaMemcpy(buff+7*siz_icmp,buff_d,size,cudaMemcpyDeviceToHost));
         nc_put_vara_float(iosnap_nc->ncid[n],iosnap_nc->varid_T[n*CONST_NDIM_2+4],
-              startp,countp,buff+7*siz_volume);
+              startp,countp,buff+7*siz_icmp);
 
         io_snap_pack_buff<<<grid, block>>> (w_end_d + wav->Txy_pos,
-                 siz_line,siz_slice,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
+                 siz_iy,siz_iz,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
                  snap_dj,snap_k1,snap_nk,snap_dk,buff_d);
-        CUDACHECK(cudaMemcpy(buff+8*siz_volume,buff_d,size,cudaMemcpyDeviceToHost));
+        CUDACHECK(cudaMemcpy(buff+8*siz_icmp,buff_d,size,cudaMemcpyDeviceToHost));
         nc_put_vara_float(iosnap_nc->ncid[n],iosnap_nc->varid_T[n*CONST_NDIM_2+5],
-              startp,countp,buff+8*siz_volume);
+              startp,countp,buff+8*siz_icmp);
       }
       if (is_run_out_stress==1 && snap_out_E==1)
       {
         // convert to strain
         io_snap_stress_to_strain_eliso(md->lambda,md->mu,
-                                       buff + 3*siz_volume,   //Txx
-                                       buff + 4*siz_volume,   //Tyy
-                                       buff + 5*siz_volume,   //Tzz
-                                       buff + 6*siz_volume,   //Tyz
-                                       buff + 7*siz_volume,   //Txz
-                                       buff + 8*siz_volume,   //Txy
-                                       buff + 9*siz_volume,   //Exx
-                                       buff + 10*siz_volume,  //Eyy
-                                       buff + 11*siz_volume,  //Ezz
-                                       buff + 12*siz_volume,  //Eyz
-                                       buff + 13*siz_volume,  //Exz
-                                       buff + 14*siz_volume,  //Exy
-                                       siz_line,siz_slice,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
+                                       buff + 3*siz_icmp,   //Txx
+                                       buff + 4*siz_icmp,   //Tyy
+                                       buff + 5*siz_icmp,   //Tzz
+                                       buff + 6*siz_icmp,   //Tyz
+                                       buff + 7*siz_icmp,   //Txz
+                                       buff + 8*siz_icmp,   //Txy
+                                       buff + 9*siz_icmp,   //Exx
+                                       buff + 10*siz_icmp,  //Eyy
+                                       buff + 11*siz_icmp,  //Ezz
+                                       buff + 12*siz_icmp,  //Eyz
+                                       buff + 13*siz_icmp,  //Exz
+                                       buff + 14*siz_icmp,  //Exy
+                                       siz_iy,siz_iz,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
                                        snap_dj,snap_k1,snap_nk,snap_dk);
         // export
         nc_put_vara_float(iosnap_nc->ncid[n],iosnap_nc->varid_E[n*CONST_NDIM_2+0],
-              startp,countp,buff + 9*siz_volume);
+              startp,countp,buff + 9*siz_icmp);
         nc_put_vara_float(iosnap_nc->ncid[n],iosnap_nc->varid_E[n*CONST_NDIM_2+1],
-              startp,countp,buff + 10*siz_volume);
+              startp,countp,buff + 10*siz_icmp);
         nc_put_vara_float(iosnap_nc->ncid[n],iosnap_nc->varid_E[n*CONST_NDIM_2+2],
-              startp,countp,buff + 11*siz_volume);
+              startp,countp,buff + 11*siz_icmp);
         nc_put_vara_float(iosnap_nc->ncid[n],iosnap_nc->varid_E[n*CONST_NDIM_2+3],
-              startp,countp,buff + 12*siz_volume);
+              startp,countp,buff + 12*siz_icmp);
         nc_put_vara_float(iosnap_nc->ncid[n],iosnap_nc->varid_E[n*CONST_NDIM_2+4],
-              startp,countp,buff + 13*siz_volume);
+              startp,countp,buff + 13*siz_icmp);
         nc_put_vara_float(iosnap_nc->ncid[n],iosnap_nc->varid_E[n*CONST_NDIM_2+5],
-              startp,countp,buff + 14*siz_volume);
+              startp,countp,buff + 14*siz_icmp);
 
       }
 
@@ -1461,8 +1460,8 @@ io_snap_nc_put_ac(iosnap_t *iosnap,
   int ierr = 0;
 
   int num_of_snap = iosnap->num_of_snap;
-  size_t siz_line  = gdinfo->siz_iy;
-  size_t siz_slice = gdinfo->siz_iz;
+  size_t siz_iy  = gdinfo->siz_iy;
+  size_t siz_iz = gdinfo->siz_iz;
 
   for (int n=0; n<num_of_snap; n++)
   {
@@ -1502,19 +1501,19 @@ io_snap_nc_put_ac(iosnap_t *iosnap,
       if (is_run_out_vel == 1 && snap_out_V==1)
       {
         io_snap_pack_buff(w4d + wav->Vx_pos,
-              siz_line,siz_slice,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
+              siz_iy,siz_iz,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
               snap_dj,snap_k1,snap_nk,snap_dk,buff);
         nc_put_vara_float(iosnap_nc->ncid[n],iosnap_nc->varid_V[n*CONST_NDIM+0],
               startp,countp,buff);
 
         io_snap_pack_buff(w4d + wav->Vy_pos,
-              siz_line,siz_slice,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
+              siz_iy,siz_iz,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
               snap_dj,snap_k1,snap_nk,snap_dk,buff);
         nc_put_vara_float(iosnap_nc->ncid[n],iosnap_nc->varid_V[n*CONST_NDIM+1],
               startp,countp,buff);
 
         io_snap_pack_buff(w4d + wav->Vz_pos,
-              siz_line,siz_slice,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
+              siz_iy,siz_iz,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
               snap_dj,snap_k1,snap_nk,snap_dk,buff);
         nc_put_vara_float(iosnap_nc->ncid[n],iosnap_nc->varid_V[n*CONST_NDIM+2],
               startp,countp,buff);
@@ -1522,7 +1521,7 @@ io_snap_nc_put_ac(iosnap_t *iosnap,
       if (is_run_out_stress==1 && snap_out_T==1)
       {
         io_snap_pack_buff(w4d + wav->Txx_pos,
-              siz_line,siz_slice,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
+              siz_iy,siz_iz,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
               snap_dj,snap_k1,snap_nk,snap_dk,buff);
         nc_put_vara_float(iosnap_nc->ncid[n],iosnap_nc->varid_T[n],
               startp,countp,buff);
@@ -1557,8 +1556,8 @@ io_snap_stress_to_strain_eliso(float *lam3d,
                                float *Eyz,
                                float *Exz,
                                float *Exy,
-                               size_t siz_line,
-                               size_t siz_slice,
+                               size_t siz_iy,
+                               size_t siz_iz,
                                int starti,
                                int counti,
                                int increi,
@@ -1576,11 +1575,11 @@ io_snap_stress_to_strain_eliso(float *lam3d,
   for (int n3=0; n3<countk; n3++)
   {
     k = startk + n3 * increk;
-    iptr_k = k * siz_slice;
+    iptr_k = k * siz_iz;
     for (int n2=0; n2<countj; n2++)
     {
       j = startj + n2 * increj;
-      iptr_j = j * siz_line + iptr_k;
+      iptr_j = j * siz_iy + iptr_k;
 
       for (int n1=0; n1<counti; n1++)
       {
@@ -1611,48 +1610,48 @@ io_snap_stress_to_strain_eliso(float *lam3d,
   return 0;
 }
 __global__ void
-io_slice_pack_buff_x(int i, int nj, int nk, size_t siz_line, size_t siz_slice, float *var, float* buff_d)
+io_slice_pack_buff_x(int i, int nj, int nk, size_t siz_iy, size_t siz_iz, float *var, float* buff_d)
 {
   size_t iy = blockIdx.x * blockDim.x + threadIdx.x;
   size_t iz = blockIdx.y * blockDim.y + threadIdx.y;
   if(iy < nj && iz < nk)
   {
     size_t iptr_slice = iy + iz*nj;
-    size_t iptr = i + (iy+3) * siz_line + (iz+3) * siz_slice; 
+    size_t iptr = i + (iy+3) * siz_iy + (iz+3) * siz_iz; 
     buff_d[iptr_slice] = var[iptr];
   }
 }
 
 __global__ void
-io_slice_pack_buff_y(int j, int ni, int nk, size_t siz_line, size_t siz_slice, float *var, float *buff_d)
+io_slice_pack_buff_y(int j, int ni, int nk, size_t siz_iy, size_t siz_iz, float *var, float *buff_d)
 {
   size_t ix = blockIdx.x * blockDim.x + threadIdx.x;
   size_t iz = blockIdx.y * blockDim.y + threadIdx.y;
   if(ix < ni && iz < nk)
   {
     size_t iptr_slice = ix + iz*ni;
-    size_t iptr = (ix+3) + j * siz_line + (iz+3) * siz_slice; 
+    size_t iptr = (ix+3) + j * siz_iy + (iz+3) * siz_iz; 
     buff_d[iptr_slice] = var[iptr];
   }
 }
 
 __global__ void
-io_slice_pack_buff_z(int k, int ni, int nj, size_t siz_line, size_t siz_slice, float *var, float *buff_d)
+io_slice_pack_buff_z(int k, int ni, int nj, size_t siz_iy, size_t siz_iz, float *var, float *buff_d)
 {
   size_t ix = blockIdx.x * blockDim.x + threadIdx.x;
   size_t iy = blockIdx.y * blockDim.y + threadIdx.y;
   if(ix < ni && iy < nj)
   {
     size_t iptr_slice = ix + iy*ni;
-    size_t iptr = (ix+3) + (iy+3) * siz_line + k * siz_slice; 
+    size_t iptr = (ix+3) + (iy+3) * siz_iy + k * siz_iz; 
     buff_d[iptr_slice] = var[iptr];
   }
 }
 
 __global__ void
 io_snap_pack_buff(float *var,
-                  size_t siz_line,
-                  size_t siz_slice,
+                  size_t siz_iy,
+                  size_t siz_iz,
                   int starti,
                   int counti,
                   int increi,
@@ -1673,7 +1672,7 @@ io_snap_pack_buff(float *var,
     size_t i = starti + ix * increi;
     size_t j = startj + iy * increj;
     size_t k = startk + iz * increk;
-    size_t iptr = i + j * siz_line + k * siz_slice;
+    size_t iptr = i + j * siz_iy + k * siz_iz;
     buff_d[iptr_snap] =  var[iptr];
   }
 }

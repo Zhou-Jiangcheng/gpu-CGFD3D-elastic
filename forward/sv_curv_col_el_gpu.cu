@@ -33,7 +33,7 @@ sv_curv_col_el_iso_rhs_timg_z2_gpu(
     float * zt_x, float * zt_y, float * zt_z,
     float * jac3d, float * slw3d,
     int ni1, int ni, int nj1, int nj, int nk1, int nk2,
-    size_t siz_line, size_t siz_slice, 
+    size_t siz_iy, size_t siz_iz, 
     int fdx_len, int * fdx_indx, float * lfdx_coef,
     int fdy_len, int * fdy_indx, float * lfdy_coef,
     int fdz_len, int * fdz_indx, float * lfdz_coef,
@@ -70,7 +70,7 @@ sv_curv_col_el_iso_rhs_timg_z2_gpu(
     if(ix<ni && iy<nj)
     {
 
-      size_t iptr = (ix+ni1) + (iy+nj1) * siz_line + k * siz_slice;
+      size_t iptr = (ix+ni1) + (iy+nj1) * siz_iy + k * siz_iz;
       // metric
       xix = xi_x[iptr];
       xiy = xi_y[iptr];
@@ -97,7 +97,7 @@ sv_curv_col_el_iso_rhs_timg_z2_gpu(
                                       + xi_z[iptr4vec] * Txz[iptr4vec] );
       }
       for (n=0; n<fdy_len; n++) {
-        iptr4vec = iptr + fdy_indx[n] * siz_line;
+        iptr4vec = iptr + fdy_indx[n] * siz_iy;
         vecet[n] = jac3d[iptr4vec] * (  et_x[iptr4vec] * Txx[iptr4vec]
                                       + et_y[iptr4vec] * Txy[iptr4vec]
                                       + et_z[iptr4vec] * Txz[iptr4vec] );
@@ -105,7 +105,7 @@ sv_curv_col_el_iso_rhs_timg_z2_gpu(
 
       // blow surface -> cal
       for (n=0; n<n_free; n++) {
-        iptr4vec = iptr + fdz_indx[n] * siz_slice;
+        iptr4vec = iptr + fdz_indx[n] * siz_iz;
         veczt[n] = jac3d[iptr4vec] * (  zt_x[iptr4vec] * Txx[iptr4vec]
                                       + zt_y[iptr4vec] * Txy[iptr4vec]
                                       + zt_z[iptr4vec] * Txz[iptr4vec] );
@@ -118,7 +118,7 @@ sv_curv_col_el_iso_rhs_timg_z2_gpu(
       for (n=n_free+1; n<fdz_len; n++)
       {
         int n_img = fdz_indx[n] - 2*(n-n_free);
-        iptr4vec = iptr + n_img * siz_slice;
+        iptr4vec = iptr + n_img * siz_iz;
         veczt[n] = -jac3d[iptr4vec] * (  zt_x[iptr4vec] * Txx[iptr4vec]
                                        + zt_y[iptr4vec] * Txy[iptr4vec]
                                        + zt_z[iptr4vec] * Txz[iptr4vec] );
@@ -143,7 +143,7 @@ sv_curv_col_el_iso_rhs_timg_z2_gpu(
                                       + xi_z[iptr4vec] * Tyz[iptr4vec] );
       }
       for (n=0; n<fdy_len; n++) {
-        iptr4vec = iptr + fdy_indx[n] * siz_line;
+        iptr4vec = iptr + fdy_indx[n] * siz_iy;
         vecet[n] = jac3d[iptr4vec] * (  et_x[iptr4vec] * Txy[iptr4vec]
                                       + et_y[iptr4vec] * Tyy[iptr4vec]
                                       + et_z[iptr4vec] * Tyz[iptr4vec] );
@@ -151,7 +151,7 @@ sv_curv_col_el_iso_rhs_timg_z2_gpu(
 
       // blow surface -> cal
       for (n=0; n<n_free; n++) {
-        iptr4vec = iptr + fdz_indx[n] * siz_slice;
+        iptr4vec = iptr + fdz_indx[n] * siz_iz;
         veczt[n] = jac3d[iptr4vec] * (  zt_x[iptr4vec] * Txy[iptr4vec]
                                       + zt_y[iptr4vec] * Tyy[iptr4vec]
                                       + zt_z[iptr4vec] * Tyz[iptr4vec] );
@@ -163,7 +163,7 @@ sv_curv_col_el_iso_rhs_timg_z2_gpu(
       // above surface -> mirror
       for (n=n_free+1; n<fdz_len; n++) {
         int n_img = fdz_indx[n] - 2*(n-n_free);
-        iptr4vec = iptr + n_img * siz_slice;
+        iptr4vec = iptr + n_img * siz_iz;
         veczt[n] = -jac3d[iptr4vec] * (  zt_x[iptr4vec] * Txy[iptr4vec]
                                        + zt_y[iptr4vec] * Tyy[iptr4vec]
                                        + zt_z[iptr4vec] * Tyz[iptr4vec] );
@@ -188,7 +188,7 @@ sv_curv_col_el_iso_rhs_timg_z2_gpu(
                                       + xi_z[iptr4vec] * Tzz[iptr4vec] );
       }
       for (n=0; n<fdy_len; n++) {
-        iptr4vec = iptr + fdy_indx[n] * siz_line;
+        iptr4vec = iptr + fdy_indx[n] * siz_iy;
         vecet[n] = jac3d[iptr4vec] * (  et_x[iptr4vec] * Txz[iptr4vec]
                                       + et_y[iptr4vec] * Tyz[iptr4vec]
                                       + et_z[iptr4vec] * Tzz[iptr4vec] );
@@ -196,7 +196,7 @@ sv_curv_col_el_iso_rhs_timg_z2_gpu(
 
       // blow surface -> cal
       for (n=0; n<n_free; n++) {
-        iptr4vec = iptr + fdz_indx[n] * siz_slice;
+        iptr4vec = iptr + fdz_indx[n] * siz_iz;
         veczt[n] = jac3d[iptr4vec] * (  zt_x[iptr4vec] * Txz[iptr4vec]
                                       + zt_y[iptr4vec] * Tyz[iptr4vec]
                                       + zt_z[iptr4vec] * Tzz[iptr4vec] );
@@ -208,7 +208,7 @@ sv_curv_col_el_iso_rhs_timg_z2_gpu(
       // above surface -> mirror
       for (n=n_free+1; n<fdz_len; n++) {
         int n_img = fdz_indx[n] - 2*(n-n_free);
-        iptr4vec = iptr + n_img * siz_slice;
+        iptr4vec = iptr + n_img * siz_iz;
         veczt[n] = -jac3d[iptr4vec] * (  zt_x[iptr4vec] * Txz[iptr4vec]
                                        + zt_y[iptr4vec] * Tyz[iptr4vec]
                                        + zt_z[iptr4vec] * Tzz[iptr4vec] );

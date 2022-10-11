@@ -143,14 +143,10 @@ gd_info_set(gdinfo_t *const gdinfo,
   gdinfo->nk2_to_glob_phys0 = gdinfo->gnk2;
   
   // x dimention varies first
-  gdinfo->siz_line   = nx; 
-  gdinfo->siz_slice  = nx * ny; 
-  gdinfo->siz_volume = nx * ny * nz;
+  gdinfo->siz_iy   = nx; 
+  gdinfo->siz_iz  = nx * ny; 
+  gdinfo->siz_icmp = nx * ny * nz;
 
-  // new var, will replace above old naming
-  gdinfo->siz_iy   = gdinfo->siz_line;
-  gdinfo->siz_iz   = gdinfo->siz_slice;
-  gdinfo->siz_icmp = gdinfo->siz_volume;
 
   // set npoint_ghosts according to fdz_nghosts
   gdinfo->npoint_ghosts = fdz_nghosts;

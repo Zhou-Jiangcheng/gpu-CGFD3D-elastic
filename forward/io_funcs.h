@@ -301,8 +301,8 @@ io_snap_stress_to_strain_eliso(float *lam3d,
                                float *Eyz,
                                float *Exz,
                                float *Exy,
-                               size_t siz_line,
-                               size_t siz_slice,
+                               size_t siz_iy,
+                               size_t siz_iz,
                                int starti,
                                int counti,
                                int increi,
@@ -314,18 +314,18 @@ io_snap_stress_to_strain_eliso(float *lam3d,
                                int increk);
 
 __global__ void
-io_slice_pack_buff_x(int i, int nj, int nk, size_t siz_line, size_t siz_slice, float *var, float *buff_d);
+io_slice_pack_buff_x(int i, int nj, int nk, size_t siz_iy, size_t siz_iz, float *var, float *buff_d);
 
 __global__ void
-io_slice_pack_buff_y(int j, int ni, int nk, size_t siz_line, size_t siz_slice, float *var, float *buff_d);
+io_slice_pack_buff_y(int j, int ni, int nk, size_t siz_iy, size_t siz_iz, float *var, float *buff_d);
 
 __global__ void
-io_slice_pack_buff_z(int k, int ni, int nj, size_t siz_line, size_t siz_slice, float *var, float *buff_d);
+io_slice_pack_buff_z(int k, int ni, int nj, size_t siz_iy, size_t siz_iz, float *var, float *buff_d);
 
 __global__ void
 io_snap_pack_buff(float *var,
-                  size_t siz_line,
-                  size_t siz_slice,
+                  size_t siz_iy,
+                  size_t siz_iz,
                   int starti,
                   int counti,
                   int increi,

@@ -88,9 +88,9 @@ sv_curv_col_el_vti_onestage(
   int nx  = gdinfo_d.nx;
   int ny  = gdinfo_d.ny;
   int nz  = gdinfo_d.nz;
-  size_t siz_line   = gdinfo_d.siz_line;
-  size_t siz_slice  = gdinfo_d.siz_slice;
-  size_t siz_volume = gdinfo_d.siz_volume;
+  size_t siz_iy   = gdinfo_d.siz_iy;
+  size_t siz_iz  = gdinfo_d.siz_iz;
+  size_t siz_icmp = gdinfo_d.siz_icmp;
 
   float *matVx2Vz = bdry_d.matVx2Vz2;
   float *matVy2Vz = bdry_d.matVy2Vz2;
@@ -135,11 +135,11 @@ sv_curv_col_el_vti_onestage(
   }
   for (int j=0; j < fdy_len; j++) {
     lfdy_coef [j] = fdy_coef[j];
-    lfdy_shift[j] = fdy_indx[j] * siz_line;
+    lfdy_shift[j] = fdy_indx[j] * siz_iy;
   }
   for (int k=0; k < fdz_len; k++) {
     lfdz_coef [k] = fdz_coef[k];
-    lfdz_shift[k] = fdz_indx[k] * siz_slice;
+    lfdz_shift[k] = fdz_indx[k] * siz_iz;
   }
 
   // allocate max_len because fdz may have different lens
@@ -156,7 +156,7 @@ sv_curv_col_el_vti_onestage(
     int   *p_fdz_indx  = fdz_op[n].indx;
     float *p_fdz_coef  = fdz_op[n].coef;
     for (int n_fd = 0; n_fd < fdz_len_all[n] ; n_fd++) {
-      fdz_shift_all[n_fd + n*fdz_max_len]  = p_fdz_indx[n_fd] * siz_slice;
+      fdz_shift_all[n_fd + n*fdz_max_len]  = p_fdz_indx[n_fd] * siz_iz;
       fdz_coef_all [n_fd + n*fdz_max_len]  = p_fdz_coef[n_fd];
     }
   }
@@ -199,7 +199,7 @@ sv_curv_col_el_vti_onestage(
                         hVx,hVy,hVz,hTxx,hTyy,hTzz,hTxz,hTyz,hTxy,
                         xi_x, xi_y, xi_z, et_x, et_y, et_z, zt_x, zt_y, zt_z,
                         c11, c13, c33, c55, c66, slw3d,
-                        ni1,ni,nj1,nj,nk1,nk,siz_line,siz_slice,
+                        ni1,ni,nj1,nj,nk1,nk,siz_iy,siz_iz,
                         fdx_len, lfdx_shift_d, lfdx_coef_d,
                         fdy_len, lfdy_shift_d, lfdy_coef_d,
                         fdz_len, lfdz_shift_d, lfdz_coef_d,
@@ -219,7 +219,7 @@ sv_curv_col_el_vti_onestage(
                           Txx,Tyy,Tzz,Txz,Tyz,Txy,hVx,hVy,hVz,
                           xi_x, xi_y, xi_z, et_x, et_y, et_z, zt_x, zt_y, zt_z,
                           jac3d, slw3d,
-                          ni1,ni,nj1,nj,nk1,nk2,siz_line,siz_slice,
+                          ni1,ni,nj1,nj,nk1,nk2,siz_iy,siz_iz,
                           fdx_len, lfdx_indx_d, lfdx_coef_d,
                           fdy_len, lfdy_indx_d, lfdy_coef_d,
                           fdz_len, lfdz_indx_d, lfdz_coef_d,
@@ -237,7 +237,7 @@ sv_curv_col_el_vti_onestage(
                         xi_x, xi_y, xi_z, et_x, et_y, et_z, zt_x, zt_y, zt_z,
                         c11, c13, c33, c55, c66, slw3d,
                         matVx2Vz,matVy2Vz,
-                        ni1,ni,nj1,nj,nk1,nk2,siz_line,siz_slice,
+                        ni1,ni,nj1,nj,nk1,nk2,siz_iy,siz_iz,
                         fdx_len, lfdx_shift_d, lfdx_coef_d,
                         fdy_len, lfdy_shift_d, lfdy_coef_d,
                         num_of_fdz_op,fdz_max_len,lfdz_len_d,
@@ -254,7 +254,7 @@ sv_curv_col_el_vti_onestage(
                                   hVx,hVy,hVz,hTxx,hTyy,hTzz,hTxz,hTyz,hTxy,
                                   xi_x, xi_y, xi_z, et_x, et_y, et_z, zt_x, zt_y, zt_z,
                                   c11, c13, c33, c55, c66, slw3d,
-                                  nk2, siz_line,siz_slice,
+                                  nk2, siz_iy,siz_iz,
                                   fdx_len, lfdx_shift_d, lfdx_coef_d,
                                   fdy_len, lfdy_shift_d, lfdy_coef_d,
                                   fdz_len, lfdz_shift_d, lfdz_coef_d,
@@ -299,7 +299,7 @@ sv_curv_col_el_vti_rhs_inner_gpu(
     float *c11d, float *c13d, float *c33d,
     float *c55d, float *c66d, float *slw3d,
     int ni1, int ni, int nj1, int nj, int nk1, int nk,
-    size_t siz_line, size_t siz_slice,
+    size_t siz_iy, size_t siz_iz,
     int fdx_len, size_t * lfdx_shift, float * lfdx_coef,
     int fdy_len, size_t * lfdy_shift, float * lfdy_coef,
     int fdz_len, size_t * lfdz_shift, float * lfdz_coef,
@@ -330,7 +330,7 @@ sv_curv_col_el_vti_rhs_inner_gpu(
   // caclu all points
   if(ix<ni && iy<nj && iz<nk)
   {
-    size_t iptr = (ix+ni1) + (iy+nj1) * siz_line + (iz+nk1) * siz_slice;
+    size_t iptr = (ix+ni1) + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz;
 
     Vx_ptr = Vx + iptr;
     Vy_ptr = Vy + iptr;
@@ -469,7 +469,7 @@ sv_curv_col_el_vti_rhs_vlow_z2_gpu(
     float *c55d, float *c66d, float *slw3d,
     float * matVx2Vz, float * matVy2Vz,
     int ni1, int ni, int nj1, int nj, int nk1, int nk2,
-    size_t siz_line, size_t siz_slice,
+    size_t siz_iy, size_t siz_iz,
     int fdx_len, size_t * lfdx_shift, float * lfdx_coef,
     int fdy_len, size_t * lfdy_shift, float * lfdy_coef,
     int num_of_fdz_op, int fdz_max_len, int * fdz_len,
@@ -506,7 +506,7 @@ sv_curv_col_el_vti_rhs_vlow_z2_gpu(
 
     if(ix<ni && iy<nj)
     {
-      size_t iptr   = (ix+ni1) + (iy+nj1) * siz_line + k * siz_slice;
+      size_t iptr   = (ix+ni1) + (iy+nj1) * siz_iy + k * siz_iz;
 
       // metric
       xix = xi_x[iptr];
@@ -542,7 +542,7 @@ sv_curv_col_el_vti_rhs_vlow_z2_gpu(
 
       if (k==nk2) // at surface, convert
       {
-        size_t ij = ((ix+ni1) + (iy+nj1) * siz_line)*9;
+        size_t ij = ((ix+ni1) + (iy+nj1) * siz_iy)*9;
         DzVx = matVx2Vz[ij+3*0+0] * DxVx
              + matVx2Vz[ij+3*0+1] * DxVy
              + matVx2Vz[ij+3*0+2] * DxVz
@@ -623,7 +623,7 @@ sv_curv_col_el_vti_rhs_cfspml(
     float * zt_x, float * zt_y, float * zt_z,
     float *c11d, float *c13d, float *c33d,
     float *c55d, float *c66d, float *slw3d,
-    int nk2, size_t siz_line, size_t siz_slice,
+    int nk2, size_t siz_iy, size_t siz_iz,
     int fdx_len, size_t * lfdx_shift, float * lfdx_coef,
     int fdy_len, size_t * lfdy_shift, float * lfdy_coef,
     int fdz_len, size_t * lfdz_shift, float * lfdz_coef,
@@ -664,7 +664,7 @@ sv_curv_col_el_vti_rhs_cfspml(
                                 hTxz, hTyz, hTxy, xi_x, xi_y, xi_z,
                                 et_x, et_y, et_z, zt_x, zt_y, zt_z, 
                                 c11d, c13d, c33d, c55d, c66d, slw3d,
-                                nk2, siz_line, siz_slice,
+                                nk2, siz_iy, siz_iz,
                                 fdx_len, lfdx_shift,  lfdx_coef,
                                 fdy_len, lfdy_shift,  lfdy_coef,
                                 fdz_len, lfdz_shift,  lfdz_coef,
@@ -690,7 +690,7 @@ sv_curv_col_el_vti_rhs_cfspml_gpu(int idim, int iside,
                                   float * zt_x, float * zt_y, float * zt_z,
                                   float *c11d, float *c13d, float *c33d,
                                   float *c55d, float *c66d, float *slw3d,
-                                  int nk2, size_t siz_line, size_t siz_slice,
+                                  int nk2, size_t siz_iy, size_t siz_iz,
                                   int fdx_len, size_t * lfdx_shift, float * lfdx_coef,
                                   int fdy_len, size_t * lfdy_shift, float * lfdy_coef,
                                   int fdz_len, size_t * lfdz_shift, float * lfdz_coef,
@@ -768,7 +768,7 @@ sv_curv_col_el_vti_rhs_cfspml_gpu(int idim, int iside,
     if(ix<abs_ni  && iy<abs_nj && iz<abs_nk)
     {
       iptr_a = iz*(abs_nj*abs_ni) + iy*abs_ni + ix;
-      iptr   = (ix + abs_ni1) + (iy+abs_nj1) * siz_line + (iz+abs_nk1) * siz_slice;
+      iptr   = (ix + abs_ni1) + (iy+abs_nj1) * siz_iy + (iz+abs_nk1) * siz_iz;
       // pml coefs
       // int abs_i = ix;
       coef_D = ptr_coef_D[ix];
@@ -843,7 +843,7 @@ sv_curv_col_el_vti_rhs_cfspml_gpu(int idim, int iside,
       if (bdry_d.is_sides_free[CONST_NDIM-1][1]==1 && (iz+abs_nk1)==nk2)
       {
         // zeta derivatives
-        size_t ij = ((ix+abs_ni1) + (iy+abs_nj1) * siz_line)*9;
+        size_t ij = ((ix+abs_ni1) + (iy+abs_nj1) * siz_iy)*9;
         Dx_DzVx = matVx2Vz[ij+3*0+0] * DxVx
                 + matVx2Vz[ij+3*0+1] * DxVy
                 + matVx2Vz[ij+3*0+2] * DxVz;
@@ -893,7 +893,7 @@ sv_curv_col_el_vti_rhs_cfspml_gpu(int idim, int iside,
     if(ix<abs_ni  && iy<abs_nj && iz<abs_nk)
     {
       iptr_a = iz*(abs_nj*abs_ni) + iy*abs_ni + ix;
-      iptr   = (ix + abs_ni1) + (iy+abs_nj1)*siz_line + (iz+abs_nk1) * siz_slice;
+      iptr   = (ix + abs_ni1) + (iy+abs_nj1)*siz_iy + (iz+abs_nk1) * siz_iz;
 
       // pml coefs
       // int abs_j = iy;
@@ -967,7 +967,7 @@ sv_curv_col_el_vti_rhs_cfspml_gpu(int idim, int iside,
       if (bdry_d.is_sides_free[CONST_NDIM-1][1]==1 && (iz+abs_nk1)==nk2)
       {
         // zeta derivatives
-        size_t ij = ((ix+abs_ni1) + (iy+abs_nj1) * siz_line)*9;
+        size_t ij = ((ix+abs_ni1) + (iy+abs_nj1) * siz_iy)*9;
         Dy_DzVx = matVy2Vz[ij+3*0+0] * DyVx
                 + matVy2Vz[ij+3*0+1] * DyVy
                 + matVy2Vz[ij+3*0+2] * DyVz;
@@ -1017,7 +1017,7 @@ sv_curv_col_el_vti_rhs_cfspml_gpu(int idim, int iside,
     if(ix<abs_ni  && iy<abs_nj && iz<abs_nk)
     {
       iptr_a = iz*(abs_nj*abs_ni) + iy*abs_ni + ix;
-      iptr   = (ix + abs_ni1) + (iy+abs_nj1) * siz_line + (iz+abs_nk1) * siz_slice;
+      iptr   = (ix + abs_ni1) + (iy+abs_nj1) * siz_iy + (iz+abs_nk1) * siz_iz;
       // pml coefs
       // int abs_k = iz;
       coef_D = ptr_coef_D[iz];
@@ -1113,9 +1113,9 @@ sv_curv_col_el_vti_dvh2dvz_gpu(gdinfo_t        gdinfo_d,
   int nx  = gdinfo_d.nx;
   int ny  = gdinfo_d.ny;
   int nz  = gdinfo_d.nz;
-  size_t siz_line   = gdinfo_d.siz_iy;
-  size_t siz_slice  = gdinfo_d.siz_iz;
-  size_t siz_volume = gdinfo_d.siz_icmp;
+  size_t siz_iy   = gdinfo_d.siz_iy;
+  size_t siz_iz  = gdinfo_d.siz_iz;
+  size_t siz_icmp = gdinfo_d.siz_icmp;
 
   // point to each var
   float * xi_x = metric_d.xi_x;
@@ -1149,7 +1149,7 @@ sv_curv_col_el_vti_dvh2dvz_gpu(gdinfo_t        gdinfo_d,
   size_t iy = blockIdx.y * blockDim.y + threadIdx.y;
   if(ix<(ni2-ni1+1) && iy<(nj2-nj1+1))
   {
-    size_t iptr = (ix+ni1) + (iy+nj1) * siz_line + k * siz_slice;
+    size_t iptr = (ix+ni1) + (iy+nj1) * siz_iy + k * siz_iz;
 
     xix = xi_x[iptr];
     xiy = xi_y[iptr];
@@ -1202,7 +1202,7 @@ sv_curv_col_el_vti_dvh2dvz_gpu(gdinfo_t        gdinfo_d,
     fdlib_math_matmul3x3(A, B, AB);
     fdlib_math_matmul3x3(A, C, AC);
 
-    size_t ij = ((iy+nj1) * siz_line + (ix+ni1)) * 9;
+    size_t ij = ((iy+nj1) * siz_iy + (ix+ni1)) * 9;
 
     // save into mat
     for(int irow = 0; irow < 3; irow++){
