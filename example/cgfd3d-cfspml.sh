@@ -34,15 +34,15 @@ mkdir -p $MEDIA_DIR
 #----------------------------------------------------------------------
 cat << ieof > $PAR_FILE
 {
-  "number_of_total_grid_points_x" : 600,
-  "number_of_total_grid_points_y" : 550,
-  "number_of_total_grid_points_z" : 200,
+  "number_of_total_grid_points_x" : 300,
+  "number_of_total_grid_points_y" : 250,
+  "number_of_total_grid_points_z" : 60,
 
   "number_of_mpiprocs_x" : 2,
   "number_of_mpiprocs_y" : 2,
 
   "size_of_time_step" : 0.01,
-  "number_of_time_steps" : 1000,
+  "number_of_time_steps" : 600,
   "#time_window_length" : 8,
   "check_stability" : 1,
 
@@ -51,7 +51,7 @@ cat << ieof > $PAR_FILE
           "number_of_layers" : 10,
           "alpha_max" : 3.14,
           "beta_max" : 2.0,
-          "ref_vel"  : 5000.0
+          "ref_vel"  : 7000.0
           }
       },
   "boundary_x_right" : {
@@ -59,7 +59,7 @@ cat << ieof > $PAR_FILE
           "number_of_layers" : 10,
           "alpha_max" : 3.14,
           "beta_max" : 2.0,
-          "ref_vel"  : 5000.0
+          "ref_vel"  : 7000.0
           }
       },
   "boundary_y_front" : {
@@ -67,7 +67,7 @@ cat << ieof > $PAR_FILE
           "number_of_layers" : 10,
           "alpha_max" : 3.14,
           "beta_max" : 2.0,
-          "ref_vel"  : 5000.0
+          "ref_vel"  : 7000.0
           }
       },
   "boundary_y_back" : {
@@ -75,7 +75,7 @@ cat << ieof > $PAR_FILE
           "number_of_layers" : 10,
           "alpha_max" : 3.14,
           "beta_max" : 2.0,
-          "ref_vel"  : 5000.0
+          "ref_vel"  : 7000.0
           }
       },
   "boundary_z_bottom" : {
@@ -83,7 +83,7 @@ cat << ieof > $PAR_FILE
           "number_of_layers" : 10,
           "alpha_max" : 3.14,
           "beta_max" : 2.0,
-          "ref_vel"  : 5000.0
+          "ref_vel"  : 7000.0
           }
       },
   "boundary_z_top" : {
@@ -93,12 +93,12 @@ cat << ieof > $PAR_FILE
   "grid_generation_method" : {
       "#import" : "$GRID_DIR",
       "cartesian" : {
-        "origin"  : [0.0, 0.0, -19900.0 ],
+        "origin"  : [0.0, 0.0, -5900.0 ],
         "inteval" : [ 100.0, 100.0, 100.0 ]
       },
       "#layer_interp" : {
-        "in_grid_layer_file" : "$INPUTDIR/prep_grid/seam_smo_628.gdlay",
-        "refine_factor" : [ 1, 1, 1 ],
+        "in_grid_layer_file" : "$INPUTDIR/prep_grid/seam_smo_ablex.gdlay",
+        "refine_factor" : [ 1, 1, 1],
         "horizontal_start_index" : [ 3, 3 ],
         "vertical_last_to_top" : 0
       }
@@ -118,7 +118,7 @@ cat << ieof > $PAR_FILE
       "#input_way" : "binfile",
       "input_way" : "code",
       "#binfile" : {
-        "size"    : [1101, 1447, 1252],
+        "size"    : [1001, 1447, 1252],
         "spacing" : [-10, 10, 10],
         "origin"  : [0.0,0.0,0.0],
         "dim1" : "z",
@@ -132,7 +132,7 @@ cat << ieof > $PAR_FILE
       "#import" : "$MEDIA_DIR",
       "#infile_layer" : "$INPUTDIR/prep_medium/basin_el_iso.md3lay",
       "#infile_grid" : "$INPUTDIR/prep_medium/topolay_el_iso.md3grd",
-      "equivalent_medium_method" : "loc",
+      "#equivalent_medium_method" : "loc",
       "#equivalent_medium_method" : "har"
   },
 
@@ -152,34 +152,34 @@ cat << ieof > $PAR_FILE
 
   "in_station_file" : "$INPUTDIR/prep_station/station.list",
 
-  "#receiver_line" : [
+  "receiver_line" : [
     {
       "name" : "line_x_1",
-      "grid_index_start"    : [  100, 100, 100 ],
+      "grid_index_start"    : [  50, 149, 59 ],
       "grid_index_incre"    : [  5,  0,  0 ],
       "grid_index_count"    : 10
     },
     {
       "name" : "line_y_1",
-      "grid_index_start"    : [ 200, 100, 130 ],
+      "grid_index_start"    : [ 200, 100, 59 ],
       "grid_index_incre"    : [  0,  5,  0 ],
       "grid_index_count"    : 10
     } 
   ],
 
-  "#slice" : {
-      "x_index" : [ 190 ],
-      "y_index" : [ 120 ],
+  "slice" : {
+      "x_index" : [ 100 ],
+      "y_index" : [ 100 ],
       "z_index" : [ 59 ]
   },
 
   "snapshot" : [
     {
       "name" : "volume_vel",
-      "grid_index_start" : [ 0, 0, 199 ],
+      "grid_index_start" : [ 0, 0, 59 ],
       "grid_index_count" : [ 300,250, 1 ],
       "grid_index_incre" : [  1, 1, 1 ],
-      "time_index_start" : 1,
+      "time_index_start" : 0,
       "time_index_incre" : 1,
       "save_velocity" : 1,
       "save_stress"   : 0,
