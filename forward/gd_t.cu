@@ -92,6 +92,34 @@ gd_curv_init(gdinfo_t *gdinfo, gd_t *gdcurv)
       fprintf(stderr,"Error: failed to alloc coord AABB vars\n");
       fflush(stderr);
   }
+
+  gdcurv->tile_istart = (int *) fdlib_mem_calloc_1d_int(
+                 GD_TILE_NX, 0.0, "gd_curv_init");
+  gdcurv->tile_iend = (int *) fdlib_mem_calloc_1d_int(
+                 GD_TILE_NX, 0.0, "gd_curv_init");
+  gdcurv->tile_jstart = (int *) fdlib_mem_calloc_1d_int(
+                 GD_TILE_NY, 0.0, "gd_curv_init");
+  gdcurv->tile_jend = (int *) fdlib_mem_calloc_1d_int(
+                 GD_TILE_NY, 0.0, "gd_curv_init");
+  gdcurv->tile_kstart = (int *) fdlib_mem_calloc_1d_int(
+                 GD_TILE_NZ, 0.0, "gd_curv_init");
+  gdcurv->tile_kend = (int *) fdlib_mem_calloc_1d_int(
+                 GD_TILE_NZ, 0.0, "gd_curv_init");
+
+  int size = GD_TILE_NX*GD_TILE_NY*GD_TILE_NZ;
+  gdcurv->tile_xmin = (float *) fdlib_mem_calloc_1d_float(
+                 size, 0.0, "gd_curv_init");
+  gdcurv->tile_xmax = (float *) fdlib_mem_calloc_1d_float(
+                 size, 0.0, "gd_curv_init");
+  gdcurv->tile_ymin = (float *) fdlib_mem_calloc_1d_float(
+                 size, 0.0, "gd_curv_init");
+  gdcurv->tile_ymax = (float *) fdlib_mem_calloc_1d_float(
+                 size, 0.0, "gd_curv_init");
+  gdcurv->tile_zmin = (float *) fdlib_mem_calloc_1d_float(
+                 size, 0.0, "gd_curv_init");
+  gdcurv->tile_zmax = (float *) fdlib_mem_calloc_1d_float(
+                 size, 0.0, "gd_curv_init");
+
   return;
 }
 
@@ -1869,12 +1897,13 @@ gd_curv_set_minmax(gdinfo_t *gdinfo, gd_t *gdcurv)
             }
           }
         }
-        gdcurv->tile_xmin[k_tile][j_tile][i_tile] = xmin;
-        gdcurv->tile_xmax[k_tile][j_tile][i_tile] = xmax;
-        gdcurv->tile_ymin[k_tile][j_tile][i_tile] = ymin;
-        gdcurv->tile_ymax[k_tile][j_tile][i_tile] = ymax;
-        gdcurv->tile_zmin[k_tile][j_tile][i_tile] = zmin;
-        gdcurv->tile_zmax[k_tile][j_tile][i_tile] = zmax;
+        int iptr_tile = i_tile + j_tile * GD_TILE_NX  + k_tile * GD_TILE_NX * GD_TILE_NY; 
+        gdcurv->tile_xmin[iptr_tile] = xmin;
+        gdcurv->tile_xmax[iptr_tile] = xmax;
+        gdcurv->tile_ymin[iptr_tile] = ymin;
+        gdcurv->tile_ymax[iptr_tile] = ymax;
+        gdcurv->tile_zmin[iptr_tile] = zmin;
+        gdcurv->tile_zmax[iptr_tile] = zmax;
 
       }
     }
@@ -2224,10 +2253,11 @@ gd_curv_depth_to_axis(gdinfo_t *gdinfo,
     {
       for (int i_tile = 0; i_tile < GD_TILE_NX; i_tile++)
       {
-        if (  sx < gd->tile_xmin[k_tile][j_tile][i_tile] ||
-              sx > gd->tile_xmax[k_tile][j_tile][i_tile] ||
-              sy < gd->tile_ymin[k_tile][j_tile][i_tile] ||
-              sy > gd->tile_ymax[k_tile][j_tile][i_tile])
+        int iptr_tile = i_tile + j_tile * GD_TILE_NX  + k_tile * GD_TILE_NX * GD_TILE_NY; 
+        if (  sx < gd->tile_xmin[iptr_tile] ||
+              sx > gd->tile_xmax[iptr_tile] ||
+              sy < gd->tile_ymin[iptr_tile] ||
+              sy > gd->tile_ymax[iptr_tile])
         {
           // loop next tile
           continue;
@@ -2697,14 +2727,15 @@ gd_print(gd_t *gd)
     {
       for (int i_tile = 0; i_tile < GD_TILE_NX; i_tile++)
       {
+        int iptr_tile = i_tile + j_tile * GD_TILE_NX  + k_tile * GD_TILE_NX * GD_TILE_NY; 
         fprintf(stdout," tile %d,%d,%d, range (%g,%g,%g,%g,%g,%g)\n",
           i_tile,j_tile,k_tile,
-          gd->tile_xmin[k_tile][j_tile][i_tile],
-          gd->tile_xmax[k_tile][j_tile][i_tile],
-          gd->tile_ymin[k_tile][j_tile][i_tile],
-          gd->tile_ymax[k_tile][j_tile][i_tile],
-          gd->tile_zmin[k_tile][j_tile][i_tile],
-          gd->tile_zmax[k_tile][j_tile][i_tile]);
+          gd->tile_xmin[iptr_tile],
+          gd->tile_xmax[iptr_tile],
+          gd->tile_ymin[iptr_tile],
+          gd->tile_ymax[iptr_tile],
+          gd->tile_zmin[iptr_tile],
+          gd->tile_zmax[iptr_tile]);
       }
     }
   }
