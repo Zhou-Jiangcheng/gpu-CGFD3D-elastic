@@ -67,32 +67,18 @@ typedef struct {
   float *cell_zmin;
   float *cell_zmax;
   // boundary of tiles by 4x4x4 partition for AABB algorithm
-  //int   tile_istart[GD_TILE_NX];
-  //int   tile_iend  [GD_TILE_NX];
-  //int   tile_jstart[GD_TILE_NY];
-  //int   tile_jend  [GD_TILE_NY];
-  //int   tile_kstart[GD_TILE_NZ];
-  //int   tile_kend  [GD_TILE_NZ];
-  //float tile_xmin[GD_TILE_NZ][GD_TILE_NY][GD_TILE_NX];
-  //float tile_xmax[GD_TILE_NZ][GD_TILE_NY][GD_TILE_NX];
-  //float tile_ymin[GD_TILE_NZ][GD_TILE_NY][GD_TILE_NX];
-  //float tile_ymax[GD_TILE_NZ][GD_TILE_NY][GD_TILE_NX];
-  //float tile_zmin[GD_TILE_NZ][GD_TILE_NY][GD_TILE_NX];
-  //float tile_zmax[GD_TILE_NZ][GD_TILE_NY][GD_TILE_NX];
-
-  int   *tile_istart;
-  int   *tile_iend  ;
-  int   *tile_jstart;
-  int   *tile_jend  ;
-  int   *tile_kstart;
-  int   *tile_kend  ;
-
-  float *tile_xmin;
-  float *tile_xmax;
-  float *tile_ymin;
-  float *tile_ymax;
-  float *tile_zmin;
-  float *tile_zmax;
+  int   tile_istart[GD_TILE_NX];
+  int   tile_iend  [GD_TILE_NX];
+  int   tile_jstart[GD_TILE_NY];
+  int   tile_jend  [GD_TILE_NY];
+  int   tile_kstart[GD_TILE_NZ];
+  int   tile_kend  [GD_TILE_NZ];
+  float tile_xmin[GD_TILE_NZ][GD_TILE_NY][GD_TILE_NX];
+  float tile_xmax[GD_TILE_NZ][GD_TILE_NY][GD_TILE_NX];
+  float tile_ymin[GD_TILE_NZ][GD_TILE_NY][GD_TILE_NX];
+  float tile_ymax[GD_TILE_NZ][GD_TILE_NY][GD_TILE_NX];
+  float tile_zmin[GD_TILE_NZ][GD_TILE_NY][GD_TILE_NX];
+  float tile_zmax[GD_TILE_NZ][GD_TILE_NY][GD_TILE_NX];
 
   size_t siz_iy;
   size_t siz_iz;
