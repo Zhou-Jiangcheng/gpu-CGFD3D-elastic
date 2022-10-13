@@ -29,7 +29,13 @@ int
 init_src_device(src_t *src, src_t *src_d);
 
 int 
-init_bdry_device(gdinfo_t *gdinfo, bdry_t *bdry, bdry_t *bdry_d);
+init_bdryfree_device(gdinfo_t *gdinfo, bdryfree_t *bdryfree, bdryfree_t *bdryfree_d);
+
+int 
+init_bdrypml_device(gdinfo_t *gdinfo, bdrypml_t *bdrypml, bdrypml_t *bdrypml_d);
+
+int
+init_bdryexp_device(gdinfo_t *gdinfo, bdryexp_t *bdryexp, bdryexp_t *bdryexp_d);
 
 int 
 init_wave_device(wav_t *wav, wav_t *wav_d);
@@ -58,8 +64,14 @@ dealloc_metric_device(gdcurv_metric_t metric_d);
 int 
 dealloc_src_device(src_t src_d);
 
+int
+dealloc_bdryfree_device(bdryfree_t bdryfree_d);
+
 int 
-dealloc_bdry_device(bdry_t bdry_d);
+dealloc_bdrypml_device(bdrypml_t bdrypml_d);
+
+int
+dealloc_bdryexp_device(bdryexp_t bdryexp_d);
 
 int 
 dealloc_wave_device(wav_t wav_d);

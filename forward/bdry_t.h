@@ -65,62 +65,8 @@ typedef struct {
 
 typedef struct
 {
-  // 0 or 1 to indicate corresponding boundary condition
-  //   such implementation simplifies calling the funcs
-  int is_sides_pml [CONST_NDIM][2];
   int is_sides_free[CONST_NDIM][2];
-  int is_sides_mpml[CONST_NDIM][2];
-  int is_sides_ablexp [CONST_NDIM][2];
-
-  int is_enable_pml;
   int is_enable_free;
-  int is_enable_mpml;
-  int is_enable_ablexp;
-
-  // same as grid, to make here self contained
-  int nx;
-  int ny;
-  int nz;
-
-  // used for PML or exp
-  int num_of_layers[CONST_NDIM][2]; //
-
-  int ni1[CONST_NDIM][2];
-  int ni2[CONST_NDIM][2];
-  int nj1[CONST_NDIM][2];
-  int nj2[CONST_NDIM][2];
-  int nk1[CONST_NDIM][2];
-  int nk2[CONST_NDIM][2];
-
-  //
-  // for ADE CFS-PML
-  //
-
-  float *A[CONST_NDIM][2]; // dim, side, length
-  float *B[CONST_NDIM][2]; // dim, side, length
-  float *D[CONST_NDIM][2]; // dim, side, length
-
-  // for middile point of staggered grid
-  float *Am[CONST_NDIM][2]; // dim, side, length
-  float *Bm[CONST_NDIM][2]; // dim, side, length
-  float *Dm[CONST_NDIM][2]; // dim, side, length
-
-  bdrypml_auxvar_t auxvar[CONST_NDIM][2];
-
-  //
-  // for ABLEXP
-  //
-
-  // use 6 blocks to partition the boundaries
-  bdry_block_t bdry_blk[CONST_NDIM_2];
-
-  float *ablexp_Ex;
-  float *ablexp_Ey;
-  float *ablexp_Ez;
-
-  //
-  // for free surface condition
-  //
 
   // top
   float *matVx2Vz2; // [j,i, dzVi, dxVi]
@@ -146,14 +92,61 @@ typedef struct
   float *matVx2Vy2;
   float *matVz2Vy2;
 
-} bdry_t;
+} bdryfree_t;
 
+typedef struct
+{
+  // 0 or 1 to indicate corresponding boundary condition
+  //   such implementation simplifies calling the funcs
+  int is_sides_pml [CONST_NDIM][2];
+  int is_sides_mpml[CONST_NDIM][2];
+
+  int is_enable_pml;
+  int is_enable_mpml;
+
+  // used for PML or exp
+  int num_of_layers[CONST_NDIM][2]; //
+
+  int ni1[CONST_NDIM][2];
+  int ni2[CONST_NDIM][2];
+  int nj1[CONST_NDIM][2];
+  int nj2[CONST_NDIM][2];
+  int nk1[CONST_NDIM][2];
+  int nk2[CONST_NDIM][2];
+
+  float *A[CONST_NDIM][2]; // dim, side, length
+  float *B[CONST_NDIM][2]; // dim, side, length
+  float *D[CONST_NDIM][2]; // dim, side, length
+
+  bdrypml_auxvar_t auxvar[CONST_NDIM][2];
+
+} bdrypml_t;
+
+typedef struct
+{
+  int is_sides_ablexp [CONST_NDIM][2];
+  int is_enable_ablexp;
+
+  // used for PML or exp
+  int num_of_layers[CONST_NDIM][2]; //
+
+  int ni1[CONST_NDIM][2];
+  int ni2[CONST_NDIM][2];
+  int nj1[CONST_NDIM][2];
+  int nj2[CONST_NDIM][2];
+  int nk1[CONST_NDIM][2];
+  int nk2[CONST_NDIM][2];
+  // use 6 blocks to partition the boundaries
+  bdry_block_t bdry_blk[CONST_NDIM_2];
+
+  float *ablexp_Ex;
+  float *ablexp_Ey;
+  float *ablexp_Ez;
+
+} bdryexp_t;
 /*************************************************
  * function prototype
  *************************************************/
-
-int
-bdry_init(bdry_t *bdry, int nx, int ny, int nz);
 
 float
 bdry_pml_cal_R(float N);
@@ -177,7 +170,7 @@ void
 bdry_pml_set(gdinfo_t *gdinfo,
              gd_t *gd,
              wav_t *wav,
-             bdry_t *bdrypml,
+             bdrypml_t *bdrypml,
              int   *neighid, 
              int   in_is_sides[][2],
              int   in_num_layers[][2],
@@ -203,7 +196,7 @@ bdry_cal_abl_len_dh(gd_t *gd,
 
 int
 bdry_free_set(gdinfo_t        *gdinfo,
-              bdry_t      *bdryfree,
+              bdryfree_t      *bdryfree,
               int   *neighid, 
               int   in_is_sides[][2],
               const int verbose);
@@ -212,7 +205,7 @@ int
 bdry_ablexp_set(gdinfo_t *gdinfo,
              gd_t *gd,
              wav_t *wav,
-             bdry_t *bdry,
+             bdryexp_t *bdryexp,
              int   *neighid, 
              int   in_is_sides[][2],
              int   in_num_layers[][2],
@@ -225,7 +218,7 @@ float
 bdry_ablexp_cal_mask(int i, float vel, float dt, int num_lay, float dh);
 
 int
-bdry_ablexp_apply(bdry_t bdry, gdinfo_t *gdinfo, float *w_end, int ncmp);
+bdry_ablexp_apply(bdryexp_t bdryexp, gdinfo_t *gdinfo, float *w_end, int ncmp);
 
 __global__ 
 void

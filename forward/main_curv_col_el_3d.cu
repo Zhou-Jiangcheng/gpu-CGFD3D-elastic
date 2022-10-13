@@ -104,7 +104,9 @@ int main(int argc, char** argv)
   md_t            *md            = blk->md;
   wav_t           *wav           = blk->wav;
   src_t           *src           = blk->src;
-  bdry_t          *bdry          = blk->bdry;
+  bdryfree_t      *bdryfree      = blk->bdryfree;
+  bdrypml_t       *bdrypml       = blk->bdrypml;
+  bdryexp_t       *bdryexp       = blk->bdryexp;
   iorecv_t        *iorecv        = blk->iorecv;
   ioline_t        *ioline        = blk->ioline;
   ioslice_t       *ioslice       = blk->ioslice;
@@ -666,11 +668,10 @@ int main(int argc, char** argv)
 //-------------------------------------------------------------------------------
 
   if (myid==0 && verbose>0) fprintf(stdout,"setup absorbingg boundary ...\n"); 
-  bdry_init(bdry, gdinfo->nx, gdinfo->ny, gdinfo->nz);
 
   if (par->bdry_has_cfspml == 1)
   {
-    bdry_pml_set(gdinfo, gdcurv, wav, bdry,
+    bdry_pml_set(gdinfo, gdcurv, wav, bdrypml,
                  mympi->neighid,
                  par->cfspml_is_sides,
                  par->abs_num_of_layers,
@@ -684,7 +685,7 @@ int main(int argc, char** argv)
   {
     if (myid==0 && verbose>0) fprintf(stdout,"setup sponge layer ...\n"); 
 
-    bdry_ablexp_set(gdinfo, gdcurv, wav, bdry,
+    bdry_ablexp_set(gdinfo, gdcurv, wav, bdryexp,
                     mympi->neighid,
                     par->ablexp_is_sides,
                     par->abs_num_of_layers,
@@ -701,7 +702,7 @@ int main(int argc, char** argv)
   if (par->bdry_has_free == 1)
   {
     if (myid==0 && verbose>0) fprintf(stdout,"cal free surface matrix ...\n"); 
-    bdry_free_set(gdinfo, bdry, mympi->neighid, par->free_is_sides, verbose);
+    bdry_free_set(gdinfo, bdryfree, mympi->neighid, par->free_is_sides, verbose);
   }
 
 //-------------------------------------------------------------------------------
@@ -738,7 +739,7 @@ int main(int argc, char** argv)
   time_t t_start = time(NULL);
   
   drv_rk_curv_col_allstep(fd, gdinfo, gdcurv_metric, md,
-                          src, bdry, wav, mympi,
+                          src, bdryfree, bdrypml, bdryexp, wav, mympi,
                           iorecv, ioline, ioslice, iosnap,
                           dt, nt_total, t0,
                           blk->output_fname_part,

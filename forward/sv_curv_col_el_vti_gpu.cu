@@ -27,7 +27,8 @@ sv_curv_col_el_vti_onestage(
   gdinfo_t  gdinfo_d,
   gdcurv_metric_t metric_d,
   md_t md_d,
-  bdry_t bdry_d,
+  bdrypml_t  bdrypml_d,
+  bdryfree_t bdryfree_d,
   src_t src_d,
   // include different order/stentil
   int num_of_fdx_op, fd_op_t *fdx_op,
@@ -89,11 +90,11 @@ sv_curv_col_el_vti_onestage(
   int ny  = gdinfo_d.ny;
   int nz  = gdinfo_d.nz;
   size_t siz_iy   = gdinfo_d.siz_iy;
-  size_t siz_iz  = gdinfo_d.siz_iz;
+  size_t siz_iz   = gdinfo_d.siz_iz;
   size_t siz_icmp = gdinfo_d.siz_icmp;
 
-  float *matVx2Vz = bdry_d.matVx2Vz2;
-  float *matVy2Vz = bdry_d.matVy2Vz2;
+  float *matVx2Vz = bdryfree_d.matVx2Vz2;
+  float *matVy2Vz = bdryfree_d.matVy2Vz2;
 
   // local fd op
   int    fdx_len;
@@ -207,7 +208,7 @@ sv_curv_col_el_vti_onestage(
   }
 
   // free surface at z2
-  if (bdry_d.is_sides_free[2][1] == 1)
+  if (bdryfree_d.is_sides_free[2][1] == 1)
   {
     // tractiong
     {
@@ -248,7 +249,7 @@ sv_curv_col_el_vti_onestage(
   }
 
   // cfs-pml, loop face inside
-  if (bdry_d.is_enable_pml == 1)
+  if (bdrypml_d.is_enable_pml == 1)
   {
     sv_curv_col_el_vti_rhs_cfspml(Vx,Vy,Vz,Txx,Tyy,Tzz,Txz,Tyz,Txy,
                                   hVx,hVy,hVz,hTxx,hTyy,hTzz,hTxz,hTyz,hTxy,
@@ -258,7 +259,7 @@ sv_curv_col_el_vti_onestage(
                                   fdx_len, lfdx_shift_d, lfdx_coef_d,
                                   fdy_len, lfdy_shift_d, lfdy_coef_d,
                                   fdz_len, lfdz_shift_d, lfdz_coef_d,
-                                  bdry_d,
+                                  bdrypml_d, bdryfree_d,
                                   myid, verbose);
   }
 
@@ -627,7 +628,7 @@ sv_curv_col_el_vti_rhs_cfspml(
     int fdx_len, size_t * lfdx_shift, float * lfdx_coef,
     int fdy_len, size_t * lfdy_shift, float * lfdy_coef,
     int fdz_len, size_t * lfdz_shift, float * lfdz_coef,
-    bdry_t bdry_d,
+    bdrypml_t bdrypml_d, bdryfree_t bdryfree_d,
     const int myid, const int verbose)
 {
   // check each side
@@ -636,15 +637,15 @@ sv_curv_col_el_vti_rhs_cfspml(
     for (int iside=0; iside<2; iside++)
     {
       // skip to next face if not cfspml
-      if (bdry_d.is_sides_pml[idim][iside] == 0) continue;
+      if (bdrypml_d.is_sides_pml[idim][iside] == 0) continue;
 
       // get index into local var
-      int abs_ni1 = bdry_d.ni1[idim][iside];
-      int abs_ni2 = bdry_d.ni2[idim][iside];
-      int abs_nj1 = bdry_d.nj1[idim][iside];
-      int abs_nj2 = bdry_d.nj2[idim][iside];
-      int abs_nk1 = bdry_d.nk1[idim][iside];
-      int abs_nk2 = bdry_d.nk2[idim][iside];
+      int abs_ni1 = bdrypml_d.ni1[idim][iside];
+      int abs_ni2 = bdrypml_d.ni2[idim][iside];
+      int abs_nj1 = bdrypml_d.nj1[idim][iside];
+      int abs_nj2 = bdrypml_d.nj2[idim][iside];
+      int abs_nk1 = bdrypml_d.nk1[idim][iside];
+      int abs_nk2 = bdrypml_d.nk2[idim][iside];
 
       
       int abs_ni = abs_ni2-abs_ni1+1; 
@@ -668,7 +669,8 @@ sv_curv_col_el_vti_rhs_cfspml(
                                 fdx_len, lfdx_shift,  lfdx_coef,
                                 fdy_len, lfdy_shift,  lfdy_coef,
                                 fdz_len, lfdz_shift,  lfdz_coef,
-                                bdry_d, myid, verbose);
+                                bdrypml_d, bdryfree_d,
+                                myid, verbose);
         //cudaDeviceSynchronize();
       }
     } // iside
@@ -694,14 +696,14 @@ sv_curv_col_el_vti_rhs_cfspml_gpu(int idim, int iside,
                                   int fdx_len, size_t * lfdx_shift, float * lfdx_coef,
                                   int fdy_len, size_t * lfdy_shift, float * lfdy_coef,
                                   int fdz_len, size_t * lfdz_shift, float * lfdz_coef,
-                                  bdry_t bdry_d, 
+                                  bdrypml_t bdrypml_d, bdryfree_t bdryfree_d,
                                   const int myid, const int verbose)
 {
   size_t ix = blockIdx.x * blockDim.x + threadIdx.x;
   size_t iy = blockIdx.y * blockDim.y + threadIdx.y;
   size_t iz = blockIdx.z * blockDim.z + threadIdx.z;
-  float *matVx2Vz = bdry_d.matVx2Vz2;
-  float *matVy2Vz = bdry_d.matVy2Vz2;
+  float *matVx2Vz = bdryfree_d.matVx2Vz2;
+  float *matVy2Vz = bdryfree_d.matVy2Vz2;
   // local
   size_t iptr, iptr_a;
   float coef_A, coef_B, coef_D, coef_B_minus_1;
@@ -709,12 +711,12 @@ sv_curv_col_el_vti_rhs_cfspml_gpu(int idim, int iside,
   int n_fd;
 
   // get index into local var
-  int abs_ni1 = bdry_d.ni1[idim][iside];
-  int abs_ni2 = bdry_d.ni2[idim][iside];
-  int abs_nj1 = bdry_d.nj1[idim][iside];
-  int abs_nj2 = bdry_d.nj2[idim][iside];
-  int abs_nk1 = bdry_d.nk1[idim][iside];
-  int abs_nk2 = bdry_d.nk2[idim][iside];
+  int abs_ni1 = bdrypml_d.ni1[idim][iside];
+  int abs_ni2 = bdrypml_d.ni2[idim][iside];
+  int abs_nj1 = bdrypml_d.nj1[idim][iside];
+  int abs_nj2 = bdrypml_d.nj2[idim][iside];
+  int abs_nk1 = bdrypml_d.nk1[idim][iside];
+  int abs_nk2 = bdrypml_d.nk2[idim][iside];
 
   
   int abs_ni = abs_ni2-abs_ni1+1; 
@@ -732,11 +734,11 @@ sv_curv_col_el_vti_rhs_cfspml_gpu(int idim, int iside,
   // for free surface
   float Dx_DzVx,Dy_DzVx,Dx_DzVy,Dy_DzVy,Dx_DzVz,Dy_DzVz;
   // get coef for this face
-  float * ptr_coef_A = bdry_d.A[idim][iside];
-  float * ptr_coef_B = bdry_d.B[idim][iside];
-  float * ptr_coef_D = bdry_d.D[idim][iside];
+  float * ptr_coef_A = bdrypml_d.A[idim][iside];
+  float * ptr_coef_B = bdrypml_d.B[idim][iside];
+  float * ptr_coef_D = bdrypml_d.D[idim][iside];
 
-  bdrypml_auxvar_t *auxvar = &(bdry_d.auxvar[idim][iside]);
+  bdrypml_auxvar_t *auxvar = &(bdrypml_d.auxvar[idim][iside]);
 
   // get pml vars
   float * abs_vars_cur = auxvar->cur;
@@ -840,7 +842,7 @@ sv_curv_col_el_vti_rhs_cfspml_gpu(int idim, int iside,
       // add contributions from free surface condition
       //  not consider timg because conflict with main cfspml,
       //     need to revise in the future if required
-      if (bdry_d.is_sides_free[CONST_NDIM-1][1]==1 && (iz+abs_nk1)==nk2)
+      if (bdryfree_d.is_sides_free[CONST_NDIM-1][1]==1 && (iz+abs_nk1)==nk2)
       {
         // zeta derivatives
         size_t ij = ((ix+abs_ni1) + (iy+abs_nj1) * siz_iy)*9;
@@ -964,7 +966,7 @@ sv_curv_col_el_vti_rhs_cfspml_gpu(int idim, int iside,
       pml_hTxy[iptr_a] = coef_D * hTxy_rhs - coef_A * pml_Txy[iptr_a];
 
       // add contributions from free surface condition
-      if (bdry_d.is_sides_free[CONST_NDIM-1][1]==1 && (iz+abs_nk1)==nk2)
+      if (bdryfree_d.is_sides_free[CONST_NDIM-1][1]==1 && (iz+abs_nk1)==nk2)
       {
         // zeta derivatives
         size_t ij = ((ix+abs_ni1) + (iy+abs_nj1) * siz_iy)*9;
@@ -1100,8 +1102,8 @@ sv_curv_col_el_vti_rhs_cfspml_gpu(int idim, int iside,
 __global__ void
 sv_curv_col_el_vti_dvh2dvz_gpu(gdinfo_t        gdinfo_d,
                                gdcurv_metric_t metric_d,
-                               md_t       md_d,
-                               bdry_t     bdry_d,
+                               md_t            md_d,
+                               bdryfree_t      bdryfree_d,
                                const int verbose)
 {
   int ni1 = gdinfo_d.ni1;
@@ -1114,7 +1116,7 @@ sv_curv_col_el_vti_dvh2dvz_gpu(gdinfo_t        gdinfo_d,
   int ny  = gdinfo_d.ny;
   int nz  = gdinfo_d.nz;
   size_t siz_iy   = gdinfo_d.siz_iy;
-  size_t siz_iz  = gdinfo_d.siz_iz;
+  size_t siz_iz   = gdinfo_d.siz_iz;
   size_t siz_icmp = gdinfo_d.siz_icmp;
 
   // point to each var
@@ -1134,8 +1136,8 @@ sv_curv_col_el_vti_dvh2dvz_gpu(gdinfo_t        gdinfo_d,
   float * c55d = md_d.c55;
   float * c66d = md_d.c66;
 
-  float *matVx2Vz = bdry_d.matVx2Vz2;
-  float *matVy2Vz = bdry_d.matVy2Vz2;
+  float *matVx2Vz = bdryfree_d.matVx2Vz2;
+  float *matVy2Vz = bdryfree_d.matVy2Vz2;
 
   float A[3][3], B[3][3], C[3][3];
   float AB[3][3], AC[3][3];

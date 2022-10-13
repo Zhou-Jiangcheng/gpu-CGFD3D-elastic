@@ -24,7 +24,8 @@ sv_curv_col_el_iso_onestage(
   gdinfo_t   gdinfo_d,
   gdcurv_metric_t  metric_d,
   md_t md_d,
-  bdry_t bdry_d,
+  bdrypml_t  bdrypml_d,
+  bdryfree_t bdryfree_d,
   src_t src_d,
   // include different order/stentil
   int num_of_fdx_op, fd_op_t *fdx_op,
@@ -86,7 +87,7 @@ sv_curv_col_el_iso_rhs_cfspml(
     int fdx_len, size_t * fdx_shift, float * fdx_coef,
     int fdy_len, size_t * fdy_shift, float * fdy_coef,
     int fdz_len, size_t * fdz_shift, float * fdz_coef,
-    bdry_t bdry_d,
+    bdrypml_t bdrypml_d, bdryfree_t bdryfree_d,
     const int myid, const int verbose);
 
 __global__ void
@@ -106,13 +107,13 @@ sv_curv_col_el_iso_rhs_cfspml_gpu(
     int fdx_len, size_t * fdx_shift, float * fdx_coef,
     int fdy_len, size_t * fdy_shift, float * fdy_coef,
     int fdz_len, size_t * fdz_shift, float * fdz_coef,
-    bdry_t bdry_d,
+    bdrypml_t bdrypml_d, bdryfree_t bdryfree_d,
     const int myid, const int verbose);
 
 __global__ void
 sv_curv_col_el_iso_dvh2dvz_gpu(gdinfo_t        gdinfo_d,
-                                     gdcurv_metric_t metric_d,
-                                     md_t       md_d,
-                                     bdry_t      bdry_d,
-                                     const int verbose);
+                               gdcurv_metric_t metric_d,
+                               md_t            md_d,
+                               bdryfree_t      bdryfree_d,
+                               const int verbose);
 #endif

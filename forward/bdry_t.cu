@@ -17,32 +17,13 @@
 #define CONSPA 1.0f // power for alpha
 
 /*
- *   init bdry_t
- */
-
-int
-bdry_init(bdry_t *bdry, int nx, int ny, int nz)
-{
-  bdry->is_enable_pml  = 0;
-  bdry->is_enable_mpml = 0;
-  bdry->is_enable_ablexp  = 0;
-  bdry->is_enable_free = 0;
-
-  bdry->nx = nx;
-  bdry->ny = ny;
-  bdry->nz = nz;
-
-  return 0;
-}
-
-/*
  * matrix for velocity gradient conversion
  *  only implement z2 (top) right now
  */
 
 int
 bdry_free_set(gdinfo_t    *gdinfo,
-              bdry_t      *bdryfree,
+              bdryfree_t  *bdryfree,
               int   *neighid, 
               int   in_is_sides[][2],
               const int verbose)
@@ -100,7 +81,7 @@ void
 bdry_pml_set(gdinfo_t *gdinfo,
              gd_t *gd,
              wav_t *wav,
-             bdry_t *bdrypml,
+             bdrypml_t *bdrypml,
              int   *neighid, 
              int   in_is_sides[][2],
              int   in_num_layers[][2],
@@ -494,7 +475,7 @@ int
 bdry_ablexp_set(gdinfo_t *gdinfo,
                 gd_t *gd,
                 wav_t *wav,
-                bdry_t *bdryexp,
+                bdryexp_t *bdryexp,
                 int   *neighid, 
                 int   in_is_sides[][2],
                 int   in_num_layers[][2],
@@ -792,18 +773,17 @@ bdry_ablexp_cal_mask(int i, float vel, float dt, int num_lay, float dh)
 }
 
 int
-bdry_ablexp_apply(bdry_t bdry, gdinfo_t *gdinfo, float *w_end, int ncmp)
+bdry_ablexp_apply(bdryexp_t bdryexp, gdinfo_t *gdinfo, float *w_end, int ncmp)
 {
-  float *Ex = bdry.ablexp_Ex;
-  float *Ey = bdry.ablexp_Ey;
-  float *Ez = bdry.ablexp_Ez;
+  float *Ex = bdryexp.ablexp_Ex;
+  float *Ey = bdryexp.ablexp_Ey;
+  float *Ez = bdryexp.ablexp_Ez;
 
   size_t siz_iy   = gdinfo->siz_iy;
-  size_t siz_iz  = gdinfo->siz_iz;
+  size_t siz_iz   = gdinfo->siz_iz;
   size_t siz_icmp = gdinfo->siz_icmp;
 
-
-  bdry_block_t *D = bdry.bdry_blk;
+  bdry_block_t *D = bdryexp.bdry_blk;
 
   for (int n=0; n < CONST_NDIM_2; n++)
   {

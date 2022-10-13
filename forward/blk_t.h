@@ -47,7 +47,10 @@ typedef struct
   // source term
   src_t *src;
   
-  bdry_t *bdry;
+  bdryfree_t *bdryfree;
+  bdrypml_t  *bdrypml;
+  bdryexp_t  *bdryexp;
+
   // io
   iorecv_t  *iorecv;
   ioline_t  *ioline;
