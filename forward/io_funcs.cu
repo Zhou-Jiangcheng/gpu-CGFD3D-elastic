@@ -268,7 +268,7 @@ io_recv_read_locate(gdinfo_t  *gdinfo,
   int nr_this = 0; // in this thread
   int recv_by_coords = 0;
 
-  int *flag_indx = (int *) malloc(sizeof(int) * num_recv);
+  int *flag_coord = (int *) malloc(sizeof(int) * num_recv);
   int *flag_depth = (int *) malloc(sizeof(int) * num_recv);
 
   float *all_coords = (float *) malloc(sizeof(float) * CONST_NDIM * num_recv);
@@ -282,9 +282,9 @@ io_recv_read_locate(gdinfo_t  *gdinfo,
 
     // get values
     sscanf(line, "%s %d %d %g %g %g", 
-              recvone[ir].name, &flag_indx[ir], &flag_depth[ir], &all_coords[3*ir+0], &all_coords[3*ir+1], &all_coords[3*ir+2]);
+              recvone[ir].name, &flag_coord[ir], &flag_depth[ir], &all_coords[3*ir+0], &all_coords[3*ir+1], &all_coords[3*ir+2]);
 
-    if(flag_indx[ir] == 0)
+    if(flag_coord[ir] == 1)
     {
       recv_by_coords += 1;
     }
@@ -293,7 +293,7 @@ io_recv_read_locate(gdinfo_t  *gdinfo,
   // by axis
   // computation is big, use GPU 
 
-  int *flag_indx_d = NULL; 
+  int *flag_coord_d = NULL; 
   int *flag_depth_d = NULL;
   
   int *all_index_tmp = NULL;
@@ -322,12 +322,12 @@ io_recv_read_locate(gdinfo_t  *gdinfo,
     all_index_tmp  = (int *)   malloc(sizeof(int) * CONST_NDIM * num_recv);
     all_inc_tmp    = (float *) malloc(sizeof(float) * CONST_NDIM * num_recv);
 
-    flag_indx_d  = (int *)    cuda_malloc(sizeof(int)*num_recv);
+    flag_coord_d  = (int *)    cuda_malloc(sizeof(int)*num_recv);
     flag_depth_d  = (int *)   cuda_malloc(sizeof(int)*num_recv);
     all_coords_d = (float *) cuda_malloc(sizeof(float)*num_recv*CONST_NDIM);
     all_index_d  = (int *)   cuda_malloc(sizeof(int)*num_recv*CONST_NDIM);
     all_inc_d    = (float *) cuda_malloc(sizeof(float)*num_recv*CONST_NDIM);
-    CUDACHECK(cudaMemcpy(flag_indx_d,flag_indx,sizeof(int)*num_recv,cudaMemcpyHostToDevice));
+    CUDACHECK(cudaMemcpy(flag_coord_d,flag_coord,sizeof(int)*num_recv,cudaMemcpyHostToDevice));
     CUDACHECK(cudaMemcpy(flag_depth_d,flag_depth,sizeof(int)*num_recv,cudaMemcpyHostToDevice));
     CUDACHECK(cudaMemcpy(all_coords_d,all_coords,sizeof(float)*num_recv*CONST_NDIM,cudaMemcpyHostToDevice));
 
@@ -335,11 +335,11 @@ io_recv_read_locate(gdinfo_t  *gdinfo,
     dim3 grid;
     grid.x = (num_recv+block.x-1) / block.x;
     recv_depth_to_axis<<<grid, block>>> (all_coords_d, num_recv, gdinfo_d, gd_d, 
-                         flag_indx_d, flag_depth_d, comm, myid);
+                         flag_coord_d, flag_depth_d, comm, myid);
     CUDACHECK(cudaDeviceSynchronize());
     grid.x = (num_recv+block.x-1) / block.x;
     recv_coords_to_glob_indx<<<grid, block>>> (all_coords_d, all_index_d, 
-                              all_inc_d, num_recv, gdinfo_d, gd_d, flag_indx_d, comm, myid);
+                              all_inc_d, num_recv, gdinfo_d, gd_d, flag_coord_d, comm, myid);
     CUDACHECK(cudaDeviceSynchronize());
     CUDACHECK(cudaMemcpy(all_coords,all_coords_d,sizeof(float)*num_recv*CONST_NDIM,cudaMemcpyDeviceToHost));
     CUDACHECK(cudaMemcpy(all_index_tmp,all_index_d,sizeof(int)*num_recv*CONST_NDIM,cudaMemcpyDeviceToHost));
@@ -355,7 +355,7 @@ io_recv_read_locate(gdinfo_t  *gdinfo,
     {
       dealloc_gdcurv_device(gd_d);
     }
-    CUDACHECK(cudaFree(flag_indx_d));
+    CUDACHECK(cudaFree(flag_coord_d));
     CUDACHECK(cudaFree(flag_depth_d));
     CUDACHECK(cudaFree(all_coords_d));
     CUDACHECK(cudaFree(all_index_d));
@@ -369,7 +369,7 @@ io_recv_read_locate(gdinfo_t  *gdinfo,
     // conver minus shift to plus to use linear interp with all grid in this thread
     //    there may be problem if the receiver is located just bewteen two mpi block
     //    we should exchange data first then before save receiver waveform
-    if(flag_indx[ir] == 0)
+    if(flag_coord[ir] == 1)
     {
       if (all_inc[3*ir+0] < 0.0) {
         all_inc[3*ir+0] = 1.0 +all_inc[3*ir+0];
@@ -386,7 +386,7 @@ io_recv_read_locate(gdinfo_t  *gdinfo,
     }
 
     // by grid index
-    if (flag_indx[ir] == 1)
+    if (flag_coord[ir] == 0)
     {
       // if sz is relative to surface, convert to normal index
       if (flag_depth[ir] == 1) {
@@ -420,7 +420,7 @@ io_recv_read_locate(gdinfo_t  *gdinfo,
       int k_local = gd_info_indx_glphy2lcext_k(iz,gdinfo);
 
       // get coord
-      if (flag_indx[ir] == 1)
+      if (flag_coord[ir] == 0)
       {
         rx = gd_coord_get_x(gd,i_local,j_local,k_local);
         ry = gd_coord_get_y(gd,i_local,j_local,k_local);
@@ -476,7 +476,7 @@ io_recv_read_locate(gdinfo_t  *gdinfo,
   free(all_index);
   free(all_inc);
   free(all_coords);
-  free(flag_indx);
+  free(flag_coord);
   free(flag_depth);
   return 0;
 }
@@ -1782,14 +1782,14 @@ io_line_keep(ioline_t *ioline, float *w_end_d,
 
 __global__ void
 recv_depth_to_axis(float *all_coords_d, int num_recv, gdinfo_t gdinfo_d, gd_t gd_d, 
-                   int *flag_indx, int *flag_depth, MPI_Comm comm, int myid)
+                   int *flag_coord, int *flag_depth, MPI_Comm comm, int myid)
 {
   size_t ix = blockIdx.x * blockDim.x + threadIdx.x;  
   if(ix<num_recv)
   {
     float sx = all_coords_d[3*ix+0];
     float sy = all_coords_d[3*ix+1];
-    if(flag_indx[ix] == 0 && flag_depth[ix] == 1)
+    if(flag_coord[ix] == 1 && flag_depth[ix] == 1)
     {
       if(gd_d.type == GD_TYPE_CURV)
       {
@@ -1807,7 +1807,7 @@ recv_depth_to_axis(float *all_coords_d, int num_recv, gdinfo_t gdinfo_d, gd_t gd
 __global__ void 
 recv_coords_to_glob_indx(float *all_coords_d, int *all_index_d, 
                          float *all_inc_d, int num_recv, gdinfo_t gdinfo_d, gd_t gd_d, 
-                         int *flag_indx, MPI_Comm comm, int myid)
+                         int *flag_coord, MPI_Comm comm, int myid)
 {
   int ix = blockIdx.x * blockDim.x + threadIdx.x;
   if(ix < num_recv)
@@ -1819,7 +1819,7 @@ recv_coords_to_glob_indx(float *all_coords_d, int *all_index_d,
     float sx = all_coords_d[3*ix+0];
     float sy = all_coords_d[3*ix+1];
     float sz = all_coords_d[3*ix+2];
-    if(flag_indx[ix] == 0)
+    if(flag_coord[ix] == 1)
     {
       if (gd_d.type == GD_TYPE_CURV)
       {
