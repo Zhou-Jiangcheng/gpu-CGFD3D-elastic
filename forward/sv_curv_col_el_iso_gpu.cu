@@ -345,49 +345,49 @@ sv_curv_col_el_iso_rhs_inner_gpu(
     Txy_ptr = Txy + iptr;
 
     // Vx derivatives
-    M_FD_SHIFT_PTR_MACDRP(DxVx, Vx_ptr, fdx_len, lfdx_shift, lfdx_coef);
-    M_FD_SHIFT_PTR_MACDRP(DyVx, Vx_ptr, fdy_len, lfdy_shift, lfdy_coef);
-    M_FD_SHIFT_PTR_MACDRP(DzVx, Vx_ptr, fdz_len, lfdz_shift, lfdz_coef);
+    M_FD_SHIFT_PTR_MACDRP(DxVx, Vx_ptr, lfdx_shift, lfdx_coef);
+    M_FD_SHIFT_PTR_MACDRP(DyVx, Vx_ptr, lfdy_shift, lfdy_coef);
+    M_FD_SHIFT_PTR_MACDRP(DzVx, Vx_ptr, lfdz_shift, lfdz_coef);
 
     // Vy derivatives
-    M_FD_SHIFT_PTR_MACDRP(DxVy, Vy_ptr, fdx_len, lfdx_shift, lfdx_coef);
-    M_FD_SHIFT_PTR_MACDRP(DyVy, Vy_ptr, fdy_len, lfdy_shift, lfdy_coef);
-    M_FD_SHIFT_PTR_MACDRP(DzVy, Vy_ptr, fdz_len, lfdz_shift, lfdz_coef);
+    M_FD_SHIFT_PTR_MACDRP(DxVy, Vy_ptr, lfdx_shift, lfdx_coef);
+    M_FD_SHIFT_PTR_MACDRP(DyVy, Vy_ptr, lfdy_shift, lfdy_coef);
+    M_FD_SHIFT_PTR_MACDRP(DzVy, Vy_ptr, lfdz_shift, lfdz_coef);
 
     // Vz derivatives
-    M_FD_SHIFT_PTR_MACDRP(DxVz, Vz_ptr, fdx_len, lfdx_shift, lfdx_coef);
-    M_FD_SHIFT_PTR_MACDRP(DyVz, Vz_ptr, fdy_len, lfdy_shift, lfdy_coef);
-    M_FD_SHIFT_PTR_MACDRP(DzVz, Vz_ptr, fdz_len, lfdz_shift, lfdz_coef);
+    M_FD_SHIFT_PTR_MACDRP(DxVz, Vz_ptr, lfdx_shift, lfdx_coef);
+    M_FD_SHIFT_PTR_MACDRP(DyVz, Vz_ptr, lfdy_shift, lfdy_coef);
+    M_FD_SHIFT_PTR_MACDRP(DzVz, Vz_ptr, lfdz_shift, lfdz_coef);
 
     // Txx derivatives
-    M_FD_SHIFT_PTR_MACDRP(DxTxx, Txx_ptr, fdx_len, lfdx_shift, lfdx_coef);
-    M_FD_SHIFT_PTR_MACDRP(DyTxx, Txx_ptr, fdy_len, lfdy_shift, lfdy_coef);
-    M_FD_SHIFT_PTR_MACDRP(DzTxx, Txx_ptr, fdz_len, lfdz_shift, lfdz_coef);
+    M_FD_SHIFT_PTR_MACDRP(DxTxx, Txx_ptr, lfdx_shift, lfdx_coef);
+    M_FD_SHIFT_PTR_MACDRP(DyTxx, Txx_ptr, lfdy_shift, lfdy_coef);
+    M_FD_SHIFT_PTR_MACDRP(DzTxx, Txx_ptr, lfdz_shift, lfdz_coef);
 
     // Tyy derivatives
-    M_FD_SHIFT_PTR_MACDRP(DxTyy, Tyy_ptr, fdx_len, lfdx_shift, lfdx_coef);
-    M_FD_SHIFT_PTR_MACDRP(DyTyy, Tyy_ptr, fdy_len, lfdy_shift, lfdy_coef);
-    M_FD_SHIFT_PTR_MACDRP(DzTyy, Tyy_ptr, fdz_len, lfdz_shift, lfdz_coef);
+    M_FD_SHIFT_PTR_MACDRP(DxTyy, Tyy_ptr, lfdx_shift, lfdx_coef);
+    M_FD_SHIFT_PTR_MACDRP(DyTyy, Tyy_ptr, lfdy_shift, lfdy_coef);
+    M_FD_SHIFT_PTR_MACDRP(DzTyy, Tyy_ptr, lfdz_shift, lfdz_coef);
 
     // Tzz derivatives
-    M_FD_SHIFT_PTR_MACDRP(DxTzz, Tzz_ptr, fdx_len, lfdx_shift, lfdx_coef);
-    M_FD_SHIFT_PTR_MACDRP(DyTzz, Tzz_ptr, fdy_len, lfdy_shift, lfdy_coef);
-    M_FD_SHIFT_PTR_MACDRP(DzTzz, Tzz_ptr, fdz_len, lfdz_shift, lfdz_coef);
+    M_FD_SHIFT_PTR_MACDRP(DxTzz, Tzz_ptr, lfdx_shift, lfdx_coef);
+    M_FD_SHIFT_PTR_MACDRP(DyTzz, Tzz_ptr, lfdy_shift, lfdy_coef);
+    M_FD_SHIFT_PTR_MACDRP(DzTzz, Tzz_ptr, lfdz_shift, lfdz_coef);
 
     // Txz derivatives
-    M_FD_SHIFT_PTR_MACDRP(DxTxz, Txz_ptr, fdx_len, lfdx_shift, lfdx_coef);
-    M_FD_SHIFT_PTR_MACDRP(DyTxz, Txz_ptr, fdy_len, lfdy_shift, lfdy_coef);
-    M_FD_SHIFT_PTR_MACDRP(DzTxz, Txz_ptr, fdz_len, lfdz_shift, lfdz_coef);
+    M_FD_SHIFT_PTR_MACDRP(DxTxz, Txz_ptr, lfdx_shift, lfdx_coef);
+    M_FD_SHIFT_PTR_MACDRP(DyTxz, Txz_ptr, lfdy_shift, lfdy_coef);
+    M_FD_SHIFT_PTR_MACDRP(DzTxz, Txz_ptr, lfdz_shift, lfdz_coef);
 
     // Tyz derivatives
-    M_FD_SHIFT_PTR_MACDRP(DxTyz, Tyz_ptr, fdx_len, lfdx_shift, lfdx_coef);
-    M_FD_SHIFT_PTR_MACDRP(DyTyz, Tyz_ptr, fdy_len, lfdy_shift, lfdy_coef);
-    M_FD_SHIFT_PTR_MACDRP(DzTyz, Tyz_ptr, fdz_len, lfdz_shift, lfdz_coef);
+    M_FD_SHIFT_PTR_MACDRP(DxTyz, Tyz_ptr, lfdx_shift, lfdx_coef);
+    M_FD_SHIFT_PTR_MACDRP(DyTyz, Tyz_ptr, lfdy_shift, lfdy_coef);
+    M_FD_SHIFT_PTR_MACDRP(DzTyz, Tyz_ptr, lfdz_shift, lfdz_coef);
 
     // Txy derivatives
-    M_FD_SHIFT_PTR_MACDRP(DxTxy, Txy_ptr, fdx_len, lfdx_shift, lfdx_coef);
-    M_FD_SHIFT_PTR_MACDRP(DyTxy, Txy_ptr, fdy_len, lfdy_shift, lfdy_coef);
-    M_FD_SHIFT_PTR_MACDRP(DzTxy, Txy_ptr, fdz_len, lfdz_shift, lfdz_coef);
+    M_FD_SHIFT_PTR_MACDRP(DxTxy, Txy_ptr, lfdx_shift, lfdx_coef);
+    M_FD_SHIFT_PTR_MACDRP(DyTxy, Txy_ptr, lfdy_shift, lfdy_coef);
+    M_FD_SHIFT_PTR_MACDRP(DzTxy, Txy_ptr, lfdz_shift, lfdz_coef);
 
     
     // metric
@@ -704,8 +704,16 @@ sv_curv_col_el_iso_rhs_cfspml_gpu(int idim, int iside,
   // local
   size_t iptr, iptr_a;
   float coef_A, coef_B, coef_D, coef_B_minus_1;
-  // loop var for fd
-  int n_fd;
+
+  float * Vx_ptr;
+  float * Vy_ptr;
+  float * Vz_ptr;
+  float * Txx_ptr;
+  float * Txy_ptr;
+  float * Txz_ptr;
+  float * Tyy_ptr;
+  float * Tzz_ptr;
+  float * Tyz_ptr;
 
   // get index into local var
   int abs_ni1 = bdrypml_d.ni1[idim][iside];
@@ -714,7 +722,6 @@ sv_curv_col_el_iso_rhs_cfspml_gpu(int idim, int iside,
   int abs_nj2 = bdrypml_d.nj2[idim][iside];
   int abs_nk1 = bdrypml_d.nk1[idim][iside];
   int abs_nk2 = bdrypml_d.nk2[idim][iside];
-
   
   int abs_ni = abs_ni2-abs_ni1+1; 
   int abs_nj = abs_nj2-abs_nj1+1; 
@@ -785,16 +792,26 @@ sv_curv_col_el_iso_rhs_cfspml_gpu(int idim, int iside,
       slw = slw3d[iptr];
       lam2mu = lam + 2.0 * mu;
 
+      Vx_ptr = Vx + iptr;
+      Vy_ptr = Vy + iptr;
+      Vz_ptr = Vz + iptr;
+      Txx_ptr = Txx + iptr;
+      Tyy_ptr = Tyy + iptr;
+      Tzz_ptr = Tzz + iptr;
+      Txz_ptr = Txz + iptr;
+      Tyz_ptr = Tyz + iptr;
+      Txy_ptr = Txy + iptr;
+
       // xi derivatives
-      M_FD_SHIFT(DxVx , Vx , iptr, fdx_len, lfdx_shift, lfdx_coef, n_fd);
-      M_FD_SHIFT(DxVy , Vy , iptr, fdx_len, lfdx_shift, lfdx_coef, n_fd);
-      M_FD_SHIFT(DxVz , Vz , iptr, fdx_len, lfdx_shift, lfdx_coef, n_fd);
-      M_FD_SHIFT(DxTxx, Txx, iptr, fdx_len, lfdx_shift, lfdx_coef, n_fd);
-      M_FD_SHIFT(DxTyy, Tyy, iptr, fdx_len, lfdx_shift, lfdx_coef, n_fd);
-      M_FD_SHIFT(DxTzz, Tzz, iptr, fdx_len, lfdx_shift, lfdx_coef, n_fd);
-      M_FD_SHIFT(DxTxz, Txz, iptr, fdx_len, lfdx_shift, lfdx_coef, n_fd);
-      M_FD_SHIFT(DxTyz, Tyz, iptr, fdx_len, lfdx_shift, lfdx_coef, n_fd);
-      M_FD_SHIFT(DxTxy, Txy, iptr, fdx_len, lfdx_shift, lfdx_coef, n_fd);
+      M_FD_SHIFT_PTR_MACDRP(DxVx , Vx_ptr, lfdx_shift, lfdx_coef);
+      M_FD_SHIFT_PTR_MACDRP(DxVy , Vy_ptr, lfdx_shift, lfdx_coef);
+      M_FD_SHIFT_PTR_MACDRP(DxVz , Vz_ptr, lfdx_shift, lfdx_coef);
+      M_FD_SHIFT_PTR_MACDRP(DxTxx, Txx_ptr, lfdx_shift, lfdx_coef);
+      M_FD_SHIFT_PTR_MACDRP(DxTyy, Tyy_ptr, lfdx_shift, lfdx_coef);
+      M_FD_SHIFT_PTR_MACDRP(DxTzz, Tzz_ptr, lfdx_shift, lfdx_coef);
+      M_FD_SHIFT_PTR_MACDRP(DxTxz, Txz_ptr, lfdx_shift, lfdx_coef);
+      M_FD_SHIFT_PTR_MACDRP(DxTyz, Tyz_ptr, lfdx_shift, lfdx_coef);
+      M_FD_SHIFT_PTR_MACDRP(DxTxy, Txy_ptr, lfdx_shift, lfdx_coef);
 
       // combine for corr and aux vars
        hVx_rhs = slw * ( xix*DxTxx + xiy*DxTxy + xiz*DxTxz );
@@ -923,16 +940,26 @@ sv_curv_col_el_iso_rhs_cfspml_gpu(int idim, int iside,
       slw = slw3d[iptr];
       lam2mu = lam + 2.0 * mu;
 
+      Vx_ptr = Vx + iptr;
+      Vy_ptr = Vy + iptr;
+      Vz_ptr = Vz + iptr;
+      Txx_ptr = Txx + iptr;
+      Tyy_ptr = Tyy + iptr;
+      Tzz_ptr = Tzz + iptr;
+      Txz_ptr = Txz + iptr;
+      Tyz_ptr = Tyz + iptr;
+      Txy_ptr = Txy + iptr;
+
       // et derivatives
-      M_FD_SHIFT(DyVx , Vx , iptr, fdy_len, lfdy_shift, lfdy_coef, n_fd);
-      M_FD_SHIFT(DyVy , Vy , iptr, fdy_len, lfdy_shift, lfdy_coef, n_fd);
-      M_FD_SHIFT(DyVz , Vz , iptr, fdy_len, lfdy_shift, lfdy_coef, n_fd);
-      M_FD_SHIFT(DyTxx, Txx, iptr, fdy_len, lfdy_shift, lfdy_coef, n_fd);
-      M_FD_SHIFT(DyTyy, Tyy, iptr, fdy_len, lfdy_shift, lfdy_coef, n_fd);
-      M_FD_SHIFT(DyTzz, Tzz, iptr, fdy_len, lfdy_shift, lfdy_coef, n_fd);
-      M_FD_SHIFT(DyTxz, Txz, iptr, fdy_len, lfdy_shift, lfdy_coef, n_fd);
-      M_FD_SHIFT(DyTyz, Tyz, iptr, fdy_len, lfdy_shift, lfdy_coef, n_fd);
-      M_FD_SHIFT(DyTxy, Txy, iptr, fdy_len, lfdy_shift, lfdy_coef, n_fd);
+      M_FD_SHIFT_PTR_MACDRP(DyVx , Vx_ptr,  lfdy_shift, lfdy_coef);
+      M_FD_SHIFT_PTR_MACDRP(DyVy , Vy_ptr,  lfdy_shift, lfdy_coef);
+      M_FD_SHIFT_PTR_MACDRP(DyVz , Vz_ptr,  lfdy_shift, lfdy_coef);
+      M_FD_SHIFT_PTR_MACDRP(DyTxx, Txx_ptr, lfdy_shift, lfdy_coef);
+      M_FD_SHIFT_PTR_MACDRP(DyTyy, Tyy_ptr, lfdy_shift, lfdy_coef);
+      M_FD_SHIFT_PTR_MACDRP(DyTzz, Tzz_ptr, lfdy_shift, lfdy_coef);
+      M_FD_SHIFT_PTR_MACDRP(DyTxz, Txz_ptr, lfdy_shift, lfdy_coef);
+      M_FD_SHIFT_PTR_MACDRP(DyTyz, Tyz_ptr, lfdy_shift, lfdy_coef);
+      M_FD_SHIFT_PTR_MACDRP(DyTxy, Txy_ptr, lfdy_shift, lfdy_coef);
 
       // combine for corr and aux vars
        hVx_rhs = slw * ( etx*DyTxx + ety*DyTxy + etz*DyTxz );
@@ -1057,16 +1084,26 @@ sv_curv_col_el_iso_rhs_cfspml_gpu(int idim, int iside,
       slw = slw3d[iptr];
       lam2mu = lam + 2.0 * mu;
 
+      Vx_ptr = Vx + iptr;
+      Vy_ptr = Vy + iptr;
+      Vz_ptr = Vz + iptr;
+      Txx_ptr = Txx + iptr;
+      Tyy_ptr = Tyy + iptr;
+      Tzz_ptr = Tzz + iptr;
+      Txz_ptr = Txz + iptr;
+      Tyz_ptr = Tyz + iptr;
+      Txy_ptr = Txy + iptr;
+
       // zt derivatives
-      M_FD_SHIFT(DzVx , Vx , iptr, fdz_len, lfdz_shift, lfdz_coef, n_fd);
-      M_FD_SHIFT(DzVy , Vy , iptr, fdz_len, lfdz_shift, lfdz_coef, n_fd);
-      M_FD_SHIFT(DzVz , Vz , iptr, fdz_len, lfdz_shift, lfdz_coef, n_fd);
-      M_FD_SHIFT(DzTxx, Txx, iptr, fdz_len, lfdz_shift, lfdz_coef, n_fd);
-      M_FD_SHIFT(DzTyy, Tyy, iptr, fdz_len, lfdz_shift, lfdz_coef, n_fd);
-      M_FD_SHIFT(DzTzz, Tzz, iptr, fdz_len, lfdz_shift, lfdz_coef, n_fd);
-      M_FD_SHIFT(DzTxz, Txz, iptr, fdz_len, lfdz_shift, lfdz_coef, n_fd);
-      M_FD_SHIFT(DzTyz, Tyz, iptr, fdz_len, lfdz_shift, lfdz_coef, n_fd);
-      M_FD_SHIFT(DzTxy, Txy, iptr, fdz_len, lfdz_shift, lfdz_coef, n_fd);
+      M_FD_SHIFT_PTR_MACDRP(DzVx , Vx_ptr,  lfdz_shift, lfdz_coef);
+      M_FD_SHIFT_PTR_MACDRP(DzVy , Vy_ptr,  lfdz_shift, lfdz_coef);
+      M_FD_SHIFT_PTR_MACDRP(DzVz , Vz_ptr,  lfdz_shift, lfdz_coef);
+      M_FD_SHIFT_PTR_MACDRP(DzTxx, Txx_ptr, lfdz_shift, lfdz_coef);
+      M_FD_SHIFT_PTR_MACDRP(DzTyy, Tyy_ptr, lfdz_shift, lfdz_coef);
+      M_FD_SHIFT_PTR_MACDRP(DzTzz, Tzz_ptr, lfdz_shift, lfdz_coef);
+      M_FD_SHIFT_PTR_MACDRP(DzTxz, Txz_ptr, lfdz_shift, lfdz_coef);
+      M_FD_SHIFT_PTR_MACDRP(DzTyz, Tyz_ptr, lfdz_shift, lfdz_coef);
+      M_FD_SHIFT_PTR_MACDRP(DzTxy, Txy_ptr, lfdz_shift, lfdz_coef);
 
       // combine for corr and aux vars
        hVx_rhs = slw * ( ztx*DzTxx + zty*DzTxy + ztz*DzTxz );
