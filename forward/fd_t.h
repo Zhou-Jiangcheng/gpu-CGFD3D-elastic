@@ -107,54 +107,6 @@ typedef struct {
   int fdy_max_half_len;
   int fdz_max_half_len;
 
-  ////----------------------------------------------------------------------------
-  //// center schemes at different points to boundary
-  ////----------------------------------------------------------------------------
-
-  //// center scheme can be separated into 1d array as
-  //int    fdx_max_nlay;
-  //int    fdx_max_total;
-  //int   *fdx_num_total;
-  //int   *fdx_num_half;
-  //int   *fdx_num_left;
-  //int   *fdx_num_right;
-  //int   *fdx_indx; // fdx_max_total * fdx_max_nlay
-  //float *fdx_coef;
-
-  ////  fd_ is 2d pointer, the first pointer means the grid layer to free surface (from 0 to fd_len-1),
-  ////  the second pointer points to fd op for that layer, the size could be different, larger than
-  ////  inner op
-  //// not used yet
-  //int    **fdx_all_info; // [k2free][pos, total, half, left, right]
-  //int    **fdx_all_indx;
-  //float  **fdx_all_coef;
-
-  //int    **fdy_all_info;
-  //int    **fdy_all_indx;
-  //float  **fdy_all_coef;
-
-  //int    **fdz_all_info;
-  //int    **fdz_all_indx;
-  //float  **fdz_all_coef;
-
-  ////----------------------------------------------------------------------------
-  //// filter schemes at different points to boundary
-  ////----------------------------------------------------------------------------
-
-  //// not used yet
-
-  //int    **filtx_all_info; // [k2free][pos, total, half, left, right] 
-  //int    **filtx_all_indx;
-  //float  **filtx_all_coef;
-
-  //int    **filty_all_info;
-  //int    **filty_all_indx;
-  //float  **filty_all_coef;
-
-  //int    **filtz_all_info;
-  //int    **filtz_all_indx;
-  //float  **filtz_all_coef;
-
   //----------------------------------------------------------------------------
   // pairs for 3d space for MacCormack-type schemes
   //----------------------------------------------------------------------------

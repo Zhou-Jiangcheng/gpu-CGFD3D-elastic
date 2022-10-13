@@ -442,6 +442,8 @@ int dealloc_md_device(md_t md_d)
 
 int dealloc_fd_device(fd_wav_t fd_wav_d)
 {
+  CUDACHECK(cudaFree(fd_wav_d.fdz_len_d));
+
   CUDACHECK(cudaFree(fd_wav_d.fdx_coef_d));
   CUDACHECK(cudaFree(fd_wav_d.fdy_coef_d));
   CUDACHECK(cudaFree(fd_wav_d.fdz_coef_d));

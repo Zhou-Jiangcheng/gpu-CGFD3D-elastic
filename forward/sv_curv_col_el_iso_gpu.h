@@ -48,9 +48,9 @@ sv_curv_col_el_iso_rhs_inner_gpu(
     float * lam3d, float * mu3d, float * slw3d,
     int ni1, int ni, int nj1, int nj, int nk1, int nk,
     size_t siz_iy, size_t siz_iz,
-    int fdx_len, size_t * lfdx_shift, float * lfdx_coef,
-    int fdy_len, size_t * lfdy_shift, float * lfdy_coef,
-    int fdz_len, size_t * lfdz_shift, float * lfdz_coef,
+    size_t * lfdx_shift, float * lfdx_coef,
+    size_t * lfdy_shift, float * lfdy_coef,
+    size_t * lfdz_shift, float * lfdz_coef,
     const int myid, const int verbose);
 
 __global__ void
@@ -84,9 +84,9 @@ sv_curv_col_el_iso_rhs_cfspml(
     float * zt_x, float * zt_y, float * zt_z,
     float * lam3d, float *  mu3d, float * slw3d,
     int nk2, size_t siz_iy, size_t siz_iz,
-    int fdx_len, size_t * fdx_shift, float * fdx_coef,
-    int fdy_len, size_t * fdy_shift, float * fdy_coef,
-    int fdz_len, size_t * fdz_shift, float * fdz_coef,
+    size_t * fdx_shift, float * fdx_coef,
+    size_t * fdy_shift, float * fdy_coef,
+    size_t * fdz_shift, float * fdz_coef,
     bdrypml_t bdrypml_d, bdryfree_t bdryfree_d,
     const int myid, const int verbose);
 
@@ -104,9 +104,9 @@ sv_curv_col_el_iso_rhs_cfspml_gpu(
     float * zt_x, float * zt_y, float * zt_z,
     float * lam3d, float *  mu3d, float * slw3d,
     int nk2, size_t siz_iy, size_t siz_iz,
-    int fdx_len, size_t * fdx_shift, float * fdx_coef,
-    int fdy_len, size_t * fdy_shift, float * fdy_coef,
-    int fdz_len, size_t * fdz_shift, float * fdz_coef,
+    size_t * fdx_shift, float * fdx_coef,
+    size_t * fdy_shift, float * fdy_coef,
+    size_t * fdz_shift, float * fdz_coef,
     bdrypml_t bdrypml_d, bdryfree_t bdryfree_d,
     const int myid, const int verbose);
 

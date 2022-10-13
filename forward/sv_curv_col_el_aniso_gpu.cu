@@ -224,9 +224,9 @@ sv_curv_col_el_aniso_onestage(
                                         c55,c56,
                                             c66, slw3d,
                         ni1,ni,nj1,nj,nk1,nk,siz_iy,siz_iz,
-                        fdx_len, lfdx_shift_d, lfdx_coef_d,
-                        fdy_len, lfdy_shift_d, lfdy_coef_d,
-                        fdz_len, lfdz_shift_d, lfdz_coef_d,
+                        lfdx_shift_d, lfdx_coef_d,
+                        lfdy_shift_d, lfdy_coef_d,
+                        lfdz_shift_d, lfdz_coef_d,
                         myid, verbose);
   }
 
@@ -290,9 +290,9 @@ sv_curv_col_el_aniso_onestage(
                                                     c55,c56,
                                                         c66, slw3d,
                                     nk2, siz_iy,siz_iz,
-                                    fdx_len, lfdx_shift_d, lfdx_coef_d,
-                                    fdy_len, lfdy_shift_d, lfdy_coef_d,
-                                    fdz_len, lfdz_shift_d, lfdz_coef_d,
+                                    lfdx_shift_d, lfdx_coef_d,
+                                    lfdy_shift_d, lfdy_coef_d,
+                                    lfdz_shift_d, lfdz_coef_d,
                                     bdrypml_d, bdryfree_d,
                                     myid, verbose);
   }
@@ -343,9 +343,9 @@ sv_curv_col_el_aniso_rhs_inner_gpu(
                                 float * slw3d,
     int ni1, int ni, int nj1, int nj, int nk1, int nk,
     size_t siz_iy, size_t siz_iz,
-    int fdx_len, size_t * lfdx_shift, float * lfdx_coef,
-    int fdy_len, size_t * lfdy_shift, float * lfdy_coef,
-    int fdz_len, size_t * lfdz_shift, float * lfdz_coef,
+    size_t * lfdx_shift, float * lfdx_coef,
+    size_t * lfdy_shift, float * lfdy_coef,
+    size_t * lfdz_shift, float * lfdz_coef,
     const int myid, const int verbose)
 {
   // use local stack array for speedup
@@ -725,9 +725,9 @@ sv_curv_col_el_aniso_rhs_cfspml(
                                 float * c66d,
                                 float * slw3d,
     int nk2, size_t siz_iy, size_t siz_iz,
-    int fdx_len, size_t * lfdx_shift, float * lfdx_coef,
-    int fdy_len, size_t * lfdy_shift, float * lfdy_coef,
-    int fdz_len, size_t * lfdz_shift, float * lfdz_coef,
+    size_t * lfdx_shift, float * lfdx_coef,
+    size_t * lfdy_shift, float * lfdy_coef,
+    size_t * lfdz_shift, float * lfdz_coef,
     bdrypml_t bdrypml_d, bdryfree_t bdryfree_d,
     const int myid, const int verbose)
 {
@@ -771,9 +771,9 @@ sv_curv_col_el_aniso_rhs_cfspml(
                                                     c55d,c56d,
                                                     c66d,slw3d,
                                 nk2, siz_iy, siz_iz,
-                                fdx_len, lfdx_shift,  lfdx_coef,
-                                fdy_len, lfdy_shift,  lfdy_coef,
-                                fdz_len, lfdz_shift,  lfdz_coef,
+                                lfdx_shift,  lfdx_coef,
+                                lfdy_shift,  lfdy_coef,
+                                lfdz_shift,  lfdz_coef,
                                 bdrypml_d, bdryfree_d, 
                                 myid, verbose);
         //cudaDeviceSynchronize();
@@ -807,9 +807,9 @@ sv_curv_col_el_aniso_rhs_cfspml_gpu(int idim, int iside,
                                                                 float * c66d,
                                                                 float * slw3d,
                                     int nk2, size_t siz_iy, size_t siz_iz,
-                                    int fdx_len, size_t * lfdx_shift, float * lfdx_coef,
-                                    int fdy_len, size_t * lfdy_shift, float * lfdy_coef,
-                                    int fdz_len, size_t * lfdz_shift, float * lfdz_coef,
+                                    size_t * lfdx_shift, float * lfdx_coef,
+                                    size_t * lfdy_shift, float * lfdy_coef,
+                                    size_t * lfdz_shift, float * lfdz_coef,
                                     bdrypml_t bdrypml_d, bdryfree_t bdryfree_d,
                                     const int myid, const int verbose)
 {
