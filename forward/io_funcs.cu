@@ -1313,6 +1313,38 @@ io_snap_nc_put(iosnap_t *iosnap,
       }
       if (is_run_out_stress==1 && snap_out_E==1)
       {
+        if (is_run_out_stress==1 && snap_out_T==0)
+        {
+          io_snap_pack_buff<<<grid, block>>> (w_end_d + wav->Txx_pos,
+                   siz_iy,siz_iz,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
+                   snap_dj,snap_k1,snap_nk,snap_dk,buff_d);
+          CUDACHECK(cudaMemcpy(buff+3*siz_icmp,buff_d,size,cudaMemcpyDeviceToHost));
+
+          io_snap_pack_buff<<<grid, block>>> (w_end_d + wav->Tyy_pos,
+                   siz_iy,siz_iz,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
+                   snap_dj,snap_k1,snap_nk,snap_dk,buff_d);
+          CUDACHECK(cudaMemcpy(buff+4*siz_icmp,buff_d,size,cudaMemcpyDeviceToHost));
+
+          io_snap_pack_buff<<<grid, block>>> (w_end_d + wav->Tzz_pos,
+                   siz_iy,siz_iz,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
+                   snap_dj,snap_k1,snap_nk,snap_dk,buff_d);
+          CUDACHECK(cudaMemcpy(buff+5*siz_icmp,buff_d,size,cudaMemcpyDeviceToHost));
+
+          io_snap_pack_buff<<<grid, block>>> (w_end_d + wav->Txz_pos,
+                   siz_iy,siz_iz,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
+                   snap_dj,snap_k1,snap_nk,snap_dk,buff_d);
+          CUDACHECK(cudaMemcpy(buff+6*siz_icmp,buff_d,size,cudaMemcpyDeviceToHost));
+
+          io_snap_pack_buff<<<grid, block>>> (w_end_d + wav->Tyz_pos,
+                   siz_iy,siz_iz,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
+                   snap_dj,snap_k1,snap_nk,snap_dk,buff_d);
+          CUDACHECK(cudaMemcpy(buff+7*siz_icmp,buff_d,size,cudaMemcpyDeviceToHost));
+
+          io_snap_pack_buff<<<grid, block>>> (w_end_d + wav->Txy_pos,
+                   siz_iy,siz_iz,snap_i1,snap_ni,snap_di,snap_j1,snap_nj,
+                   snap_dj,snap_k1,snap_nk,snap_dk,buff_d);
+          CUDACHECK(cudaMemcpy(buff+8*siz_icmp,buff_d,size,cudaMemcpyDeviceToHost));
+        }
         // convert to strain
         io_snap_stress_to_strain_eliso(md->lambda,md->mu,
                                        buff + 3*siz_icmp,   //Txx
