@@ -1,7 +1,7 @@
-#ifndef SV_CURV_COL_ISO_H
-#define SV_CURV_COL_ISO_H
+#ifndef SV_CURV_COL_H
+#define SV_CURV_COL_H
 
-#include "gd_info.h"
+#include "fd_t.h"
 #include "gd_t.h"
 #include "md_t.h"
 #include "src_t.h"

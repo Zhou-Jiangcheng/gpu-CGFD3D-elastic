@@ -1,8 +1,7 @@
-#ifndef SV_EQ1ST_CURV_COL_EL_ISO_H
-#define SV_EQ1ST_CURV_COL_EL_ISO_H
+#ifndef SV_CURV_COL_EL_ISO_H
+#define SV_CURV_COL_EL_ISO_H
 
 #include "fd_t.h"
-#include "gd_info.h"
 #include "mympi_t.h"
 #include "gd_t.h"
 #include "md_t.h"

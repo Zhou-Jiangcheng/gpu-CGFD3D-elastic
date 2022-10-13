@@ -2,7 +2,6 @@
 #define BDRY_H
 
 #include "constants.h"
-#include "gd_info.h"
 #include "gd_t.h"
 #include "wav_t.h"
 

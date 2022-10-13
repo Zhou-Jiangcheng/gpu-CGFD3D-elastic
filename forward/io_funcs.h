@@ -2,9 +2,7 @@
 #define IO_FUNCS_H
 
 #include "constants.h"
-#include "gd_info.h"
 #include "gd_t.h"
-#include "io_funcs.h"
 #include "md_t.h"
 #include "wav_t.h"
 

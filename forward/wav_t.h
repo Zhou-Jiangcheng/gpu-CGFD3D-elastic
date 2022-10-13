@@ -1,7 +1,7 @@
 #ifndef WF_EL_1ST_H
 #define WF_EL_1ST_H
 
-#include "gd_info.h"
+#include "gd_t.h"
 
 /*************************************************
  * structure

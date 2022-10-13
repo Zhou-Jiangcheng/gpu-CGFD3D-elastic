@@ -93,6 +93,33 @@ gd_curv_init(gdinfo_t *gdinfo, gd_t *gdcurv)
       fflush(stderr);
   }
 
+  gdcurv->tile_istart = (int *) fdlib_mem_calloc_1d_int(
+                        GD_TILE_NX, 0.0, "gd_curv_init");
+  gdcurv->tile_iend   = (int *) fdlib_mem_calloc_1d_int(
+                        GD_TILE_NX, 0.0, "gd_curv_init");
+  gdcurv->tile_jstart = (int *) fdlib_mem_calloc_1d_int(
+                        GD_TILE_NY, 0.0, "gd_curv_init");
+  gdcurv->tile_jend   = (int *) fdlib_mem_calloc_1d_int(
+                        GD_TILE_NY, 0.0, "gd_curv_init");
+  gdcurv->tile_kstart = (int *) fdlib_mem_calloc_1d_int(
+                        GD_TILE_NZ, 0.0, "gd_curv_init");
+  gdcurv->tile_kend   = (int *) fdlib_mem_calloc_1d_int(
+                        GD_TILE_NZ, 0.0, "gd_curv_init");
+
+  int size = GD_TILE_NX * GD_TILE_NY * GD_TILE_NZ;
+  gdcurv->tile_xmin = (float *) fdlib_mem_calloc_1d_float(
+                        size, 0.0, "gd_curv_init");
+  gdcurv->tile_xmax = (float *) fdlib_mem_calloc_1d_float(
+                        size, 0.0, "gd_curv_init");
+  gdcurv->tile_ymin = (float *) fdlib_mem_calloc_1d_float(
+                        size, 0.0, "gd_curv_init");
+  gdcurv->tile_ymax = (float *) fdlib_mem_calloc_1d_float(
+                        size, 0.0, "gd_curv_init");
+  gdcurv->tile_zmin = (float *) fdlib_mem_calloc_1d_float(
+                        size, 0.0, "gd_curv_init");
+  gdcurv->tile_zmax = (float *) fdlib_mem_calloc_1d_float(
+                        size, 0.0, "gd_curv_init");
+
   return;
 }
 
@@ -477,76 +504,6 @@ gd_curv_metric_exchange(gdinfo_t        *gdinfo,
                  &g3d[r_iptr],1,DTypeYL,neighid[2],220,
                  topocomm,&status);
   }
-/*
-  // for test.  check send_recv whether success
-  for (size_t i = ni1; i < ni1+3; i++)
-  {
-    int j = nj1;
-    int k = nk1;
-    size_t iptr = i + j * siz_iy + k * siz_iz;
-    if(myid2[0]==1 && myid2[1]==0 ) fprintf(stdout,"aaa  %f %f %f aaa\n",jac3d[iptr],xi_x[iptr], zt_y[iptr]);
-  }
-  for (size_t i = ni2+1; i <= ni2+3; i++)
-  {
-    int j = nj1;
-    int k = nk1;
-    size_t iptr = i + j * siz_iy + k * siz_iz;
-    if(myid2[0]==0 && myid2[1]==0) fprintf(stdout,"**a %f %f %f **a\n",jac3d[iptr],xi_x[iptr], zt_y[iptr]);
-  }
-
-  for (size_t i = ni2-2; i <= ni2; i++)
-  {
-    int j = nj1;
-    int k = nk1;
-    size_t iptr = i + j * siz_iy + k * siz_iz;
-    if(myid2[0]==0 && myid2[1]==1) fprintf(stdout,"bbb %f %f %f bbb\n",jac3d[iptr],xi_x[iptr], zt_y[iptr]);
-  }
-  for (size_t i = ni1-3; i < ni1; i++)
-  {
-    int j = nj1;
-    int k = nk1;
-    size_t iptr = i + j * siz_iy + k * siz_iz;
-    if(myid2[0]==1 && myid2[1]==1) fprintf(stdout,"**b %f %f %f **b\n",jac3d[iptr],xi_x[iptr], zt_y[iptr]);
-  }
-
-  for (size_t j = nj2-2; j <= nj2; j++)
-  {
-    int i = ni1+1;
-    int k = nk1+1;
-    size_t iptr = i + j * siz_iy + k * siz_iz;
-    if(myid2[0]==0 && myid2[1]==0) fprintf(stdout,"ccc %f %f %f ccc\n",jac3d[iptr],xi_x[iptr], zt_y[iptr]);
-  }
-  for (size_t j = nj1-3; j < nj1; j++)
-  {
-    int i = ni1+1;
-    int k = nk1+1;
-    size_t iptr = i + j * siz_iy + k * siz_iz;
-    if(myid2[0]==0 && myid2[1]==1) fprintf(stdout,"**c %f %f %f **c\n",jac3d[iptr],xi_x[iptr], zt_y[iptr]);
-  }
-*/
-
-  // for test
-  /*
-  for (size_t k = 0; k < nz; k++){
-    for (size_t j = 0; j < ny; j++) {
-      for (size_t i = 0; i < nx; i++)
-      {
-        float dh=100.0;
-        size_t iptr = i + j * siz_iy + k * siz_iz;
-        jac3d[iptr] = dh*dh*dh;
-         xi_x[iptr] = 1.0/dh;
-         xi_y[iptr] =  0.0;
-         xi_z[iptr] =  0.0;
-         et_x[iptr] =  0.0;
-         et_y[iptr] = 1.0/dh;
-         et_z[iptr] =  0.0;
-         zt_x[iptr] =  0.0;
-         zt_y[iptr] =  0.0;
-         zt_z[iptr] = 1.0/dh;
-      }
-    }
-  }
-  */
 }
 
 /*
@@ -1870,12 +1827,13 @@ gd_curv_set_minmax(gdinfo_t *gdinfo, gd_t *gdcurv)
             }
           }
         }
-        gdcurv->tile_xmin[k_tile][j_tile][i_tile] = xmin;
-        gdcurv->tile_xmax[k_tile][j_tile][i_tile] = xmax;
-        gdcurv->tile_ymin[k_tile][j_tile][i_tile] = ymin;
-        gdcurv->tile_ymax[k_tile][j_tile][i_tile] = ymax;
-        gdcurv->tile_zmin[k_tile][j_tile][i_tile] = zmin;
-        gdcurv->tile_zmax[k_tile][j_tile][i_tile] = zmax;
+        int iptr_tile = i_tile + j_tile * GD_TILE_NX + k_tile * GD_TILE_NX *GD_TILE_NY;
+        gdcurv->tile_xmin[iptr_tile] = xmin;
+        gdcurv->tile_xmax[iptr_tile] = xmax;
+        gdcurv->tile_ymin[iptr_tile] = ymin;
+        gdcurv->tile_ymax[iptr_tile] = ymax;
+        gdcurv->tile_zmin[iptr_tile] = zmin;
+        gdcurv->tile_zmax[iptr_tile] = zmax;
 
       }
     }
@@ -1953,9 +1911,9 @@ gd_curv_coord_to_glob_indx(gdinfo_t *gdinfo,
   if ( is_here == 1)
   {
     // conver to global index
-    si_glob = gd_info_ind_lcext2glphy_i(si, gdinfo);
-    sj_glob = gd_info_ind_lcext2glphy_j(sj, gdinfo);
-    sk_glob = gd_info_ind_lcext2glphy_k(sk, gdinfo);
+    si_glob = gd_info_indx_lcext2glphy_i(si, gdinfo);
+    sj_glob = gd_info_indx_lcext2glphy_j(sj, gdinfo);
+    sk_glob = gd_info_indx_lcext2glphy_k(sk, gdinfo);
   }
 
   // reduce global index and shift values
@@ -2018,9 +1976,9 @@ gd_curv_coord_to_glob_indx_gpu(gdinfo_t *gdinfo,
   if ( is_here == 1)
   {
     // conver to global index
-    si_glob = gd_info_ind_lcext2glphy_i(si, gdinfo);
-    sj_glob = gd_info_ind_lcext2glphy_j(sj, gdinfo);
-    sk_glob = gd_info_ind_lcext2glphy_k(sk, gdinfo);
+    si_glob = gd_info_indx_lcext2glphy_i(si, gdinfo);
+    sj_glob = gd_info_indx_lcext2glphy_j(sj, gdinfo);
+    sk_glob = gd_info_indx_lcext2glphy_k(sk, gdinfo);
   }
 
   *ou_si = si_glob;
@@ -2225,10 +2183,11 @@ gd_curv_depth_to_axis(gdinfo_t *gdinfo,
     {
       for (int i_tile = 0; i_tile < GD_TILE_NX; i_tile++)
       {
-        if (  sx < gd->tile_xmin[k_tile][j_tile][i_tile] ||
-              sx > gd->tile_xmax[k_tile][j_tile][i_tile] ||
-              sy < gd->tile_ymin[k_tile][j_tile][i_tile] ||
-              sy > gd->tile_ymax[k_tile][j_tile][i_tile])
+        int iptr_tile = i_tile + j_tile * GD_TILE_NX + k_tile * GD_TILE_NX * GD_TILE_NY;
+        if (  sx < gd->tile_xmin[iptr_tile] ||
+              sx > gd->tile_xmax[iptr_tile] ||
+              sy < gd->tile_ymin[iptr_tile] ||
+              sy > gd->tile_ymax[iptr_tile])
         {
           // loop next tile
           continue;
@@ -2698,18 +2657,336 @@ gd_print(gd_t *gd)
     {
       for (int i_tile = 0; i_tile < GD_TILE_NX; i_tile++)
       {
+        int iptr_tile = i_tile + j_tile * GD_TILE_NX + k_tile * GD_TILE_NX * GD_TILE_NY;
         fprintf(stdout," tile %d,%d,%d, range (%g,%g,%g,%g,%g,%g)\n",
           i_tile,j_tile,k_tile,
-          gd->tile_xmin[k_tile][j_tile][i_tile],
-          gd->tile_xmax[k_tile][j_tile][i_tile],
-          gd->tile_ymin[k_tile][j_tile][i_tile],
-          gd->tile_ymax[k_tile][j_tile][i_tile],
-          gd->tile_zmin[k_tile][j_tile][i_tile],
-          gd->tile_zmax[k_tile][j_tile][i_tile]);
+          gd->tile_xmin[iptr_tile],
+          gd->tile_xmax[iptr_tile],
+          gd->tile_ymin[iptr_tile],
+          gd->tile_ymax[iptr_tile],
+          gd->tile_zmin[iptr_tile],
+          gd->tile_zmax[iptr_tile]);
       }
     }
   }
   fflush(stdout);
 
   return 0;
+}
+
+int
+gd_info_set(gdinfo_t *const gdinfo,
+            const mympi_t *const mympi,
+            const int number_of_total_grid_points_x,
+            const int number_of_total_grid_points_y,
+            const int number_of_total_grid_points_z,
+                  int abs_num_of_layers[][2],
+            const int fdx_nghosts,
+            int const fdy_nghosts,
+            const int fdz_nghosts,
+            const int verbose)
+{
+  int ierr = 0;
+
+  // determine ni
+  int nx_et = number_of_total_grid_points_x;
+
+  // double cfspml load
+  nx_et += abs_num_of_layers[0][0] + abs_num_of_layers[0][1];
+
+  // partition into average plus left at last
+  int nx_avg  = nx_et / mympi->nprocx;
+  int nx_left = nx_et % mympi->nprocx;
+
+  // should not be less than 2 * fdx_nghosts
+  if (nx_avg < 2 * fdx_nghosts) {
+    // error
+  }
+
+  // should not be less than abs_num_of_layers
+  if (nx_avg<abs_num_of_layers[0][0] || nx_avg<abs_num_of_layers[0][1]) {
+    // error
+  }
+
+  // default set to average value
+  int ni = nx_avg;
+  // subtract nlay for pml node
+  if (mympi->neighid[0] == MPI_PROC_NULL) {
+    ni -= abs_num_of_layers[0][0];
+  }
+  if (mympi->neighid[1] == MPI_PROC_NULL) {
+    ni -= abs_num_of_layers[0][1];
+  }
+  // first nx_left node add one more point
+  if (mympi->topoid[0] < nx_left) {
+    ni++;
+  }
+  // global index
+  if (mympi->topoid[0]==0) {
+    gdinfo->gni1 = 0;
+  } else {
+    gdinfo->gni1 = mympi->topoid[0] * nx_avg - abs_num_of_layers[0][0];
+  }
+  if (nx_left != 0) {
+    gdinfo->gni1 += (mympi->topoid[0] < nx_left)? mympi->topoid[0] : nx_left;
+  }
+
+  // determine nj
+  int ny_et = number_of_total_grid_points_y;
+  // double cfspml load
+  ny_et += abs_num_of_layers[1][0] + abs_num_of_layers[1][1];
+  int ny_avg  = ny_et / mympi->nprocy;
+  int ny_left = ny_et % mympi->nprocy;
+  if (ny_avg < 2 * fdy_nghosts) {
+    // error
+  }
+  if (ny_avg<abs_num_of_layers[1][0] || ny_avg<abs_num_of_layers[1][1]) {
+    // error
+  }
+  int nj = ny_avg;
+  if (mympi->neighid[2] == MPI_PROC_NULL) {
+    nj -= abs_num_of_layers[1][0];
+  }
+  if (mympi->neighid[3] == MPI_PROC_NULL) {
+    nj -= abs_num_of_layers[1][1];
+  }
+  // not equal divided points given to first ny_left procs
+  if (mympi->topoid[1] < ny_left) {
+    nj++;
+  }
+  // global index
+  if (mympi->topoid[1]==0) {
+    gdinfo->gnj1 = 0;
+  } else {
+    gdinfo->gnj1 = mympi->topoid[1] * ny_avg - abs_num_of_layers[1][0];
+  }
+  if (ny_left != 0) {
+    gdinfo->gnj1 += (mympi->topoid[1] < ny_left)? mympi->topoid[1] : ny_left;
+  }
+
+  // determine nk
+  int nk = number_of_total_grid_points_z;
+  gdinfo->gnk1 = 0;
+  
+  // add ghost points
+  int nx = ni + 2 * fdx_nghosts;
+  int ny = nj + 2 * fdy_nghosts;
+  int nz = nk + 2 * fdz_nghosts;
+
+  gdinfo->ni = ni;
+  gdinfo->nj = nj;
+  gdinfo->nk = nk;
+
+  gdinfo->nx = nx;
+  gdinfo->ny = ny;
+  gdinfo->nz = nz;
+
+  gdinfo->ni1 = fdx_nghosts;
+  gdinfo->ni2 = gdinfo->ni1 + ni - 1;
+
+  gdinfo->nj1 = fdy_nghosts;
+  gdinfo->nj2 = gdinfo->nj1 + nj - 1;
+
+  gdinfo->nk1 = fdz_nghosts;
+  gdinfo->nk2 = gdinfo->nk1 + nk - 1;
+
+  // global index end
+  gdinfo->gni2 = gdinfo->gni1 + gdinfo->ni - 1;
+  gdinfo->gnj2 = gdinfo->gnj1 + gdinfo->nj - 1;
+  gdinfo->gnk2 = gdinfo->gnk1 + gdinfo->nk - 1;
+
+  gdinfo->ni1_to_glob_phys0 = gdinfo->gni1;
+  gdinfo->ni2_to_glob_phys0 = gdinfo->gni2;
+  gdinfo->nj1_to_glob_phys0 = gdinfo->gnj1;
+  gdinfo->nj2_to_glob_phys0 = gdinfo->gnj2;
+  gdinfo->nk1_to_glob_phys0 = gdinfo->gnk1;
+  gdinfo->nk2_to_glob_phys0 = gdinfo->gnk2;
+  
+  // x dimention varies first
+  gdinfo->siz_iy   = nx; 
+  gdinfo->siz_iz  = nx * ny; 
+  gdinfo->siz_icmp = nx * ny * nz;
+
+
+  // set npoint_ghosts according to fdz_nghosts
+  gdinfo->npoint_ghosts = fdz_nghosts;
+
+  gdinfo->fdx_nghosts = fdx_nghosts;
+  gdinfo->fdy_nghosts = fdy_nghosts;
+  gdinfo->fdz_nghosts = fdz_nghosts;
+
+  gdinfo->index_name = fdlib_mem_malloc_2l_char(
+                        CONST_NDIM, CONST_MAX_STRLEN, "gdinfo name");
+
+  // grid coord name
+  sprintf(gdinfo->index_name[0],"%s","i");
+  sprintf(gdinfo->index_name[1],"%s","j");
+  sprintf(gdinfo->index_name[2],"%s","k");
+
+  return ierr;
+}
+
+/*
+ * give a local index ref, check if in this thread
+ */
+
+int
+gd_info_lindx_is_inner(int i, int j, int k, gdinfo_t *gdinfo)
+{
+  int is_in = 0;
+
+  if (   i >= gdinfo->ni1 && i <= gdinfo->ni2
+      && j >= gdinfo->nj1 && j <= gdinfo->nj2
+      && k >= gdinfo->nk1 && k <= gdinfo->nk2)
+  {
+    is_in = 1;
+  }
+
+  return is_in;
+}  
+
+/*
+ * give a global index ref to phys0, check if in this thread
+ */
+
+int
+gd_info_gindx_is_inner(int gi, int gj, int gk, gdinfo_t *gdinfo)
+{
+  int ishere = 0;
+
+  if ( gi >= gdinfo->ni1_to_glob_phys0 && gi <= gdinfo->ni2_to_glob_phys0 &&
+       gj >= gdinfo->nj1_to_glob_phys0 && gj <= gdinfo->nj2_to_glob_phys0 &&
+       gk >= gdinfo->nk1_to_glob_phys0 && gk <= gdinfo->nk2_to_glob_phys0 )
+  {
+    ishere = 1;
+  }
+
+  return ishere;
+}
+
+/*
+ * glphyinx, glextind, gp,ge
+ * lcphyind, lcextind
+ * gl: global
+ * lc: local
+ * inx: index
+ * phy: physical points only, do not count ghost
+ * ext: include extended points, with ghots points
+ */
+
+int
+gd_info_gindx_is_inner_i(int gi, gdinfo_t *gdinfo)
+{
+  int ishere = 0;
+
+  if ( gi >= gdinfo->ni1_to_glob_phys0 && gi <= gdinfo->ni2_to_glob_phys0)
+  {
+    ishere = 1;
+  }
+
+  return ishere;
+}
+
+int
+gd_info_gindx_is_inner_j(int gj, gdinfo_t *gdinfo)
+{
+  int ishere = 0;
+
+  if ( gj >= gdinfo->nj1_to_glob_phys0 && gj <= gdinfo->nj2_to_glob_phys0)
+  {
+    ishere = 1;
+  }
+
+  return ishere;
+}
+
+int
+gd_info_gindx_is_inner_k(int gk, gdinfo_t *gdinfo)
+{
+  int ishere = 0;
+
+  if ( gk >= gdinfo->nk1_to_glob_phys0 && gk <= gdinfo->nk2_to_glob_phys0)
+  {
+    ishere = 1;
+  }
+
+  return ishere;
+}
+
+/*
+ * convert global index to local
+ */
+
+int
+gd_info_indx_glphy2lcext_i(int gi, gdinfo_t *gdinfo)
+{
+  return gi - gdinfo->ni1_to_glob_phys0 + gdinfo->npoint_ghosts;
+}
+
+int
+gd_info_indx_glphy2lcext_j(int gj, gdinfo_t *gdinfo)
+{
+  return gj - gdinfo->nj1_to_glob_phys0 + gdinfo->npoint_ghosts;
+}
+
+int
+gd_info_indx_glphy2lcext_k(int gk, gdinfo_t *gdinfo)
+{
+  return gk - gdinfo->nk1_to_glob_phys0 + gdinfo->npoint_ghosts;
+}
+
+/*
+ * convert local index to global
+ */
+
+__host__ __device__ int
+gd_info_indx_lcext2glphy_i(int i, gdinfo_t *gdinfo)
+{
+  return i - gdinfo->npoint_ghosts + gdinfo->ni1_to_glob_phys0;
+}
+
+__host__ __device__ int
+gd_info_indx_lcext2glphy_j(int j, gdinfo_t *gdinfo)
+{
+  return j - gdinfo->npoint_ghosts + gdinfo->nj1_to_glob_phys0;
+}
+
+__host__ __device__ int
+gd_info_indx_lcext2glphy_k(int k, gdinfo_t *gdinfo)
+{
+  return k - gdinfo->npoint_ghosts + gdinfo->nk1_to_glob_phys0;
+}
+
+/*
+ * print for QC
+ */
+
+int
+gd_info_print(gdinfo_t *gdinfo)
+{    
+  fprintf(stdout, "-------------------------------------------------------\n");
+  fprintf(stdout, "--> grid info:\n");
+  fprintf(stdout, "-------------------------------------------------------\n");
+  fprintf(stdout, " nx    = %-10d\n", gdinfo->nx);
+  fprintf(stdout, " ny    = %-10d\n", gdinfo->ny);
+  fprintf(stdout, " nz    = %-10d\n", gdinfo->nz);
+  fprintf(stdout, " ni    = %-10d\n", gdinfo->ni);
+  fprintf(stdout, " nj    = %-10d\n", gdinfo->nj);
+  fprintf(stdout, " nk    = %-10d\n", gdinfo->nk);
+
+  fprintf(stdout, " ni1   = %-10d\n", gdinfo->ni1);
+  fprintf(stdout, " ni2   = %-10d\n", gdinfo->ni2);
+  fprintf(stdout, " nj1   = %-10d\n", gdinfo->nj1);
+  fprintf(stdout, " nj2   = %-10d\n", gdinfo->nj2);
+  fprintf(stdout, " nk1   = %-10d\n", gdinfo->nk1);
+  fprintf(stdout, " nk2   = %-10d\n", gdinfo->nk2);
+
+  fprintf(stdout, " ni1_to_glob_phys0   = %-10d\n", gdinfo->gni1);
+  fprintf(stdout, " ni2_to_glob_phys0   = %-10d\n", gdinfo->gni2);
+  fprintf(stdout, " nj1_to_glob_phys0   = %-10d\n", gdinfo->gnj1);
+  fprintf(stdout, " nj2_to_glob_phys0   = %-10d\n", gdinfo->gnj2);
+  fprintf(stdout, " nk1_to_glob_phys0   = %-10d\n", gdinfo->gnk1);
+  fprintf(stdout, " nk2_to_glob_phys0   = %-10d\n", gdinfo->gnk2);
+
+  return(0);
 }

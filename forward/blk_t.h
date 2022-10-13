@@ -3,7 +3,6 @@
 
 #include "constants.h"
 #include "fd_t.h"
-#include "gd_info.h"
 #include "mympi_t.h"
 #include "gd_t.h"
 #include "md_t.h"

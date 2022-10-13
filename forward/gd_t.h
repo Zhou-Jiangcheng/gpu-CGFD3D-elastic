@@ -4,7 +4,7 @@
 #include <mpi.h>
 
 #include "constants.h"
-#include "gd_info.h"
+#include "mympi_t.h"
 
 #define GD_TILE_NX 4
 #define GD_TILE_NY 4
@@ -13,7 +13,6 @@
 /*************************************************
  * structure
  *************************************************/
-
 typedef enum {
 
   GD_TYPE_CART = 1,
@@ -21,6 +20,47 @@ typedef enum {
   GD_TYPE_CURV = 3
 
 } gd_type_t;
+
+typedef struct {
+  int ni;
+  int nj;
+  int nk;
+  int nx;
+  int ny;
+  int nz;
+  int ni1;
+  int ni2;
+  int nj1;
+  int nj2;
+  int nk1;
+  int nk2;
+
+  int npoint_ghosts;
+  int fdx_nghosts;
+  int fdy_nghosts;
+  int fdz_nghosts;
+
+  // global index
+  int gni1, gnj1, gnk1; // global index, do not accout ghost point
+  int gni2, gnj2, gnk2; // global index
+  // new naming
+  int ni1_to_glob_phys0;
+  int nj1_to_glob_phys0;
+  int nk1_to_glob_phys0;
+  int ni2_to_glob_phys0;
+  int nj2_to_glob_phys0;
+  int nk2_to_glob_phys0;
+
+  // size of a single var
+  size_t siz_iy;
+  size_t siz_iz;
+  size_t siz_icmp;
+
+  // curvilinear coord name,
+  char **index_name;
+  
+  //size_t siz_vars; // volume * num_of_vars, not easy for understand, may named with w3d and aux
+} gdinfo_t;
 
 //  grid coordinate for both cart, vmap and curv
 //    to reduce duplicated functions
@@ -67,18 +107,18 @@ typedef struct {
   float *cell_zmin;
   float *cell_zmax;
   // boundary of tiles by 4x4x4 partition for AABB algorithm
-  int   tile_istart[GD_TILE_NX];
-  int   tile_iend  [GD_TILE_NX];
-  int   tile_jstart[GD_TILE_NY];
-  int   tile_jend  [GD_TILE_NY];
-  int   tile_kstart[GD_TILE_NZ];
-  int   tile_kend  [GD_TILE_NZ];
-  float tile_xmin[GD_TILE_NZ][GD_TILE_NY][GD_TILE_NX];
-  float tile_xmax[GD_TILE_NZ][GD_TILE_NY][GD_TILE_NX];
-  float tile_ymin[GD_TILE_NZ][GD_TILE_NY][GD_TILE_NX];
-  float tile_ymax[GD_TILE_NZ][GD_TILE_NY][GD_TILE_NX];
-  float tile_zmin[GD_TILE_NZ][GD_TILE_NY][GD_TILE_NX];
-  float tile_zmax[GD_TILE_NZ][GD_TILE_NY][GD_TILE_NX];
+  int   *tile_istart;
+  int   *tile_iend  ;
+  int   *tile_jstart;
+  int   *tile_jend  ;
+  int   *tile_kstart;
+  int   *tile_kend  ;
+  float *tile_xmin;
+  float *tile_xmax;
+  float *tile_ymin;
+  float *tile_ymax;
+  float *tile_zmin;
+  float *tile_zmax;
 
   size_t siz_iy;
   size_t siz_iz;
@@ -87,30 +127,6 @@ typedef struct {
   size_t *cmp_pos;
   char  **cmp_name;
 } gd_t;
-
-//  default means coordinate
-typedef struct {
-  int n1, n2, n3, n4;
-  int nx, ny, nz, ncmp;
-  float *v4d; // allocated var
-
-  //to avoid ref x3d at different funcs
-  float *x3d; // pointer to var
-  float *y3d;
-  float *z3d;
-
-  // min/max including ghost points
-  float xmin, xmax;
-  float ymin, ymax;
-  float zmin, zmax;
-
-  size_t siz_iy;
-  size_t siz_iz;
-  size_t siz_icmp;
-
-  size_t *cmp_pos;
-  char  **cmp_name;
-} gdcurv_t_nouse;
 
 //  for metric
 typedef struct {
@@ -136,7 +152,6 @@ typedef struct {
   size_t *cmp_pos;
   char  **cmp_name;
 } gdcurv_metric_t;
-
 
 /*************************************************
  * function prototype
@@ -349,5 +364,55 @@ gd_curv_coord_to_glob_indx_gpu(gdinfo_t *gdinfo,
                                int *ou_si, int *ou_sj, int *ou_sk,
                                float *ou_sx_inc, float *ou_sy_inc, float *ou_sz_inc);
 
+int
+gd_info_set(gdinfo_t *const gdinfo,
+            const mympi_t *const mympi,
+            const int number_of_total_grid_points_x,
+            const int number_of_total_grid_points_y,
+            const int number_of_total_grid_points_z,
+                  int abs_num_of_layers[][2],
+            const int fdx_nghosts,
+            int const fdy_nghosts,
+            const int fdz_nghosts,
+            const int verbose);
+
+int
+gd_info_lindx_is_inner(int i, int j, int k, gdinfo_t *gdinfo);
+
+int
+gd_info_gindx_is_inner(int gi, int gj, int gk, gdinfo_t *gdinfo);
+
+int
+gd_info_gindx_is_inner_i(int gi, gdinfo_t *gdinfo);
+
+int
+gd_info_gindx_is_inner_j(int gj, gdinfo_t *gdinfo);
+
+int
+gd_info_gindx_is_inner_k(int gk, gdinfo_t *gdinfo);
+
+int
+gd_info_indx_glphy2lcext_i(int gi, gdinfo_t *gdinfo);
+
+int
+gd_info_indx_glphy2lcext_j(int gj, gdinfo_t *gdinfo);
+
+int
+gd_info_indx_glphy2lcext_k(int gk, gdinfo_t *gdinfo);
+
+__host__ __device__
+int
+gd_info_indx_lcext2glphy_i(int i, gdinfo_t *gdinfo);
+
+__host__ __device__
+int
+gd_info_indx_lcext2glphy_j(int j, gdinfo_t *gdinfo);
+
+__host__ __device__
+int
+gd_info_indx_lcext2glphy_k(int k, gdinfo_t *gdinfo);
+
+int
+gd_info_print(gdinfo_t *gdinfo);
 
 #endif

@@ -2,7 +2,6 @@
 #define ALLOC_H
 
 #include "constants.h"
-#include "gd_info.h"
 #include "gd_t.h"
 #include "fd_t.h"
 #include "md_t.h"

@@ -11,14 +11,7 @@
 #include "fdlib_mem.h"
 #include "fdlib_math.h"
 
-#include "fd_t.h"
-#include "gd_info.h"
-#include "mympi_t.h"
-#include "gd_t.h"
-#include "md_t.h"
-#include "wav_t.h"
-#include "src_t.h"
-#include "bdry_t.h"
+#include "sv_curv_col_el_gpu.h"
 /*
  * implement traction image boundary 
  */

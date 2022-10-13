@@ -415,9 +415,9 @@ io_recv_read_locate(gdinfo_t  *gdinfo,
     if (gd_info_gindx_is_inner(ix,iy,iz,gdinfo) == 1)
     {
       // convert to local index w ghost
-      int i_local = gd_info_ind_glphy2lcext_i(ix,gdinfo);
-      int j_local = gd_info_ind_glphy2lcext_j(iy,gdinfo);
-      int k_local = gd_info_ind_glphy2lcext_k(iz,gdinfo);
+      int i_local = gd_info_indx_glphy2lcext_i(ix,gdinfo);
+      int j_local = gd_info_indx_glphy2lcext_j(iy,gdinfo);
+      int k_local = gd_info_indx_glphy2lcext_k(iz,gdinfo);
 
       // get coord
       if (flag_indx[ir] == 1)
@@ -577,9 +577,9 @@ io_line_locate(gdinfo_t *gdinfo,
 
       if (gd_info_gindx_is_inner(gi,gj,gk,gdinfo) == 1)
       {
-        int i = gd_info_ind_glphy2lcext_i(gi,gdinfo);
-        int j = gd_info_ind_glphy2lcext_j(gj,gdinfo);
-        int k = gd_info_ind_glphy2lcext_k(gk,gdinfo);
+        int i = gd_info_indx_glphy2lcext_i(gi,gdinfo);
+        int j = gd_info_indx_glphy2lcext_j(gj,gdinfo);
+        int k = gd_info_indx_glphy2lcext_k(gk,gdinfo);
 
         int iptr = i + j * gd->siz_iy + k * gd->siz_iz;
 
@@ -646,7 +646,7 @@ io_slice_locate(gdinfo_t  *gdinfo,
     {
       int islc = ioslice->num_of_slice_x;
 
-      ioslice->slice_x_indx[islc]  = gd_info_ind_glphy2lcext_i(gi, gdinfo);
+      ioslice->slice_x_indx[islc]  = gd_info_indx_glphy2lcext_i(gi, gdinfo);
       sprintf(ioslice->slice_x_fname[islc],"%s/slicex_i%d_%s.nc",
                 output_dir,gi,output_fname_part);
 
@@ -666,7 +666,7 @@ io_slice_locate(gdinfo_t  *gdinfo,
     {
       int islc = ioslice->num_of_slice_y;
 
-      ioslice->slice_y_indx[islc]  = gd_info_ind_glphy2lcext_j(gj, gdinfo);
+      ioslice->slice_y_indx[islc]  = gd_info_indx_glphy2lcext_j(gj, gdinfo);
       sprintf(ioslice->slice_y_fname[islc],"%s/slicey_j%d_%s.nc",
                 output_dir,gj,output_fname_part);
 
@@ -686,7 +686,7 @@ io_slice_locate(gdinfo_t  *gdinfo,
     {
       int islc = ioslice->num_of_slice_z;
 
-      ioslice->slice_z_indx[islc]  = gd_info_ind_glphy2lcext_k(gk, gdinfo);
+      ioslice->slice_z_indx[islc]  = gd_info_indx_glphy2lcext_k(gk, gdinfo);
       sprintf(ioslice->slice_z_fname[islc],"%s/slicez_k%d_%s.nc",
                 output_dir,gk,output_fname_part);
 
@@ -803,9 +803,9 @@ io_snapshot_locate(gdinfo_t *gdinfo,
     // if in this proc
     if (ngi>0 && ngj>0 && ngk>0)
     {
-      iosnap->i1[isnap]  = gd_info_ind_glphy2lcext_i(gi1, gdinfo);
-      iosnap->j1[isnap]  = gd_info_ind_glphy2lcext_j(gj1, gdinfo);
-      iosnap->k1[isnap]  = gd_info_ind_glphy2lcext_k(gk1, gdinfo);
+      iosnap->i1[isnap]  = gd_info_indx_glphy2lcext_i(gi1, gdinfo);
+      iosnap->j1[isnap]  = gd_info_indx_glphy2lcext_j(gj1, gdinfo);
+      iosnap->k1[isnap]  = gd_info_indx_glphy2lcext_k(gk1, gdinfo);
       iosnap->ni[isnap]  = ngi;
       iosnap->nj[isnap]  = ngj;
       iosnap->nk[isnap]  = ngk;

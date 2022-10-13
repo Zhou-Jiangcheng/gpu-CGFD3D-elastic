@@ -486,9 +486,9 @@ src_read_locate_file(gdinfo_t *gdinfo,
           // convert uDA input into moment tensor
           if (moment_actived==1 && in_mechanism_type ==1)
           {
-            si = gd_info_ind_glphy2lcext_i(all_index[3*is+0], gdinfo);
-            sj = gd_info_ind_glphy2lcext_j(all_index[3*is+1], gdinfo);
-            sk = gd_info_ind_glphy2lcext_k(all_index[3*is+2], gdinfo);
+            si = gd_info_indx_glphy2lcext_i(all_index[3*is+0], gdinfo);
+            sj = gd_info_indx_glphy2lcext_j(all_index[3*is+1], gdinfo);
+            sk = gd_info_indx_glphy2lcext_k(all_index[3*is+2], gdinfo);
             size_t iptr = si + sj * siz_iy + sk * siz_iz;   
             float *mu3d = md->mu;
             float mu =  myz;
@@ -528,9 +528,9 @@ src_read_locate_file(gdinfo_t *gdinfo,
             // convert uDA input into moment tensor
             if (moment_actived==1 && in_mechanism_type ==1)
             {
-              si = gd_info_ind_glphy2lcext_i(all_index[3*is+0], gdinfo);
-              sj = gd_info_ind_glphy2lcext_j(all_index[3*is+1], gdinfo);
-              sk = gd_info_ind_glphy2lcext_k(all_index[3*is+2], gdinfo);
+              si = gd_info_indx_glphy2lcext_i(all_index[3*is+0], gdinfo);
+              sj = gd_info_indx_glphy2lcext_j(all_index[3*is+1], gdinfo);
+              sk = gd_info_indx_glphy2lcext_k(all_index[3*is+2], gdinfo);
               size_t iptr = si + sj * siz_iy + sk * siz_iz;   
               float *mu3d = md->mu;
 
@@ -552,9 +552,9 @@ src_read_locate_file(gdinfo_t *gdinfo,
     if (all_in_thread[is] == 1)
     {
       // convert global index to local index
-      si = gd_info_ind_glphy2lcext_i(all_index[3*is+0], gdinfo);
-      sj = gd_info_ind_glphy2lcext_j(all_index[3*is+1], gdinfo);
-      sk = gd_info_ind_glphy2lcext_k(all_index[3*is+2], gdinfo);
+      si = gd_info_indx_glphy2lcext_i(all_index[3*is+0], gdinfo);
+      sj = gd_info_indx_glphy2lcext_j(all_index[3*is+1], gdinfo);
+      sk = gd_info_indx_glphy2lcext_k(all_index[3*is+2], gdinfo);
   
       // keep into src_t
       src->si[is_local] = si;

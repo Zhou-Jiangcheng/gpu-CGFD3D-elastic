@@ -2,7 +2,6 @@
 #define SV_EQ1ST_CURV_COL_H
 
 #include "fd_t.h"
-#include "gd_info.h"
 #include "mympi_t.h"
 #include "gd_t.h"
 #include "md_t.h"

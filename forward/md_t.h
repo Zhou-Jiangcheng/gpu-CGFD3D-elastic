@@ -1,7 +1,7 @@
-#ifndef MD_EL_ISO_H
-#define MD_EL_ISO_H
+#ifndef MD_EL_H
+#define MD_EL_H
 
-#include "gd_info.h"
+#include "gd_t.h"
 
 /*************************************************
  * structure
