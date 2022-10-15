@@ -60,7 +60,7 @@ main_curv_col_el_3d: \
 		media_bin2model.o \
 		media_geometry3d.o \
 		media_read_file.o \
-		gd_info.o gd_t.o md_t.o wav_t.o \
+		gd_t.o md_t.o wav_t.o \
 		bdry_t.o src_t.o io_funcs.o \
 		blk_t.o cuda_common.o \
 		drv_rk_curv_col.o \
@@ -99,8 +99,6 @@ par_t.o: forward/par_t.cu
 interp.o: forward/interp.cu
 	${GC} -c -o $@ $(CFLAGS_CUDA) $<
 mympi_t.o: forward/mympi_t.cu
-	${GC} -c -o $@ $(CFLAGS_CUDA) $<
-gd_info.o: forward/gd_info.cu
 	${GC} -c -o $@ $(CFLAGS_CUDA) $<
 gd_t.o: forward/gd_t.cu
 	${GC} -c -o $@ $(CFLAGS_CUDA) $<
