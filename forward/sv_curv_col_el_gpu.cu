@@ -44,6 +44,7 @@ sv_curv_col_el_iso_rhs_timg_z2_gpu(
   float vecxi[5] = {0.0};
   float vecet[5] = {0.0};
   float veczt[5] = {0.0};
+
   int n, iptr4vec;
 
   size_t ix = blockIdx.x * blockDim.x + threadIdx.x;

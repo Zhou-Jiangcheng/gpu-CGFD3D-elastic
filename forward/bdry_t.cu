@@ -831,15 +831,11 @@ bdry_ablexp_apply_gpu(float *Ex, float *Ey, float *Ez,
     if (mask > Ez[iz+nk1]) mask = Ez[iz+nk1];
     // unroll for accelate 
     // ncmp=9
-    w_end[iptr + 0 * siz_icmp] *= mask;
-    w_end[iptr + 1 * siz_icmp] *= mask;
-    w_end[iptr + 2 * siz_icmp] *= mask;
-    w_end[iptr + 3 * siz_icmp] *= mask;
-    w_end[iptr + 4 * siz_icmp] *= mask;
-    w_end[iptr + 5 * siz_icmp] *= mask;
-    w_end[iptr + 6 * siz_icmp] *= mask;
-    w_end[iptr + 7 * siz_icmp] *= mask;
-    w_end[iptr + 8 * siz_icmp] *= mask;
+#pragma unroll 9
+    for(int i=0; i<9; i++)
+    {
+      w_end[iptr + i * siz_icmp] *= mask;
+    }
   }
 
   return;

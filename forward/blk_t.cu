@@ -407,15 +407,11 @@ blk_macdrp_pack_mesg_x1(
   {
     iptr     = (iz+nk1) * siz_iz + (iy+nj1) * siz_iy + (ix+ni1);
     iptr_b   = iz*nj*nx1_g + iy*nx1_g + ix;
-    sbuff_x1[iptr_b + 0*nx1_g*nj*nk] = w_cur[iptr + 0*siz_icmp];
-    sbuff_x1[iptr_b + 1*nx1_g*nj*nk] = w_cur[iptr + 1*siz_icmp];
-    sbuff_x1[iptr_b + 2*nx1_g*nj*nk] = w_cur[iptr + 2*siz_icmp];
-    sbuff_x1[iptr_b + 3*nx1_g*nj*nk] = w_cur[iptr + 3*siz_icmp];
-    sbuff_x1[iptr_b + 4*nx1_g*nj*nk] = w_cur[iptr + 4*siz_icmp];
-    sbuff_x1[iptr_b + 5*nx1_g*nj*nk] = w_cur[iptr + 5*siz_icmp];
-    sbuff_x1[iptr_b + 6*nx1_g*nj*nk] = w_cur[iptr + 6*siz_icmp];
-    sbuff_x1[iptr_b + 7*nx1_g*nj*nk] = w_cur[iptr + 7*siz_icmp];
-    sbuff_x1[iptr_b + 8*nx1_g*nj*nk] = w_cur[iptr + 8*siz_icmp];
+#pragma unroll 9
+    for(int i=0; i<9; i++)
+    {
+      sbuff_x1[iptr_b + i*nx1_g*nj*nk] = w_cur[iptr + i*siz_icmp];
+    }
   }
   return;
 }
@@ -434,15 +430,11 @@ blk_macdrp_pack_mesg_x2(
   {
     iptr     = (iz+nk1) * siz_iz + (iy+nj1) * siz_iy + (ix+ni2-nx2_g+1);
     iptr_b   = iz*nj*nx2_g + iy*nx2_g + ix;
-    sbuff_x2[iptr_b + 0*nx2_g*nj*nk] = w_cur[iptr + 0*siz_icmp];
-    sbuff_x2[iptr_b + 1*nx2_g*nj*nk] = w_cur[iptr + 1*siz_icmp];
-    sbuff_x2[iptr_b + 2*nx2_g*nj*nk] = w_cur[iptr + 2*siz_icmp];
-    sbuff_x2[iptr_b + 3*nx2_g*nj*nk] = w_cur[iptr + 3*siz_icmp];
-    sbuff_x2[iptr_b + 4*nx2_g*nj*nk] = w_cur[iptr + 4*siz_icmp];
-    sbuff_x2[iptr_b + 5*nx2_g*nj*nk] = w_cur[iptr + 5*siz_icmp];
-    sbuff_x2[iptr_b + 6*nx2_g*nj*nk] = w_cur[iptr + 6*siz_icmp];
-    sbuff_x2[iptr_b + 7*nx2_g*nj*nk] = w_cur[iptr + 7*siz_icmp];
-    sbuff_x2[iptr_b + 8*nx2_g*nj*nk] = w_cur[iptr + 8*siz_icmp];
+#pragma unroll 9
+    for(int i=0; i<9; i++)
+    {
+      sbuff_x2[iptr_b + i*nx2_g*nj*nk] = w_cur[iptr + i*siz_icmp];
+    }
   }
   return;
 }
@@ -461,15 +453,11 @@ blk_macdrp_pack_mesg_y1(
   {
     iptr     = (iz+nk1) * siz_iz + (iy+nj1) * siz_iy + (ix+ni1);
     iptr_b   = iz*ni*ny1_g + iy*ni + ix;
-    sbuff_y1[iptr_b + 0*ny1_g*ni*nk] = w_cur[iptr + 0*siz_icmp];
-    sbuff_y1[iptr_b + 1*ny1_g*ni*nk] = w_cur[iptr + 1*siz_icmp];
-    sbuff_y1[iptr_b + 2*ny1_g*ni*nk] = w_cur[iptr + 2*siz_icmp];
-    sbuff_y1[iptr_b + 3*ny1_g*ni*nk] = w_cur[iptr + 3*siz_icmp];
-    sbuff_y1[iptr_b + 4*ny1_g*ni*nk] = w_cur[iptr + 4*siz_icmp];
-    sbuff_y1[iptr_b + 5*ny1_g*ni*nk] = w_cur[iptr + 5*siz_icmp];
-    sbuff_y1[iptr_b + 6*ny1_g*ni*nk] = w_cur[iptr + 6*siz_icmp];
-    sbuff_y1[iptr_b + 7*ny1_g*ni*nk] = w_cur[iptr + 7*siz_icmp];
-    sbuff_y1[iptr_b + 8*ny1_g*ni*nk] = w_cur[iptr + 8*siz_icmp];
+#pragma unroll 9
+    for(int i=0; i<9; i++)
+    {
+      sbuff_y1[iptr_b + i*ny1_g*ni*nk] = w_cur[iptr + i*siz_icmp];
+    }
   }
 
   return;
@@ -489,15 +477,11 @@ blk_macdrp_pack_mesg_y2(
   {
     iptr     = (iz+nk1) * siz_iz + (iy+nj2-ny2_g+1) * siz_iy + (ix+ni1);
     iptr_b   = iz*ni*ny2_g + iy*ni + ix;
-    sbuff_y2[iptr_b + 0*ny2_g*ni*nk] = w_cur[iptr + 0*siz_icmp];
-    sbuff_y2[iptr_b + 1*ny2_g*ni*nk] = w_cur[iptr + 1*siz_icmp];
-    sbuff_y2[iptr_b + 2*ny2_g*ni*nk] = w_cur[iptr + 2*siz_icmp];
-    sbuff_y2[iptr_b + 3*ny2_g*ni*nk] = w_cur[iptr + 3*siz_icmp];
-    sbuff_y2[iptr_b + 4*ny2_g*ni*nk] = w_cur[iptr + 4*siz_icmp];
-    sbuff_y2[iptr_b + 5*ny2_g*ni*nk] = w_cur[iptr + 5*siz_icmp];
-    sbuff_y2[iptr_b + 6*ny2_g*ni*nk] = w_cur[iptr + 6*siz_icmp];
-    sbuff_y2[iptr_b + 7*ny2_g*ni*nk] = w_cur[iptr + 7*siz_icmp];
-    sbuff_y2[iptr_b + 8*ny2_g*ni*nk] = w_cur[iptr + 8*siz_icmp];
+#pragma unroll 9
+    for(int i=0; i<9; i++)
+    {
+      sbuff_y2[iptr_b + i*ny2_g*ni*nk] = w_cur[iptr + i*siz_icmp];
+    }
   }
   return;
 }
@@ -605,15 +589,11 @@ blk_macdrp_unpack_mesg_x1(
     if(ix<nx2_g && iy<nj && iz<nk){
       iptr   = (iz+nk1) * siz_iz + (iy+nj1) * siz_iy + (ix+ni1-nx2_g);
       iptr_b = iz*nj*nx2_g + iy*nx2_g + ix;
-      w_cur[iptr + 0*siz_icmp] = rbuff_x1[iptr_b+ 0*nx2_g*nj*nk];
-      w_cur[iptr + 1*siz_icmp] = rbuff_x1[iptr_b+ 1*nx2_g*nj*nk];
-      w_cur[iptr + 2*siz_icmp] = rbuff_x1[iptr_b+ 2*nx2_g*nj*nk];
-      w_cur[iptr + 3*siz_icmp] = rbuff_x1[iptr_b+ 3*nx2_g*nj*nk];
-      w_cur[iptr + 4*siz_icmp] = rbuff_x1[iptr_b+ 4*nx2_g*nj*nk];
-      w_cur[iptr + 5*siz_icmp] = rbuff_x1[iptr_b+ 5*nx2_g*nj*nk];
-      w_cur[iptr + 6*siz_icmp] = rbuff_x1[iptr_b+ 6*nx2_g*nj*nk];
-      w_cur[iptr + 7*siz_icmp] = rbuff_x1[iptr_b+ 7*nx2_g*nj*nk];
-      w_cur[iptr + 8*siz_icmp] = rbuff_x1[iptr_b+ 8*nx2_g*nj*nk];
+#pragma unroll 9
+      for(int i=0; i<9; i++)
+      {
+        w_cur[iptr + i*siz_icmp] = rbuff_x1[iptr_b+ i*nx2_g*nj*nk];
+      }
     }
   }
   return;
@@ -634,15 +614,11 @@ blk_macdrp_unpack_mesg_x2(
     if(ix<nx1_g && iy<nj && iz<nk){
       iptr   = (iz+nk1) * siz_iz + (iy+nj1) * siz_iy + (ix+ni2+1);
       iptr_b = iz*nj*nx1_g + iy*nx1_g + ix;
-      w_cur[iptr + 0*siz_icmp] = rbuff_x2[iptr_b+ 0*nx1_g*nj*nk];
-      w_cur[iptr + 1*siz_icmp] = rbuff_x2[iptr_b+ 1*nx1_g*nj*nk];
-      w_cur[iptr + 2*siz_icmp] = rbuff_x2[iptr_b+ 2*nx1_g*nj*nk];
-      w_cur[iptr + 3*siz_icmp] = rbuff_x2[iptr_b+ 3*nx1_g*nj*nk];
-      w_cur[iptr + 4*siz_icmp] = rbuff_x2[iptr_b+ 4*nx1_g*nj*nk];
-      w_cur[iptr + 5*siz_icmp] = rbuff_x2[iptr_b+ 5*nx1_g*nj*nk];
-      w_cur[iptr + 6*siz_icmp] = rbuff_x2[iptr_b+ 6*nx1_g*nj*nk];
-      w_cur[iptr + 7*siz_icmp] = rbuff_x2[iptr_b+ 7*nx1_g*nj*nk];
-      w_cur[iptr + 8*siz_icmp] = rbuff_x2[iptr_b+ 8*nx1_g*nj*nk];
+#pragma unroll 9
+      for(int i=0; i<9; i++)
+      {
+        w_cur[iptr + i*siz_icmp] = rbuff_x2[iptr_b+ i*nx1_g*nj*nk];
+      }
     }
   }
   return;
@@ -663,15 +639,11 @@ blk_macdrp_unpack_mesg_y1(
     if(ix<ni && iy<ny2_g && iz<nk){
       iptr   = (iz+nk1) * siz_iz + (iy+nj1-ny2_g) * siz_iy + (ix+ni1);
       iptr_b = iz*ni*ny2_g + iy*ni + ix;
-      w_cur[iptr + 0*siz_icmp] = rbuff_y1[iptr_b+ 0*ny2_g*ni*nk];
-      w_cur[iptr + 1*siz_icmp] = rbuff_y1[iptr_b+ 1*ny2_g*ni*nk];
-      w_cur[iptr + 2*siz_icmp] = rbuff_y1[iptr_b+ 2*ny2_g*ni*nk];
-      w_cur[iptr + 3*siz_icmp] = rbuff_y1[iptr_b+ 3*ny2_g*ni*nk];
-      w_cur[iptr + 4*siz_icmp] = rbuff_y1[iptr_b+ 4*ny2_g*ni*nk];
-      w_cur[iptr + 5*siz_icmp] = rbuff_y1[iptr_b+ 5*ny2_g*ni*nk];
-      w_cur[iptr + 6*siz_icmp] = rbuff_y1[iptr_b+ 6*ny2_g*ni*nk];
-      w_cur[iptr + 7*siz_icmp] = rbuff_y1[iptr_b+ 7*ny2_g*ni*nk];
-      w_cur[iptr + 8*siz_icmp] = rbuff_y1[iptr_b+ 8*ny2_g*ni*nk];
+#pragma unroll 9
+      for(int i=0; i<9; i++)
+      {
+        w_cur[iptr + i*siz_icmp] = rbuff_y1[iptr_b+ i*ny2_g*ni*nk];
+      }
     }
   }
   return;
@@ -692,15 +664,11 @@ blk_macdrp_unpack_mesg_y2(
     if(ix<ni && iy<ny1_g && iz<nk){
       iptr   = (iz+nk1) * siz_iz + (iy+nj2+1) * siz_iy + (ix+ni1);
       iptr_b = iz*ni*ny1_g + iy*ni + ix;
-      w_cur[iptr + 0*siz_icmp] = rbuff_y2[iptr_b+ 0*ny1_g*ni*nk];
-      w_cur[iptr + 1*siz_icmp] = rbuff_y2[iptr_b+ 1*ny1_g*ni*nk];
-      w_cur[iptr + 2*siz_icmp] = rbuff_y2[iptr_b+ 2*ny1_g*ni*nk];
-      w_cur[iptr + 3*siz_icmp] = rbuff_y2[iptr_b+ 3*ny1_g*ni*nk];
-      w_cur[iptr + 4*siz_icmp] = rbuff_y2[iptr_b+ 4*ny1_g*ni*nk];
-      w_cur[iptr + 5*siz_icmp] = rbuff_y2[iptr_b+ 5*ny1_g*ni*nk];
-      w_cur[iptr + 6*siz_icmp] = rbuff_y2[iptr_b+ 6*ny1_g*ni*nk];
-      w_cur[iptr + 7*siz_icmp] = rbuff_y2[iptr_b+ 7*ny1_g*ni*nk];
-      w_cur[iptr + 8*siz_icmp] = rbuff_y2[iptr_b+ 8*ny1_g*ni*nk];
+#pragma unroll 9
+      for(int i=0; i<9; i++)
+      {
+        w_cur[iptr + i*siz_icmp] = rbuff_y2[iptr_b+ i*ny1_g*ni*nk];
+      }
     }
   }
   return;
