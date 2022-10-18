@@ -190,7 +190,7 @@ sv_curv_col_el_vti_onestage(
   CUDACHECK(cudaMemcpy(lfdz_shift_all_d,fdz_shift_all,fdz_max_len*num_of_fdz_op*sizeof(size_t),cudaMemcpyHostToDevice));
 
   {
-    dim3 block(8,8,8);
+    dim3 block(32,4,2);
     dim3 grid;
     grid.x = (ni+block.x-1)/block.x;
     grid.y = (nj+block.y-1)/block.y;
@@ -212,7 +212,7 @@ sv_curv_col_el_vti_onestage(
   {
     // tractiong
     {
-      dim3 block(8,8);
+      dim3 block(32,8);
       dim3 grid;
       grid.x = (ni+block.x-1)/block.x;
       grid.y = (nj+block.y-1)/block.y;
@@ -229,7 +229,7 @@ sv_curv_col_el_vti_onestage(
     }
     // velocity: vlow
     {
-      dim3 block(8,8);
+      dim3 block(32,8);
       dim3 grid;
       grid.x = (ni+block.x-1)/block.x;
       grid.y = (nj+block.y-1)/block.y;
@@ -652,7 +652,7 @@ sv_curv_col_el_vti_rhs_cfspml(
       int abs_nj = abs_nj2-abs_nj1+1; 
       int abs_nk = abs_nk2-abs_nk1+1; 
       {
-        dim3 block(8,4,4);
+        dim3 block(32,4,2);
         dim3 grid;
         grid.x = (abs_ni+block.x-1)/block.x;
         grid.y = (abs_nj+block.y-1)/block.y;

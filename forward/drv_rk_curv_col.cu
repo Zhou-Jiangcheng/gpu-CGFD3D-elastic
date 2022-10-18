@@ -155,7 +155,7 @@ drv_rk_curv_col_allstep(
   {
     if (md_d.medium_type == CONST_MEDIUM_ELASTIC_ISO)
     {
-      dim3 block(16,16);
+      dim3 block(32,16);
       dim3 grid;
       grid.x = (ni+block.x-1)/block.x;
       grid.y = (nj+block.y-1)/block.y;
@@ -164,7 +164,7 @@ drv_rk_curv_col_allstep(
     }
     else if (md_d.medium_type == CONST_MEDIUM_ELASTIC_VTI)
     {
-      dim3 block(16,16);
+      dim3 block(32,16);
       dim3 grid;
       grid.x = (ni+block.x-1)/block.x;
       grid.y = (nj+block.y-1)/block.y;
@@ -173,7 +173,7 @@ drv_rk_curv_col_allstep(
     }
     else if (md_d.medium_type == CONST_MEDIUM_ELASTIC_ANISO)
     {
-      dim3 block(16,16);
+      dim3 block(32,16);
       dim3 grid;
       grid.x = (ni+block.x-1)/block.x;
       grid.y = (nj+block.y-1)/block.y;

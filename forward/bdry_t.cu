@@ -797,7 +797,7 @@ bdry_ablexp_apply(bdryexp_t bdryexp, gdinfo_t *gdinfo, float *w_end, int ncmp)
 
     if (D[n].enable == 1)
     {
-      dim3 block(8,8,8);
+      dim3 block(32,4,2);
       dim3 grid;
       grid.x = (ni + block.x - 1) / block.x;
       grid.y = (nj + block.y - 1) / block.y;
