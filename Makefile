@@ -12,16 +12,8 @@
 #-------------------------------------------------------------------------------
 # compiler
 #-------------------------------------------------------------------------------
-CUDAHOME   := /data3/lihl/software/cuda-11.5
-MPIHOME    := /data3/lihl/software/openmpi-gnu-4.1.2
-NETCDF := /data3/lihl/software/disable-netcdf-4.4.1
-#CUDAHOME   := /opt/apps/cuda-11.5
-#MPIHOME    := /opt/apps/openmpi/4.1.2-cuda-aware
-#NETCDF := /opt/apps/gcc-4.8.5/disable-netcdf-4.4.1
 CXX    :=  $(MPIHOME)/bin/mpicxx
 GC     :=  $(CUDAHOME)/bin/nvcc 
-
-
 
 #- debug
 #CFLAGS_CUDA   := -g $(CFLAGS_CUDA)
