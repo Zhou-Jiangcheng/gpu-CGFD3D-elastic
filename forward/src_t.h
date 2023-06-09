@@ -77,6 +77,9 @@ int
 src_glob_ext_ishere(int si, int sj, int sk, int half_ext, gdinfo_t *gdinfo);
 
 int
+src_glob_ishere(int si, int sj, int sk, int half_ext, gdinfo_t *gdinfo);
+
+int
 src_coord_to_local_indx(gdinfo_t *gdinfo,
                         gd_t *gdcurv,
                         float sx, float sy, float sz,

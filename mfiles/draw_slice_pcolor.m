@@ -4,6 +4,7 @@
 % Date:     2021.05.31
 
 clear all;
+close all;
 addmypath;
 % -------------------------- parameters input -------------------------- %
 % file and path name
@@ -11,13 +12,13 @@ parfnm='../project/test.json';
 output_dir='../project/output';
 
 % which slice to plot
-slicedir='x';
-sliceid=190;
+slicedir='Z';
+sliceid=149;
 
 % which variable and time to plot
-varnm='Vx';
-ns=300;
-ne=300;
+varnm='Vz';
+ns=500;
+ne=500;
 nt=50;
 
 % figure control parameters
@@ -25,7 +26,7 @@ flag_km     = 1;
 flag_emlast = 1;
 flag_print  = 0;
 scl_daspect =[1 1 1];
-clrmp       = 'parula';
+clrmp       = 'jetwr';
 taut=0.5;
 % ---------------------------------------------------------------------- %
 

@@ -8,12 +8,12 @@ clear all;
 addmypath
 % -------------------------- parameters input -------------------------- %
 % file and path name
-parfnm='../project/test.json';
-output_dir='../project/output';
+parfnm='../project1/test.json';
+output_dir='../project1/output';
 
 % which grid profile to plot
-subs=[5,5,1];     % start from index '1'
-subc=[-1,-1,1];     % '-1' to plot all points in this dimension
+subs=[1,10,1];     % start from index '1'
+subc=[-1,1,-1];     % '-1' to plot all points in this dimension
 subt=[1,1,1];
 
 % figure control parameters

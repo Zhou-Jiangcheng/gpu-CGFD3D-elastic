@@ -16,12 +16,14 @@ echo "EXEC_WAVE=$EXEC_WAVE"
 INPUTDIR=`pwd`
 
 #-- output and conf
-PROJDIR=`pwd`/../project
+PROJDIR=`pwd`/../project1
 PAR_FILE=${PROJDIR}/test.json
 GRID_DIR=${PROJDIR}/output
-MEDIA_DIR=${PROJDIR}/output
+MEDIA_DIR=${PROJDIR}/../project/output
 SOURCE_DIR=${PROJDIR}/output
 OUTPUT_DIR=${PROJDIR}/output
+
+rm -rf $PROJDIR
 
 #-- create dir
 mkdir -p $PROJDIR
@@ -34,15 +36,15 @@ mkdir -p $MEDIA_DIR
 #----------------------------------------------------------------------
 cat << ieof > $PAR_FILE
 {
-  "number_of_total_grid_points_x" : 300,
-  "number_of_total_grid_points_y" : 250,
-  "number_of_total_grid_points_z" : 60,
+  "number_of_total_grid_points_x" : 250,
+  "number_of_total_grid_points_y" : 200,
+  "number_of_total_grid_points_z" : 150,
 
   "number_of_mpiprocs_x" : 2,
   "number_of_mpiprocs_y" : 2,
 
   "size_of_time_step" : 0.01,
-  "number_of_time_steps" : 600,
+  "number_of_time_steps" : 1500,
   "#time_window_length" : 8,
   "check_stability" : 1,
 
@@ -59,7 +61,7 @@ cat << ieof > $PAR_FILE
           "number_of_layers" : 10,
           "alpha_max" : 3.14,
           "beta_max" : 2.0,
-          "ref_vel"  : 7000.0
+          "ref_vel"  : 5000.0
           }
       },
   "boundary_y_front" : {
@@ -67,7 +69,7 @@ cat << ieof > $PAR_FILE
           "number_of_layers" : 10,
           "alpha_max" : 3.14,
           "beta_max" : 2.0,
-          "ref_vel"  : 7000.0
+          "ref_vel"  : 5000.0
           }
       },
   "boundary_y_back" : {
@@ -75,7 +77,7 @@ cat << ieof > $PAR_FILE
           "number_of_layers" : 10,
           "alpha_max" : 3.14,
           "beta_max" : 2.0,
-          "ref_vel"  : 7000.0
+          "ref_vel"  : 5000.0
           }
       },
   "boundary_z_bottom" : {
@@ -83,7 +85,7 @@ cat << ieof > $PAR_FILE
           "number_of_layers" : 10,
           "alpha_max" : 3.14,
           "beta_max" : 2.0,
-          "ref_vel"  : 7000.0
+          "ref_vel"  : 5000.0
           }
       },
   "boundary_z_top" : {
@@ -93,7 +95,7 @@ cat << ieof > $PAR_FILE
   "grid_generation_method" : {
       "#import" : "$GRID_DIR",
       "cartesian" : {
-        "origin"  : [0.0, 0.0, -5900.0 ],
+        "origin"  : [0.0, 0.0, -14900.0 ],
         "inteval" : [ 100.0, 100.0, 100.0 ]
       },
       "#layer_interp" : {
@@ -117,6 +119,7 @@ cat << ieof > $PAR_FILE
       "#input_way" : "infile_layer",
       "#input_way" : "binfile",
       "input_way" : "code",
+      "#input_way" : "import",
       "#binfile" : {
         "size"    : [1001, 1447, 1252],
         "spacing" : [-10, 10, 10],
@@ -152,7 +155,7 @@ cat << ieof > $PAR_FILE
 
   "in_station_file" : "$INPUTDIR/prep_station/station.list",
 
-  "receiver_line" : [
+  "#receiver_line" : [
     {
       "name" : "line_x_1",
       "grid_index_start"    : [  50, 149, 59 ],
@@ -170,19 +173,19 @@ cat << ieof > $PAR_FILE
   "slice" : {
       "x_index" : [ 100 ],
       "y_index" : [ 100 ],
-      "z_index" : [ 59 ]
+      "z_index" : [ 100,149 ]
   },
 
-  "snapshot" : [
+  "#snapshot" : [
     {
       "name" : "volume_vel",
-      "grid_index_start" : [ 0, 0, 59 ],
-      "grid_index_count" : [ 300,250, 1 ],
+      "grid_index_start" : [ 0, 0, 0 ],
+      "grid_index_count" : [ 300,250, 150 ],
       "grid_index_incre" : [  1, 1, 1 ],
       "time_index_start" : 0,
       "time_index_incre" : 1,
       "save_velocity" : 1,
-      "save_stress"   : 0,
+      "save_stress"   : 1,
       "save_strain"   : 0
     }
   ],

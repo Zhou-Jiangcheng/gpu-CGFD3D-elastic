@@ -118,6 +118,28 @@ src_glob_ext_ishere(int si, int sj, int sk, int half_ext, gdinfo_t *gdinfo)
   return is_here;
 }
 
+/*
+ * if global index in this thread without ghost points
+ */
+
+int
+src_glob_ishere(int si, int sj, int sk, int half_ext, gdinfo_t *gdinfo)
+{
+  int is_here = 0;
+
+  if (si <= gdinfo->ni2_to_glob_phys0 && 
+      si >= gdinfo->ni1_to_glob_phys0 && 
+      sj <= gdinfo->nj2_to_glob_phys0 && 
+      sj >= gdinfo->nj1_to_glob_phys0 &&
+      sk <= gdinfo->nk2_to_glob_phys0 && 
+      sk >= gdinfo->nk1_to_glob_phys0)
+  {
+    is_here = 1;
+  }
+
+  return is_here;
+}
+
 int
 src_read_locate_file(gdinfo_t *gdinfo,
                      gd_t *gd,
@@ -250,6 +272,7 @@ src_read_locate_file(gdinfo_t *gdinfo,
   }
 
   int *all_in_thread = (int *) fdlib_mem_calloc_1d_int(in_num_source,0, "source_in_this_thread");
+  int *all_in_thread_without_ghost = (int *) fdlib_mem_calloc_1d_int(in_num_source,0, "source_in_this_thread");
   int *all_index   = (int *)   malloc(sizeof(int)*in_num_source*CONST_NDIM);
   float *all_inc     = (float *) malloc(sizeof(float)*in_num_source*CONST_NDIM);
 
@@ -295,6 +318,10 @@ src_read_locate_file(gdinfo_t *gdinfo,
       {
         num_of_src_here += 1;
         all_in_thread[is] = 1;
+      }
+      if (src_glob_ishere(si_glob,sj_glob,sk_glob,npoint_half_ext,gdinfo)==1)
+      {
+        all_in_thread_without_ghost[is] = 1;
       }
     }
   }
@@ -349,6 +376,10 @@ src_read_locate_file(gdinfo_t *gdinfo,
       {
         num_of_src_here += 1;
         all_in_thread[is] = 1;
+      }
+      if (src_glob_ishere(si_glob,sj_glob,sk_glob,npoint_half_ext,gdinfo)==1)
+      {
+        all_in_thread_without_ghost[is] = 1;
       }
     }
     //free temp pointer
@@ -494,8 +525,11 @@ src_read_locate_file(gdinfo_t *gdinfo,
             float mu =  myz;
             // mu < 0 means to use internal model mu value
             if (mu < 0.0) { mu =  mu3d[iptr]; }
-            //mxz is D, mxy is A,
-            M0 += mu*mxz*mxy;
+            if(all_in_thread_without_ghost[is] == 1) // in in this thread without ghost
+            {
+              //mxz is D, mxy is A,
+              M0 += mu*mxz*mxy;
+            }
             src_muDA_to_moment(mxx,myy,mzz,mu,mxz,mxy,
                       &mxx,&myy,&mzz,&myz,&mxz,&mxy);
           }
@@ -537,9 +571,12 @@ src_read_locate_file(gdinfo_t *gdinfo,
               float mu =  m23[it];
               // mu < 0 means to use internal model mu value
               if (mu < 0.0) { mu =  mu3d[iptr]; }
+              if(all_in_thread_without_ghost[is] == 1) // in in this thread without ghost
+              {
+                //m13[it] is v, m12[it] is A,
+                M0 += mu*m13[it]*in_stf_dt*m12[it];
+              }
 
-              //m13[it] is v, m12[it] is A,
-              M0 += mu*m13[it]*in_stf_dt*m12[it];
               src_muDA_to_moment(m11[it],m22[it],m33[it],mu,m13[it],m12[it],
                                  m11+it ,m22+it ,m33+it ,m23+it ,m13+it ,m12+it);
             }
@@ -712,6 +749,7 @@ src_read_locate_file(gdinfo_t *gdinfo,
   // free pointer
   free(t_in);
   free(all_in_thread);
+  free(all_in_thread_without_ghost);
   free(all_coords);
   free(all_inc);
   free(all_index);
