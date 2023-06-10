@@ -30,16 +30,30 @@ mkdir -p $GRID_DIR
 mkdir -p $MEDIA_DIR
 
 #----------------------------------------------------------------------
+#-- grid and mpi configurations
+#----------------------------------------------------------------------
+
+#-- total x grid points
+NX=300
+#-- total y grid points
+NY=250
+#-- total z grid points
+NZ=150
+#-- total x mpi procs
+NPROCS_X=2
+#-- total y mpi procs
+NPROCS_Y=2
+#----------------------------------------------------------------------
 #-- create main conf
 #----------------------------------------------------------------------
 cat << ieof > $PAR_FILE
 {
-  "number_of_total_grid_points_x" : 300,
-  "number_of_total_grid_points_y" : 250,
-  "number_of_total_grid_points_z" : 60,
+  "number_of_total_grid_points_x" : $NX,
+  "number_of_total_grid_points_y" : $NY,
+  "number_of_total_grid_points_z" : $NZ,
 
-  "number_of_mpiprocs_x" : 2,
-  "number_of_mpiprocs_y" : 2,
+  "number_of_mpiprocs_x" : $NPROCS_X,
+  "number_of_mpiprocs_y" : $NPROCS_Y,
 
   "size_of_time_step" : 0.01,
   "number_of_time_steps" : 600,
@@ -157,7 +171,7 @@ cat << ieof > $PAR_FILE
     } 
   ],
 
-  "slice" : {
+  "#slice" : {
       "x_index" : [ 100 ],
       "y_index" : [ 100 ],
       "z_index" : [ 59 ]
@@ -166,8 +180,8 @@ cat << ieof > $PAR_FILE
   "snapshot" : [
     {
       "name" : "volume_vel",
-      "grid_index_start" : [ 0, 0, 59 ],
-      "grid_index_count" : [ 300,250, 1 ],
+      "grid_index_start" : [ 0, 0, $((NZ-1)) ],
+      "grid_index_count" : [ $NX,$NY, 1 ],
       "grid_index_incre" : [  1, 1, 1 ],
       "time_index_start" : 0,
       "time_index_incre" : 1,
@@ -224,4 +238,4 @@ fi
 
 date
 
-# vim:ft=conf:ts=4:sw=4:nu:et:ai:
+# vim:ts=4:sw=4:nu:et:ai:

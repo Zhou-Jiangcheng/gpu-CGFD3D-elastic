@@ -181,23 +181,6 @@ int main(int argc, char** argv)
 
         break;
     }
-    case PAR_GRID_LAYER_INTERP : {
-
-        if (myid==0) fprintf(stdout,"gerate grid using layer interp ...\n"); 
-
-        gd_curv_gen_layer(par->in_grid_layer_file,
-							par->grid_layer_resample_factor,
-							par->grid_layer_start,
-							par->number_of_total_grid_points_x,
-							par->number_of_total_grid_points_y,
-							par->number_of_total_grid_points_z,
-							gdcurv->x3d, gdcurv->y3d, gdcurv->z3d,
-							gdinfo->nx, gdinfo->ni, gdinfo->gni1, fd->fdx_nghosts,
-							gdinfo->ny, gdinfo->nj, gdinfo->gnj1, fd->fdy_nghosts,
-							gdinfo->nz, gdinfo->nk, gdinfo->gnk1, fd->fdz_nghosts);
-
-      break;
-    }
   }
 
   // cal min/max of this thread

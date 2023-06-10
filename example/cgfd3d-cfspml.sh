@@ -16,7 +16,7 @@ echo "EXEC_WAVE=$EXEC_WAVE"
 INPUTDIR=`pwd`
 
 #-- output and conf
-PROJDIR=`pwd`/../project1
+PROJDIR=`pwd`/../project2
 PAR_FILE=${PROJDIR}/test.json
 GRID_DIR=${PROJDIR}/output
 MEDIA_DIR=${PROJDIR}/../project/output
@@ -32,16 +32,30 @@ mkdir -p $GRID_DIR
 mkdir -p $MEDIA_DIR
 
 #----------------------------------------------------------------------
+#-- grid and mpi configurations
+#----------------------------------------------------------------------
+
+#-- total x grid points
+NX=300
+#-- total y grid points
+NY=250
+#-- total z grid points
+NZ=150
+#-- total x mpi procs
+NPROCS_X=2
+#-- total y mpi procs
+NPROCS_Y=2
+#----------------------------------------------------------------------
 #-- create main conf
 #----------------------------------------------------------------------
 cat << ieof > $PAR_FILE
 {
-  "number_of_total_grid_points_x" : 250,
-  "number_of_total_grid_points_y" : 200,
-  "number_of_total_grid_points_z" : 150,
+  "number_of_total_grid_points_x" : $NX,
+  "number_of_total_grid_points_y" : $NY,
+  "number_of_total_grid_points_z" : $NZ,
 
-  "number_of_mpiprocs_x" : 2,
-  "number_of_mpiprocs_y" : 2,
+  "number_of_mpiprocs_x" : $NPROCS_X,
+  "number_of_mpiprocs_y" : $NPROCS_Y,
 
   "size_of_time_step" : 0.01,
   "number_of_time_steps" : 1500,
@@ -97,12 +111,6 @@ cat << ieof > $PAR_FILE
       "cartesian" : {
         "origin"  : [0.0, 0.0, -14900.0 ],
         "inteval" : [ 100.0, 100.0, 100.0 ]
-      },
-      "#layer_interp" : {
-        "in_grid_layer_file" : "$INPUTDIR/prep_grid/seam_smo_ablex.gdlay",
-        "refine_factor" : [ 1, 1, 1],
-        "horizontal_start_index" : [ 3, 3 ],
-        "vertical_last_to_top" : 0
       }
   },
   "is_export_grid" : 1,
@@ -170,22 +178,22 @@ cat << ieof > $PAR_FILE
     } 
   ],
 
-  "slice" : {
+  "#slice" : {
       "x_index" : [ 100 ],
       "y_index" : [ 100 ],
       "z_index" : [ 100,149 ]
   },
 
-  "#snapshot" : [
+  "snapshot" : [
     {
       "name" : "volume_vel",
-      "grid_index_start" : [ 0, 0, 0 ],
-      "grid_index_count" : [ 300,250, 150 ],
+      "grid_index_start" : [ 0, 0, $((NZ-1)) ],
+      "grid_index_count" : [ $NX,$NY, 1 ],
       "grid_index_incre" : [  1, 1, 1 ],
       "time_index_start" : 0,
       "time_index_incre" : 1,
       "save_velocity" : 1,
-      "save_stress"   : 1,
+      "save_stress"   : 0,
       "save_strain"   : 0
     }
   ],
@@ -237,4 +245,4 @@ fi
 
 date
 
-# vim:ft=conf:ts=4:sw=4:nu:et:ai:
+# vim:ts=4:sw=4:nu:et:ai:

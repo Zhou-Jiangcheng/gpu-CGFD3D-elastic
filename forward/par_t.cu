@@ -386,26 +386,6 @@ par_read_from_str(const char *str, par_t *par)
          }
        }
     }
-    // layer interp
-    if (subitem = cJSON_GetObjectItem(item, "layer_interp")) {
-       par->grid_generation_itype = PAR_GRID_LAYER_INTERP;
-       if (thirditem = cJSON_GetObjectItem(subitem, "in_grid_layer_file")) {
-          sprintf(par->in_grid_layer_file, "%s", thirditem->valuestring);
-       }
-       if (thirditem = cJSON_GetObjectItem(subitem, "refine_factor")) {
-         for (int i = 0; i < CONST_NDIM; i++) {
-           par->grid_layer_resample_factor[i] = cJSON_GetArrayItem(thirditem, i)->valueint;
-         }
-       }
-       if (thirditem = cJSON_GetObjectItem(subitem, "horizontal_start_index")) {
-         for (int i = 0; i < CONST_NDIM-1; i++) {
-           par->grid_layer_start[i] = cJSON_GetArrayItem(thirditem, i)->valueint;
-         }
-       }
-       if (thirditem = cJSON_GetObjectItem(subitem, "vertical_last_to_top")) {
-         par->grid_layer_start[CONST_NDIM-1] = thirditem->valueint;
-       }
-    }
   }
 
   par->is_export_grid = 1;
