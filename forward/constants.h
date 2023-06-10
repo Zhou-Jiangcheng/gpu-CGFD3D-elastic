@@ -25,4 +25,12 @@
 // visco type
 #define CONST_VISCO_GRAVES_QS  1
 
+#define handle_nc_err(err)                       \
+{                                                \
+  if (err != NC_NOERR) {                         \
+     fprintf(stderr,"nc error: %s\n", nc_strerror(err)); \
+     exit(-1);                                   \
+  }                                              \
+}
+
 #endif
