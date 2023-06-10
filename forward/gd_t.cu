@@ -732,13 +732,14 @@ gd_curv_coord_export(
   int ierr = nc_create(ou_file, NC_CLOBBER | NC_64BIT_OFFSET, &ncid);  handle_nc_err(ierr);
 
   // define dimension
-  ierr = nc_def_dim(ncid, "i", nx, &dimid[2]);
-  ierr = nc_def_dim(ncid, "j", ny, &dimid[1]);
-  ierr = nc_def_dim(ncid, "k", nz, &dimid[0]);
+  ierr = nc_def_dim(ncid, "i", nx, &dimid[2]);  handle_nc_err(ierr);
+  ierr = nc_def_dim(ncid, "j", ny, &dimid[1]);  handle_nc_err(ierr);
+  ierr = nc_def_dim(ncid, "k", nz, &dimid[0]);  handle_nc_err(ierr);
 
   // define vars
   for (int ivar=0; ivar<gdcurv->ncmp; ivar++) {
     ierr = nc_def_var(ncid, gdcurv->cmp_name[ivar], NC_FLOAT, CONST_NDIM, dimid, &varid[ivar]);
+    handle_nc_err(ierr);
   }
 
   // attribute: index in output snapshot, index w ghost in thread
@@ -755,7 +756,7 @@ gd_curv_coord_export(
                    NC_INT,CONST_NDIM,l_count);
 
   // end def
-  ierr = nc_enddef(ncid);
+  ierr = nc_enddef(ncid);  handle_nc_err(ierr);
 
   // add vars
   for (int ivar=0; ivar<gdcurv->ncmp; ivar++) {
@@ -830,14 +831,14 @@ gd_cart_coord_export(
   int ierr = nc_create(ou_file, NC_CLOBBER | NC_64BIT_OFFSET, &ncid);  handle_nc_err(ierr);
 
   // define dimension
-  ierr = nc_def_dim(ncid, "i", nx, &dimid[2]);
-  ierr = nc_def_dim(ncid, "j", ny, &dimid[1]);
-  ierr = nc_def_dim(ncid, "k", nz, &dimid[0]);
+  ierr = nc_def_dim(ncid, "i", nx, &dimid[2]);  handle_nc_err(ierr);
+  ierr = nc_def_dim(ncid, "j", ny, &dimid[1]);  handle_nc_err(ierr);
+  ierr = nc_def_dim(ncid, "k", nz, &dimid[0]);  handle_nc_err(ierr);
 
   // define vars
-  ierr = nc_def_var(ncid, "x", NC_FLOAT, 1, dimid+2, &varid[0]);
-  ierr = nc_def_var(ncid, "y", NC_FLOAT, 1, dimid+1, &varid[1]);
-  ierr = nc_def_var(ncid, "z", NC_FLOAT, 1, dimid+0, &varid[2]);
+  ierr = nc_def_var(ncid, "x", NC_FLOAT, 1, dimid+2, &varid[0]);  handle_nc_err(ierr);
+  ierr = nc_def_var(ncid, "y", NC_FLOAT, 1, dimid+1, &varid[1]);  handle_nc_err(ierr);
+  ierr = nc_def_var(ncid, "z", NC_FLOAT, 1, dimid+0, &varid[2]);  handle_nc_err(ierr);
 
   // attribute: index in output snapshot, index w ghost in thread
   int l_start[] = { ni1, nj1, nk1 };
@@ -853,12 +854,12 @@ gd_cart_coord_export(
                    NC_INT,CONST_NDIM,l_count);
 
   // end def
-  ierr = nc_enddef(ncid);
+  ierr = nc_enddef(ncid);  handle_nc_err(ierr);
 
   // add vars
-  ierr = nc_put_var_float(ncid, varid[0], gdcart->x1d);
-  ierr = nc_put_var_float(ncid, varid[1], gdcart->y1d);
-  ierr = nc_put_var_float(ncid, varid[2], gdcart->z1d);
+  ierr = nc_put_var_float(ncid, varid[0], gdcart->x1d);  handle_nc_err(ierr);
+  ierr = nc_put_var_float(ncid, varid[1], gdcart->y1d);  handle_nc_err(ierr);
+  ierr = nc_put_var_float(ncid, varid[2], gdcart->z1d);  handle_nc_err(ierr);
   
   // close file
   ierr = nc_close(ncid);  handle_nc_err(ierr);
@@ -900,13 +901,14 @@ gd_curv_metric_export(gdinfo_t        *gdinfo,
   int ierr = nc_create(ou_file, NC_CLOBBER | NC_64BIT_OFFSET, &ncid);  handle_nc_err(ierr);
 
   // define dimension
-  ierr = nc_def_dim(ncid, "i", nx, &dimid[2]);
-  ierr = nc_def_dim(ncid, "j", ny, &dimid[1]);
-  ierr = nc_def_dim(ncid, "k", nz, &dimid[0]);
+  ierr = nc_def_dim(ncid, "i", nx, &dimid[2]);  handle_nc_err(ierr);
+  ierr = nc_def_dim(ncid, "j", ny, &dimid[1]);  handle_nc_err(ierr);
+  ierr = nc_def_dim(ncid, "k", nz, &dimid[0]);  handle_nc_err(ierr);
 
   // define vars
   for (int ivar=0; ivar<number_of_vars; ivar++) {
     ierr = nc_def_var(ncid, g3d_name[ivar], NC_FLOAT, CONST_NDIM, dimid, &varid[ivar]);
+    handle_nc_err(ierr);
   }
 
   // attribute: index in output snapshot, index w ghost in thread
@@ -923,12 +925,13 @@ gd_curv_metric_export(gdinfo_t        *gdinfo,
                    NC_INT,CONST_NDIM,l_count);
 
   // end def
-  ierr = nc_enddef(ncid);
+  ierr = nc_enddef(ncid);  handle_nc_err(ierr);
 
   // add vars
   for (int ivar=0; ivar<number_of_vars; ivar++) {
     float *ptr = metric->v4d + g3d_pos[ivar];
     ierr = nc_put_var_float(ncid, varid[ivar],ptr);
+    handle_nc_err(ierr);
   }
   
   // close file

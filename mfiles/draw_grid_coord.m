@@ -8,8 +8,8 @@ clear all;
 addmypath
 % -------------------------- parameters input -------------------------- %
 % file and path name
-parfnm='../project1/test.json';
-output_dir='../project1/output';
+parfnm='../project2/test.json';
+output_dir='../project2/output';
 
 % which grid profile to plot
 subs=[1,10,1];     % start from index '1'

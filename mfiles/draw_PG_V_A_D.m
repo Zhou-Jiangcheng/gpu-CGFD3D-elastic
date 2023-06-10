@@ -5,10 +5,8 @@ clear all;
 addmypath
 % -------------------------- parameters input -------------------------- %
 % file and path name
-% parfnm='../project/test.json';
-% output_dir='../project/output';
-parfnm='../example1/Luding/test.json';
-output_dir='../example1/Luding/output';
+parfnm='../project2/test.json';
+output_dir='../project2/output';
 PG_dir = output_dir;
 % get free surface x y coords
 %subs is start index, subc is counts, subt is step.

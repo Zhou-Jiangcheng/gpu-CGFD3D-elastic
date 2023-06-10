@@ -9,8 +9,8 @@ close all;
 addmypath
 % -------------------------- parameters input -------------------------- %
 % file and path name
-parfnm='../project/test.json'
-output_dir='../project/output'
+parfnm='../project2/test.json'
+output_dir='../project2/output'
 
 % which snapshot to plot
 id=1;

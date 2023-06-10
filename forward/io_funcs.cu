@@ -133,38 +133,31 @@ io_var3d_export_nc(char   *ou_file,
   int varid[number_of_vars];
   int dimid[CONST_NDIM];
 
-  int ierr = nc_create(ou_file, NC_CLOBBER, &ncid);
-  if (ierr != NC_NOERR){
-    fprintf(stderr,"ou_file=%s\n",ou_file);
-    fprintf(stderr,"creat coord nc error: %s\n", nc_strerror(ierr));
-    exit(-1);
-  }
+  int ierr = nc_create(ou_file, NC_CLOBBER, &ncid);  handle_nc_err(ierr);
 
   // define dimension: last dim varis fastest for c nc file
-  ierr = nc_def_dim(ncid, coord_name[0], nx, &dimid[2]);
-  ierr = nc_def_dim(ncid, coord_name[1], ny, &dimid[1]);
-  ierr = nc_def_dim(ncid, coord_name[2], nz, &dimid[0]);
+  ierr = nc_def_dim(ncid, coord_name[0], nx, &dimid[2]);  handle_nc_err(ierr);
+  ierr = nc_def_dim(ncid, coord_name[1], ny, &dimid[1]);  handle_nc_err(ierr);
+  ierr = nc_def_dim(ncid, coord_name[2], nz, &dimid[0]);  handle_nc_err(ierr);
 
   // define vars
   for (int ivar=0; ivar<number_of_vars; ivar++) {
     ierr = nc_def_var(ncid, v3d_name[ivar], NC_FLOAT, CONST_NDIM, dimid, &varid[ivar]);
+    handle_nc_err(ierr);
   }
 
   // end def
-  ierr = nc_enddef(ncid);
+  ierr = nc_enddef(ncid);  handle_nc_err(ierr);
 
   // add vars
   for (int ivar=0; ivar<number_of_vars; ivar++) {
     float *ptr = v3d + v3d_pos[ivar];
     ierr = nc_put_var_float(ncid, varid[ivar],ptr);
+    handle_nc_err(ierr);
   }
   
   // close file
-  ierr = nc_close(ncid);
-  if (ierr != NC_NOERR){
-    fprintf(stderr,"nc error: %s\n", nc_strerror(ierr));
-    exit(-1);
-  }
+  ierr = nc_close(ncid);  handle_nc_err(ierr);
 }
 
 /*
@@ -878,18 +871,23 @@ io_slice_nc_create(ioslice_t *ioslice,
   for (int n=0; n<num_of_slice_x; n++)
   {
     int dimid[3];
-    if (nc_create(ioslice->slice_x_fname[n], NC_CLOBBER,
-                  &(ioslice_nc->ncid_slx[n]))) M_NCERR;
-    if (nc_def_dim(ioslice_nc->ncid_slx[n], "time", NC_UNLIMITED, &dimid[0])) M_NCERR;
-    if (nc_def_dim(ioslice_nc->ncid_slx[n], "k"   , nk          , &dimid[1])) M_NCERR;
-    if (nc_def_dim(ioslice_nc->ncid_slx[n], "j"   , nj          , &dimid[2])) M_NCERR;
+    ierr = nc_create(ioslice->slice_x_fname[n], NC_CLOBBER, &(ioslice_nc->ncid_slx[n]));
+    handle_nc_err(ierr);
+    ierr = nc_def_dim(ioslice_nc->ncid_slx[n], "time", NC_UNLIMITED, &dimid[0]);
+    handle_nc_err(ierr);
+    ierr = nc_def_dim(ioslice_nc->ncid_slx[n], "k"   , nk          , &dimid[1]);
+    handle_nc_err(ierr);
+    ierr = nc_def_dim(ioslice_nc->ncid_slx[n], "j"   , nj          , &dimid[2]);
+    handle_nc_err(ierr);
     // time var
-    if (nc_def_var(ioslice_nc->ncid_slx[n], "time", NC_FLOAT, 1, dimid+0,
-                   &(ioslice_nc->timeid_slx[n]))) M_NCERR;
+    ierr = nc_def_var(ioslice_nc->ncid_slx[n], "time", NC_FLOAT, 1, dimid+0,
+                   &(ioslice_nc->timeid_slx[n]));
+    handle_nc_err(ierr);
     // other vars
     for (int ivar=0; ivar<num_of_vars; ivar++) {
-      if (nc_def_var(ioslice_nc->ncid_slx[n], w3d_name[ivar], NC_FLOAT, 3, dimid,
-                     &(ioslice_nc->varid_slx[ivar+n*num_of_vars]))) M_NCERR;
+     ierr = nc_def_var(ioslice_nc->ncid_slx[n], w3d_name[ivar], NC_FLOAT, 3, dimid,
+                     &(ioslice_nc->varid_slx[ivar+n*num_of_vars]));
+      handle_nc_err(ierr);
     }
     // attribute: index info for plot
     nc_put_att_int(ioslice_nc->ncid_slx[n],NC_GLOBAL,"i_index_with_ghosts_in_this_thread",
@@ -897,25 +895,32 @@ io_slice_nc_create(ioslice_t *ioslice,
     nc_put_att_int(ioslice_nc->ncid_slx[n],NC_GLOBAL,"coords_of_mpi_topo",
                    NC_INT,2,topoid);
     // end def
-    if (nc_enddef(ioslice_nc->ncid_slx[n])) M_NCERR;
+    ierr = nc_enddef(ioslice_nc->ncid_slx[n]);
+    handle_nc_err(ierr);
   }
 
   // slice y
   for (int n=0; n<num_of_slice_y; n++)
   {
     int dimid[3];
-    if (nc_create(ioslice->slice_y_fname[n], NC_CLOBBER,
-                  &(ioslice_nc->ncid_sly[n]))) M_NCERR;
-    if (nc_def_dim(ioslice_nc->ncid_sly[n], "time", NC_UNLIMITED, &dimid[0])) M_NCERR;
-    if (nc_def_dim(ioslice_nc->ncid_sly[n], "k"   , nk          , &dimid[1])) M_NCERR;
-    if (nc_def_dim(ioslice_nc->ncid_sly[n], "i"   , ni          , &dimid[2])) M_NCERR;
+    ierr = nc_create(ioslice->slice_y_fname[n], NC_CLOBBER,
+                     &(ioslice_nc->ncid_sly[n]));
+    handle_nc_err(ierr);
+    ierr = nc_def_dim(ioslice_nc->ncid_sly[n], "time", NC_UNLIMITED, &dimid[0]);
+    handle_nc_err(ierr);
+    ierr = nc_def_dim(ioslice_nc->ncid_sly[n], "k"   , nk          , &dimid[1]);
+    handle_nc_err(ierr);
+    ierr = nc_def_dim(ioslice_nc->ncid_sly[n], "i"   , ni          , &dimid[2]);
+    handle_nc_err(ierr);
     // time var
-    if (nc_def_var(ioslice_nc->ncid_sly[n], "time", NC_FLOAT, 1, dimid+0,
-                   &(ioslice_nc->timeid_sly[n]))) M_NCERR;
+    ierr = nc_def_var(ioslice_nc->ncid_sly[n], "time", NC_FLOAT, 1, dimid+0,
+                   &(ioslice_nc->timeid_sly[n]));
+    handle_nc_err(ierr);
     // other vars
     for (int ivar=0; ivar<num_of_vars; ivar++) {
-      if (nc_def_var(ioslice_nc->ncid_sly[n], w3d_name[ivar], NC_FLOAT, 3, dimid,
-                     &(ioslice_nc->varid_sly[ivar+n*num_of_vars]))) M_NCERR;
+      ierr = nc_def_var(ioslice_nc->ncid_sly[n], w3d_name[ivar], NC_FLOAT, 3, dimid,
+                        &(ioslice_nc->varid_sly[ivar+n*num_of_vars]));
+      handle_nc_err(ierr);
     }
     // attribute: index info for plot
     nc_put_att_int(ioslice_nc->ncid_sly[n],NC_GLOBAL,"j_index_with_ghosts_in_this_thread",
@@ -923,25 +928,32 @@ io_slice_nc_create(ioslice_t *ioslice,
     nc_put_att_int(ioslice_nc->ncid_sly[n],NC_GLOBAL,"coords_of_mpi_topo",
                    NC_INT,2,topoid);
     // end def
-    if (nc_enddef(ioslice_nc->ncid_sly[n])) M_NCERR;
+    ierr = nc_enddef(ioslice_nc->ncid_sly[n]);
+    handle_nc_err(ierr);
   }
 
   // slice z
   for (int n=0; n<num_of_slice_z; n++)
   {
     int dimid[3];
-    if (nc_create(ioslice->slice_z_fname[n], NC_CLOBBER,
-                  &(ioslice_nc->ncid_slz[n]))) M_NCERR;
-    if (nc_def_dim(ioslice_nc->ncid_slz[n], "time", NC_UNLIMITED, &dimid[0])) M_NCERR;
-    if (nc_def_dim(ioslice_nc->ncid_slz[n], "j"   , nj          , &dimid[1])) M_NCERR;
-    if (nc_def_dim(ioslice_nc->ncid_slz[n], "i"   , ni          , &dimid[2])) M_NCERR;
+    ierr = nc_create(ioslice->slice_z_fname[n], NC_CLOBBER,
+                  &(ioslice_nc->ncid_slz[n]));
+    handle_nc_err(ierr);
+    ierr = nc_def_dim(ioslice_nc->ncid_slz[n], "time", NC_UNLIMITED, &dimid[0]);
+    handle_nc_err(ierr);
+    ierr = nc_def_dim(ioslice_nc->ncid_slz[n], "j"   , nj          , &dimid[1]);
+    handle_nc_err(ierr);
+    ierr = nc_def_dim(ioslice_nc->ncid_slz[n], "i"   , ni          , &dimid[2]);
+    handle_nc_err(ierr);
     // time var
-    if (nc_def_var(ioslice_nc->ncid_slz[n], "time", NC_FLOAT, 1, dimid+0,
-                   &(ioslice_nc->timeid_slz[n]))) M_NCERR;
+    ierr = nc_def_var(ioslice_nc->ncid_slz[n], "time", NC_FLOAT, 1, dimid+0,
+                      &(ioslice_nc->timeid_slz[n]));
+    handle_nc_err(ierr);
     // other vars
     for (int ivar=0; ivar<num_of_vars; ivar++) {
-      if (nc_def_var(ioslice_nc->ncid_slz[n], w3d_name[ivar], NC_FLOAT, 3, dimid,
-                     &(ioslice_nc->varid_slz[ivar+n*num_of_vars]))) M_NCERR;
+      ierr = nc_def_var(ioslice_nc->ncid_slz[n], w3d_name[ivar], NC_FLOAT, 3, dimid,
+                        &(ioslice_nc->varid_slz[ivar+n*num_of_vars]));
+      handle_nc_err(ierr);
     }
     // attribute: index info for plot
     nc_put_att_int(ioslice_nc->ncid_slz[n],NC_GLOBAL,"k_index_with_ghosts_in_this_thread",
@@ -949,7 +961,8 @@ io_slice_nc_create(ioslice_t *ioslice,
     nc_put_att_int(ioslice_nc->ncid_slz[n],NC_GLOBAL,"coords_of_mpi_topo",
                    NC_INT,2,topoid);
     // end def
-    if (nc_enddef(ioslice_nc->ncid_slz[n])) M_NCERR;
+    ierr = nc_enddef(ioslice_nc->ncid_slz[n]);
+    handle_nc_err(ierr);
   }
 
   return ierr;
@@ -1000,34 +1013,55 @@ io_snap_nc_create(iosnap_t *iosnap, iosnap_nc_t *iosnap_nc, int *topoid)
     int snap_out_T = iosnap->out_stress[n];
     int snap_out_E = iosnap->out_strain[n];
 
-    if (nc_create(snap_fname[n], NC_CLOBBER, &ncid[n])) M_NCERR;
-    if (nc_def_dim(ncid[n], "time", NC_UNLIMITED, &dimid[0])) M_NCERR;
-    if (nc_def_dim(ncid[n], "k", snap_nk     , &dimid[1])) M_NCERR;
-    if (nc_def_dim(ncid[n], "j", snap_nj     , &dimid[2])) M_NCERR;
-    if (nc_def_dim(ncid[n], "i", snap_ni     , &dimid[3])) M_NCERR;
+    ierr = nc_create(snap_fname[n], NC_CLOBBER, &ncid[n]);
+    handle_nc_err(ierr);
+    ierr = nc_def_dim(ncid[n], "time", NC_UNLIMITED, &dimid[0]);
+    handle_nc_err(ierr);
+    ierr = nc_def_dim(ncid[n], "k", snap_nk     , &dimid[1]);
+    handle_nc_err(ierr);
+    ierr = nc_def_dim(ncid[n], "j", snap_nj     , &dimid[2]);
+    handle_nc_err(ierr);
+    ierr = nc_def_dim(ncid[n], "i", snap_ni     , &dimid[3]);
+    handle_nc_err(ierr);
     // time var
-    if (nc_def_var(ncid[n], "time", NC_FLOAT, 1, dimid+0, &timeid[n])) M_NCERR;
+    ierr = nc_def_var(ncid[n], "time", NC_FLOAT, 1, dimid+0, &timeid[n]);
+    handle_nc_err(ierr);
     // other vars
     if (snap_out_V==1) {
-       if (nc_def_var(ncid[n],"Vx",NC_FLOAT,4,dimid,&varid_V[n*CONST_NDIM+0])) M_NCERR;
-       if (nc_def_var(ncid[n],"Vy",NC_FLOAT,4,dimid,&varid_V[n*CONST_NDIM+1])) M_NCERR;
-       if (nc_def_var(ncid[n],"Vz",NC_FLOAT,4,dimid,&varid_V[n*CONST_NDIM+2])) M_NCERR;
+       ierr = nc_def_var(ncid[n],"Vx",NC_FLOAT,4,dimid,&varid_V[n*CONST_NDIM+0]);
+       handle_nc_err(ierr);
+       ierr = nc_def_var(ncid[n],"Vy",NC_FLOAT,4,dimid,&varid_V[n*CONST_NDIM+1]);
+       handle_nc_err(ierr);
+       ierr = nc_def_var(ncid[n],"Vz",NC_FLOAT,4,dimid,&varid_V[n*CONST_NDIM+2]);
+       handle_nc_err(ierr);
     }
     if (snap_out_T==1) {
-       if (nc_def_var(ncid[n],"Txx",NC_FLOAT,4,dimid,&varid_T[n*CONST_NDIM_2+0])) M_NCERR;
-       if (nc_def_var(ncid[n],"Tyy",NC_FLOAT,4,dimid,&varid_T[n*CONST_NDIM_2+1])) M_NCERR;
-       if (nc_def_var(ncid[n],"Tzz",NC_FLOAT,4,dimid,&varid_T[n*CONST_NDIM_2+2])) M_NCERR;
-       if (nc_def_var(ncid[n],"Txz",NC_FLOAT,4,dimid,&varid_T[n*CONST_NDIM_2+3])) M_NCERR;
-       if (nc_def_var(ncid[n],"Tyz",NC_FLOAT,4,dimid,&varid_T[n*CONST_NDIM_2+4])) M_NCERR;
-       if (nc_def_var(ncid[n],"Txy",NC_FLOAT,4,dimid,&varid_T[n*CONST_NDIM_2+5])) M_NCERR;
+       ierr = nc_def_var(ncid[n],"Txx",NC_FLOAT,4,dimid,&varid_T[n*CONST_NDIM_2+0]);
+       handle_nc_err(ierr);
+       ierr = nc_def_var(ncid[n],"Tyy",NC_FLOAT,4,dimid,&varid_T[n*CONST_NDIM_2+1]);
+       handle_nc_err(ierr);
+       ierr = nc_def_var(ncid[n],"Tzz",NC_FLOAT,4,dimid,&varid_T[n*CONST_NDIM_2+2]);
+       handle_nc_err(ierr);
+       ierr = nc_def_var(ncid[n],"Txz",NC_FLOAT,4,dimid,&varid_T[n*CONST_NDIM_2+3]);
+       handle_nc_err(ierr);
+       ierr = nc_def_var(ncid[n],"Tyz",NC_FLOAT,4,dimid,&varid_T[n*CONST_NDIM_2+4]);
+       handle_nc_err(ierr);
+       ierr = nc_def_var(ncid[n],"Txy",NC_FLOAT,4,dimid,&varid_T[n*CONST_NDIM_2+5]);
+       handle_nc_err(ierr);
     }
     if (snap_out_E==1) {
-       if (nc_def_var(ncid[n],"Exx",NC_FLOAT,4,dimid,&varid_E[n*CONST_NDIM_2+0])) M_NCERR;
-       if (nc_def_var(ncid[n],"Eyy",NC_FLOAT,4,dimid,&varid_E[n*CONST_NDIM_2+1])) M_NCERR;
-       if (nc_def_var(ncid[n],"Ezz",NC_FLOAT,4,dimid,&varid_E[n*CONST_NDIM_2+2])) M_NCERR;
-       if (nc_def_var(ncid[n],"Exz",NC_FLOAT,4,dimid,&varid_E[n*CONST_NDIM_2+3])) M_NCERR;
-       if (nc_def_var(ncid[n],"Eyz",NC_FLOAT,4,dimid,&varid_E[n*CONST_NDIM_2+4])) M_NCERR;
-       if (nc_def_var(ncid[n],"Exy",NC_FLOAT,4,dimid,&varid_E[n*CONST_NDIM_2+5])) M_NCERR;
+       ierr = nc_def_var(ncid[n],"Exx",NC_FLOAT,4,dimid,&varid_E[n*CONST_NDIM_2+0]);
+       handle_nc_err(ierr);
+       ierr = nc_def_var(ncid[n],"Eyy",NC_FLOAT,4,dimid,&varid_E[n*CONST_NDIM_2+1]);
+       handle_nc_err(ierr);
+       ierr = nc_def_var(ncid[n],"Ezz",NC_FLOAT,4,dimid,&varid_E[n*CONST_NDIM_2+2]);
+       handle_nc_err(ierr);
+       ierr = nc_def_var(ncid[n],"Exz",NC_FLOAT,4,dimid,&varid_E[n*CONST_NDIM_2+3]);
+       handle_nc_err(ierr);
+       ierr = nc_def_var(ncid[n],"Eyz",NC_FLOAT,4,dimid,&varid_E[n*CONST_NDIM_2+4]);
+       handle_nc_err(ierr);
+       ierr = nc_def_var(ncid[n],"Exy",NC_FLOAT,4,dimid,&varid_E[n*CONST_NDIM_2+5]);
+       handle_nc_err(ierr);
     }
     // attribute: index in output snapshot, index w ghost in thread
     int g_start[] = { iosnap->i1_to_glob[n],
@@ -1046,7 +1080,7 @@ io_snap_nc_create(iosnap_t *iosnap, iosnap_nc_t *iosnap_nc, int *topoid)
     nc_put_att_int(ncid[n],NC_GLOBAL,"coords_of_mpi_topo",
                    NC_INT,2,topoid);
 
-    if (nc_enddef(ncid[n])) M_NCERR;
+    ierr = nc_enddef(ncid[n]);  handle_nc_err(ierr);
   } // loop snap
 
   return ierr;
@@ -1088,7 +1122,7 @@ io_slice_nc_put(ioslice_t    *ioslice,
     size_t start_tdim = it;
 
     nc_put_var1_float(ioslice_nc->ncid_slx[n], ioslice_nc->timeid_slx[n],
-                        &start_tdim, &time);
+                      &start_tdim, &time);
 
     int i = ioslice->slice_x_indx[n];
     size_t size = sizeof(float) * nj * nk; 
@@ -1118,7 +1152,7 @@ io_slice_nc_put(ioslice_t    *ioslice,
     size_t start_tdim = it;
 
     nc_put_var1_float(ioslice_nc->ncid_sly[n], ioslice_nc->timeid_sly[n],
-                        &start_tdim, &time);
+                      &start_tdim, &time);
 
     int j = ioslice->slice_y_indx[n];
     int size = sizeof(float) * ni * nk; 
@@ -1149,7 +1183,7 @@ io_slice_nc_put(ioslice_t    *ioslice,
     size_t start_tdim = it;
 
     nc_put_var1_float(ioslice_nc->ncid_slz[n], ioslice_nc->timeid_slz[n],
-                        &start_tdim, &time);
+                      &start_tdim, &time);
 
     int k = ioslice->slice_z_indx[n];
     int size = sizeof(float) * ni * nj; 
@@ -1166,8 +1200,8 @@ io_slice_nc_put(ioslice_t    *ioslice,
       CUDACHECK(cudaMemcpy(buff,buff_d,size,cudaMemcpyDeviceToHost));
 
       nc_put_vara_float(ioslice_nc->ncid_slz[n], 
-                          ioslice_nc->varid_slz[n*num_of_vars + ivar],
-                          startp, countp, buff);
+                        ioslice_nc->varid_slz[n*num_of_vars + ivar],
+                        startp, countp, buff);
     }
     CUDACHECK(cudaFree(buff_d));
   }
@@ -1433,24 +1467,35 @@ io_snap_nc_create_ac(iosnap_t *iosnap, iosnap_nc_t *iosnap_nc, int *topoid)
     int snap_out_T = iosnap->out_stress[n];
     int snap_out_E = iosnap->out_strain[n];
 
-    if (nc_create(snap_fname[n], NC_CLOBBER, &ncid[n])) M_NCERR;
-    if (nc_def_dim(ncid[n], "time", NC_UNLIMITED, &dimid[0])) M_NCERR;
-    if (nc_def_dim(ncid[n], "k", snap_nk     , &dimid[1])) M_NCERR;
-    if (nc_def_dim(ncid[n], "j", snap_nj     , &dimid[2])) M_NCERR;
-    if (nc_def_dim(ncid[n], "i", snap_ni     , &dimid[3])) M_NCERR;
+    ierr = nc_create(snap_fname[n], NC_CLOBBER, &ncid[n]);
+    handle_nc_err(ierr);
+    ierr = nc_def_dim(ncid[n], "time", NC_UNLIMITED, &dimid[0]);
+    handle_nc_err(ierr);
+    ierr = nc_def_dim(ncid[n], "k", snap_nk     , &dimid[1]);
+    handle_nc_err(ierr);
+    ierr = nc_def_dim(ncid[n], "j", snap_nj     , &dimid[2]);
+    handle_nc_err(ierr);
+    ierr = nc_def_dim(ncid[n], "i", snap_ni     , &dimid[3]);
+    handle_nc_err(ierr);
     // time var
-    if (nc_def_var(ncid[n], "time", NC_FLOAT, 1, dimid+0, &timeid[n])) M_NCERR;
+    ierr = nc_def_var(ncid[n], "time", NC_FLOAT, 1, dimid+0, &timeid[n]);
+    handle_nc_err(ierr);
     // other vars
     if (snap_out_V==1) {
-       if (nc_def_var(ncid[n],"Vx",NC_FLOAT,4,dimid,&varid_V[n*CONST_NDIM+0])) M_NCERR;
-       if (nc_def_var(ncid[n],"Vy",NC_FLOAT,4,dimid,&varid_V[n*CONST_NDIM+1])) M_NCERR;
-       if (nc_def_var(ncid[n],"Vz",NC_FLOAT,4,dimid,&varid_V[n*CONST_NDIM+2])) M_NCERR;
+       ierr = nc_def_var(ncid[n],"Vx",NC_FLOAT,4,dimid,&varid_V[n*CONST_NDIM+0]);
+       handle_nc_err(ierr);
+       ierr = nc_def_var(ncid[n],"Vy",NC_FLOAT,4,dimid,&varid_V[n*CONST_NDIM+1]);
+       handle_nc_err(ierr);
+       ierr = nc_def_var(ncid[n],"Vz",NC_FLOAT,4,dimid,&varid_V[n*CONST_NDIM+2]);
+       handle_nc_err(ierr);
     }
     if (snap_out_T==1) {
-       if (nc_def_var(ncid[n],"Tii",NC_FLOAT,4,dimid,&varid_T[n])) M_NCERR;
+       ierr = nc_def_var(ncid[n],"Tii",NC_FLOAT,4,dimid,&varid_T[n]);
+       handle_nc_err(ierr);
     }
     if (snap_out_E==1) {
-       if (nc_def_var(ncid[n],"Eii",NC_FLOAT,4,dimid,&varid_E[n])) M_NCERR;
+       ierr = nc_def_var(ncid[n],"Eii",NC_FLOAT,4,dimid,&varid_E[n]);
+       handle_nc_err(ierr);
     }
     // attribute: index in output snapshot, index w ghost in thread
     int g_start[] = { iosnap->i1_to_glob[n],
@@ -1469,7 +1514,8 @@ io_snap_nc_create_ac(iosnap_t *iosnap, iosnap_nc_t *iosnap_nc, int *topoid)
     nc_put_att_int(ncid[n],NC_GLOBAL,"coords_of_mpi_topo",
                    NC_INT,2,topoid);
 
-    if (nc_enddef(ncid[n])) M_NCERR;
+    ierr = nc_enddef(ncid[n]);
+    handle_nc_err(ierr);
   } // loop snap
 
   return ierr;
@@ -2218,42 +2264,41 @@ PG_slice_output(float *PG, gdinfo_t *gdinfo, char *output_dir, char *frame_coord
   int varid[CONST_NDIM_5], ncid;
   int i,ierr;
   ierr = nc_create(out_file, NC_CLOBBER, &ncid);
-  if (ierr != NC_NOERR){
-      fprintf(stderr,"creat PGV nc error: %s\n", nc_strerror(ierr));
-      exit(-1);
-     }
+  handle_nc_err(ierr);
 
-  if(nc_def_dim(ncid, "j", ny, &dimid[0])) M_NCERR;
-  if(nc_def_dim(ncid, "i", nx, &dimid[1])) M_NCERR;
+  ierr = nc_def_dim(ncid, "j", ny, &dimid[0]);
+  handle_nc_err(ierr);
+  ierr = nc_def_dim(ncid, "i", nx, &dimid[1]);
+  handle_nc_err(ierr);
 
   // define vars
   for(int i=0; i<CONST_NDIM_5; i++)
   {
-    if(nc_def_var(ncid, PG_cmp[i], NC_FLOAT,2,dimid, &varid[i])) M_NCERR;
+    ierr = nc_def_var(ncid, PG_cmp[i], NC_FLOAT,2,dimid, &varid[i]);
+    handle_nc_err(ierr);
   }
   int g_start[2] = {gni1,gnj1}; 
   int phy_size[2] = {ni,nj}; 
-  if(nc_put_att_int(ncid,NC_GLOBAL,"global_index_of_first_physical_points",
-                    NC_INT,2,g_start)) M_NCERR;
-  if(nc_put_att_int(ncid,NC_GLOBAL,"count_index_of_physical_points",
-                    NC_INT,2,phy_size)) M_NCERR;
-  if(nc_put_att_int(ncid,NC_GLOBAL,"coords_of_mpi_topo",
-                    NC_INT,2,topoid)) M_NCERR;
+  nc_put_att_int(ncid,NC_GLOBAL,"global_index_of_first_physical_points",
+                    NC_INT,2,g_start);
+  nc_put_att_int(ncid,NC_GLOBAL,"count_index_of_physical_points",
+                    NC_INT,2,phy_size);
+  nc_put_att_int(ncid,NC_GLOBAL,"coords_of_mpi_topo",
+                    NC_INT,2,topoid);
 
-  if(nc_enddef(ncid)) M_NCERR;
+  ierr = nc_enddef(ncid) ;
+  handle_nc_err(ierr);
 
   // add vars
   for(int i=0; i<CONST_NDIM_5; i++)
   {
-  float *ptr = PG + i*nx*ny; 
-  ierr = nc_put_var_float(ncid,varid[i],ptr);
+    float *ptr = PG + i*nx*ny; 
+    ierr = nc_put_var_float(ncid,varid[i],ptr);
+    handle_nc_err(ierr);
   }
   // close file
   ierr = nc_close(ncid);
-  if(ierr != NC_NOERR){
-    fprintf(stderr,"nc error: %s\n", nc_strerror(ierr));
-    exit(-1);
-    }
+  handle_nc_err(ierr);
 
   return 0;
 }
