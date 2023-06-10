@@ -168,6 +168,13 @@ gd_curv_metric_cal(gdinfo_t        *gdinfo,
                    gd_t        *gdcurv,
                    gdcurv_metric_t *metric,
                    int fd_len, int *fd_indx, float *fd_coef);
+
+int 
+mirror_symmetry(gdinfo_t *gdinfo, float *v4d, int ncmp);
+
+int 
+geometric_symmetry(gdinfo_t *gdinfo, float *v4d, int ncmp);
+
 void
 gd_curv_metric_exchange(gdinfo_t        *gdinfo,
                         gdcurv_metric_t *metric,
