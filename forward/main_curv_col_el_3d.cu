@@ -246,7 +246,7 @@ int main(int argc, char** argv)
   if (myid==0 && verbose>0) { fprintf(stdout, " --> done\n"); fflush(stdout); }
   // print basic info for QC
   fprintf(stdout,"gdcurv info at topoid=%d,%d\n", mympi->topoid[0],mympi->topoid[1]); 
-  gd_print(gdcurv);
+  //gd_print(gdcurv);
 //-------------------------------------------------------------------------------
 //-- media generation or import
 //-------------------------------------------------------------------------------
@@ -540,7 +540,7 @@ int main(int argc, char** argv)
 
        //-- auto set stept
        if (dt < 0.0) {
-          dt       = blk_keep_two_digi(dtmax);
+          dt       = blk_keep_three_digi(dtmax);
           nt_total = (int) (par->time_window_length / dt + 0.5);
 
           fprintf(stdout, "-> Set dt       = %g according to maximum allowed value\n", dt);

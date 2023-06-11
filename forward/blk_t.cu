@@ -761,16 +761,13 @@ blk_dt_esti_curv(gdinfo_t *gdinfo, gd_t *gdcurv, md_t *md,
 }
 
 float
-blk_keep_two_digi(float dt)
+blk_keep_three_digi(float dt)
 {
   char str[40];
   float dt_2;
+  sprintf(str, "%4.3e", dt);
 
-  sprintf(str, "%6.4e", dt);
-
-  str[3] = '0';
   str[4] = '0';
-  str[5] = '0';
 
   sscanf(str, "%f", &dt_2);
   

@@ -180,6 +180,6 @@ blk_dt_esti_curv(gdinfo_t *gdinfo, gd_t *gdcurv, md_t *md,
     int *dtmaxi, int *dtmaxj, int *dtmaxk);
 
 float
-blk_keep_two_digi(float dt);
+blk_keep_three_digi(float dt);
 
 #endif
