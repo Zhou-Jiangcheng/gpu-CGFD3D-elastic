@@ -35,6 +35,10 @@ typedef struct {
   int nk1;
   int nk2;
 
+  int total_point_x;
+  int total_point_y;
+  int total_point_z;
+
   int npoint_ghosts;
   int fdx_nghosts;
   int fdy_nghosts;

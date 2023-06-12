@@ -244,6 +244,9 @@ io_recv_read_locate(gdinfo_t  *gdinfo,
 	    return(1);
 	}
 
+  int total_point_x = gdinfo->total_point_x;
+  int total_point_y = gdinfo->total_point_y;
+  int total_point_z = gdinfo->total_point_z;
   // number of station
   int num_recv;
 
@@ -393,6 +396,19 @@ io_recv_read_locate(gdinfo_t  *gdinfo,
       all_inc[3*ir+0] = all_coords[3*ir+0] - all_index[3*ir+0] ;
       all_inc[3*ir+1] = all_coords[3*ir+1] - all_index[3*ir+1] ;
       all_inc[3*ir+2] = all_coords[3*ir+2] - all_index[3*ir+2] ;
+      // check recv index whether outside
+      if(all_index[3*ir+0]<0 || all_index[3*ir+0] > total_point_x)
+      {
+        all_index[3*ir+0] = -1000;
+      }
+      if(all_index[3*ir+1]<0 || all_index[3*ir+1] > total_point_y)
+      {
+        all_index[3*ir+1] = -1000;
+      }
+      if(all_index[3*ir+2]<0 || all_index[3*ir+2] > total_point_z)
+      {
+        all_index[3*ir+2] = -1000;
+      }
     }
     int ix = all_index[3*ir+0];
     int iy = all_index[3*ir+1];
@@ -450,6 +466,20 @@ io_recv_read_locate(gdinfo_t  *gdinfo,
       //      nr_this,sta_name[nr_this],i_local,j_local,k_local); fflush(stdout);
 
       nr_this += 1;
+    }
+  }
+  if(myid==0)
+  {
+    for (ir=0; ir<num_recv; ir++)
+    {
+      if(all_index[3*ir+0] == -1000 || all_index[3*ir+1] == -1000 || 
+         all_index[3*ir+2] == -1000)
+      {
+        fprintf(stdout,"#########         ########\n");
+        fprintf(stdout,"######### Warning ########\n");
+        fprintf(stdout,"#########         ########\n");
+        fprintf(stdout,"recv_number[%d] physical coordinates are outside calculation area !\n",ir);
+      }
     }
   }
 

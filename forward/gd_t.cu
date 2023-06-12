@@ -1991,6 +1991,9 @@ gd_info_set(gdinfo_t *const gdinfo,
 {
   int ierr = 0;
 
+  gdinfo->total_point_x = number_of_total_grid_points_x;
+  gdinfo->total_point_y = number_of_total_grid_points_y;
+  gdinfo->total_point_z = number_of_total_grid_points_z;
   // determine ni
   int nx_et = number_of_total_grid_points_x;
 

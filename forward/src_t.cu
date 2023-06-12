@@ -170,6 +170,9 @@ src_read_locate_file(gdinfo_t *gdinfo,
   int   npoint_ghosts = gdinfo->npoint_ghosts;
   size_t   siz_iy = gdinfo->siz_iy;
   size_t   siz_iz= gdinfo->siz_iz;
+  int total_point_x = gdinfo->total_point_x;
+  int total_point_y = gdinfo->total_point_y;
+  int total_point_z = gdinfo->total_point_z;
 
   // get total elem of exted src region for a single point
   //    int max_ext = 7 * 7 * 7;
@@ -313,6 +316,19 @@ src_read_locate_file(gdinfo_t *gdinfo,
       all_inc[3*is+0] = sx_inc;
       all_inc[3*is+1] = sy_inc;
       all_inc[3*is+2] = sz_inc;
+      // check src index whether outside
+      if(all_index[3*is+0]<0 || all_index[3*is+0] > total_point_x-1)
+      {
+        all_index[3*is+0] = -1000;
+      }
+      if(all_index[3*is+1]<0 || all_index[3*is+1] > total_point_y-1)
+      {
+        all_index[3*is+1] = -1000;
+      }
+      if(all_index[3*is+2]<0 || all_index[3*is+2] > total_point_z-1)
+      {
+        all_index[3*is+2] = -1000;
+      }
       // check if in this thread using index
       if (src_glob_ext_ishere(si_glob,sj_glob,sk_glob,npoint_half_ext,gdinfo)==1)
       {
@@ -446,10 +462,21 @@ src_read_locate_file(gdinfo_t *gdinfo,
   }
   // alloc src_t
   src_init(src,force_actived,moment_actived,num_of_src_here,max_nt,max_stage,max_ext);
-
   fprintf(stdout,"force_actived is %d, moment_actived is %d\n",force_actived,moment_actived);
   fprintf(stdout,"num_of_src_here is %d, myid is %d\n",num_of_src_here,myid);
   fflush(stdout);
+
+  int all_num_src;
+  MPI_Allreduce(&num_of_src_here, &all_num_src, 1, MPI_INT, MPI_SUM, comm);
+  fprintf(stdout,"all_num_src is %d\n",all_num_src);
+  if(all_num_src<1) 
+  {
+    if(myid == 0) {
+      fprintf(stdout,"number of source at least 1\n");
+      exit(1);
+      fflush(stdout);
+    }
+  }
   MPI_Barrier(comm);
   //
   // loop all source and only keep those in this thread
