@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "cuda_common.h"
 
-void setDeviceBeforeInit()
+void setDeviceBeforeInit(int gpu_id_start)
 {
   char *localRankStr = NULL;
   int rank = 0, devCount = 0;
@@ -9,7 +9,7 @@ void setDeviceBeforeInit()
     rank = atoi(localRankStr);
   }
   CUDACHECK(cudaGetDeviceCount(&devCount));
-  CUDACHECK(cudaSetDevice((rank%devCount)));
+  CUDACHECK(cudaSetDevice((rank%devCount + gpu_id_start)));
   //debuge
   fprintf(stdout,"rank is %d\n",rank);
   fprintf(stdout,"device count is %d\n",devCount);

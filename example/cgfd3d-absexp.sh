@@ -217,7 +217,7 @@ set -e
 printf "\nUse $NUMPROCS CPUs on following nodes:\n"
 
 printf "\nStart simualtion ...\n";
-time $MPIDIR/bin/mpiexec -np $NUMPROCS $EXEC_WAVE $PAR_FILE 100 2>&1 |tee log1
+time $MPIDIR/bin/mpiexec -np $NUMPROCS $EXEC_WAVE $PAR_FILE 100 2 2>&1 |tee log1
 if [ $? -ne 0 ]; then
     printf "\nSimulation fail! stop!\n"
     exit 1

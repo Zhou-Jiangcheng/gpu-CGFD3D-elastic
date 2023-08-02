@@ -13,7 +13,7 @@
   }                                                          \
 }
 
-void setDeviceBeforeInit();
+void setDeviceBeforeInit(int gpu_id_start);
   
 void *cuda_malloc(size_t len);
 

@@ -10,37 +10,37 @@ MPIDIR=/data3/lihl/software/openmpi-gnu-4.1.2
 
 #-- program related dir
 EXEC_WAVE=`pwd`/../main_curv_col_el_3d
-echo "EXEC_WAVE=$EXEC_WAVE"
+echo "EXEC_WAVE=${EXEC_WAVE}"
 
 #-- input dir
 INPUTDIR=`pwd`
 
 #-- output and conf
-PROJDIR=`pwd`/../project2
+PROJDIR=`pwd`/../project1
 PAR_FILE=${PROJDIR}/test.json
 GRID_DIR=${PROJDIR}/output
 MEDIA_DIR=${PROJDIR}/../project/output
 SOURCE_DIR=${PROJDIR}/output
 OUTPUT_DIR=${PROJDIR}/output
 
-rm -rf $PROJDIR
+rm -rf ${PROJDIR}
 
 #-- create dir
-mkdir -p $PROJDIR
-mkdir -p $OUTPUT_DIR
-mkdir -p $GRID_DIR
-mkdir -p $MEDIA_DIR
+mkdir -p ${PROJDIR}
+mkdir -p ${OUTPUT_DIR}
+mkdir -p ${GRID_DIR}
+mkdir -p ${MEDIA_DIR}
 
 #----------------------------------------------------------------------
 #-- grid and mpi configurations
 #----------------------------------------------------------------------
 
 #-- total x grid points
-NX=300
+NX=241
 #-- total y grid points
-NY=250
+NY=241
 #-- total z grid points
-NZ=150
+NZ=201
 #-- total x mpi procs
 NPROCS_X=2
 #-- total y mpi procs
@@ -48,31 +48,31 @@ NPROCS_Y=2
 #----------------------------------------------------------------------
 #-- create main conf
 #----------------------------------------------------------------------
-cat << ieof > $PAR_FILE
+cat << ieof > ${PAR_FILE}
 {
-  "number_of_total_grid_points_x" : $NX,
-  "number_of_total_grid_points_y" : $NY,
-  "number_of_total_grid_points_z" : $NZ,
+  "number_of_total_grid_points_x" : ${NX},
+  "number_of_total_grid_points_y" : ${NY},
+  "number_of_total_grid_points_z" : ${NZ},
 
   "number_of_mpiprocs_x" : $NPROCS_X,
   "number_of_mpiprocs_y" : $NPROCS_Y,
 
-  "size_of_time_step" : 0.01,
-  "number_of_time_steps" : 1500,
+  "size_of_time_step" : 0.008,
+  "number_of_time_steps" : 12000,
   "#time_window_length" : 8,
   "check_stability" : 1,
 
   "boundary_x_left" : {
       "cfspml" : {
-          "number_of_layers" : 10,
+          "number_of_layers" : 20,
           "alpha_max" : 3.14,
           "beta_max" : 2.0,
-          "ref_vel"  : 7000.0
+          "ref_vel"  : 5000.0
           }
       },
   "boundary_x_right" : {
       "cfspml" : {
-          "number_of_layers" : 10,
+          "number_of_layers" : 20,
           "alpha_max" : 3.14,
           "beta_max" : 2.0,
           "ref_vel"  : 5000.0
@@ -80,7 +80,7 @@ cat << ieof > $PAR_FILE
       },
   "boundary_y_front" : {
       "cfspml" : {
-          "number_of_layers" : 10,
+          "number_of_layers" : 20,
           "alpha_max" : 3.14,
           "beta_max" : 2.0,
           "ref_vel"  : 5000.0
@@ -88,7 +88,7 @@ cat << ieof > $PAR_FILE
       },
   "boundary_y_back" : {
       "cfspml" : {
-          "number_of_layers" : 10,
+          "number_of_layers" : 20,
           "alpha_max" : 3.14,
           "beta_max" : 2.0,
           "ref_vel"  : 5000.0
@@ -96,7 +96,7 @@ cat << ieof > $PAR_FILE
       },
   "boundary_z_bottom" : {
       "cfspml" : {
-          "number_of_layers" : 10,
+          "number_of_layers" : 20,
           "alpha_max" : 3.14,
           "beta_max" : 2.0,
           "ref_vel"  : 5000.0
@@ -107,7 +107,7 @@ cat << ieof > $PAR_FILE
       },
 
   "grid_generation_method" : {
-      "#import" : "$GRID_DIR",
+      "#import" : "$INPUTDIR/grid_model1",
       "cartesian" : {
         "origin"  : [0.0, 0.0, -14900.0 ],
         "inteval" : [ 100.0, 100.0, 100.0 ]
@@ -178,10 +178,10 @@ cat << ieof > $PAR_FILE
     } 
   ],
 
-  "#slice" : {
+  "slice" : {
       "x_index" : [ 100 ],
       "y_index" : [ 100 ],
-      "z_index" : [ 100,149 ]
+      "z_index" : [ 100 ]
   },
 
   "snapshot" : [
@@ -224,7 +224,7 @@ set -e
 printf "\nUse $NUMPROCS CPUs on following nodes:\n"
 
 printf "\nStart simualtion ...\n";
-time $MPIDIR/bin/mpiexec -np $NUMPROCS $EXEC_WAVE $PAR_FILE 100 2>&1 |tee log1
+time $MPIDIR/bin/mpiexec -np $NUMPROCS $EXEC_WAVE $PAR_FILE 100 2 2>&1 |tee log
 if [ $? -ne 0 ]; then
     printf "\nSimulation fail! stop!\n"
     exit 1
