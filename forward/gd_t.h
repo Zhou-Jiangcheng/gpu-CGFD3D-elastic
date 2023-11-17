@@ -186,32 +186,32 @@ gd_curv_metric_exchange(gdinfo_t        *gdinfo,
                         MPI_Comm        topocomm);
 
 void
-gd_curv_gen_cart(
-  gdinfo_t *gdinfo,
-  gd_t *gdcurv,
-  float dx, float x0,
-  float dy, float y0,
-  float dz, float z0);
+gd_curv_gen_cart(gdinfo_t *gdinfo,
+                 gd_t *gdcurv,
+                 float dx, float x0,
+                 float dy, float y0,
+                 float dz, float z0);
 
 void
 gd_curv_metric_import(gdcurv_metric_t *metric, char *fname_coords, char *import_dir);
 
 void
-gd_curv_coord_import(gd_t *gdcurv, char *fname_coords, char *import_dir);
+gd_curv_coord_export(gdinfo_t *gdinfo,
+                     gd_t *gdcurv,
+                     char *fname_coords,
+                     char *output_dir);
 
 void
-gd_curv_coord_export(
-  gdinfo_t *gdinfo,
-  gd_t *gdcurv,
-  char *fname_coords,
-  char *output_dir);
+gd_curv_coord_import(gdinfo_t *gdinfo,
+                     gd_t *gdcurv, 
+                     char *fname_coords,
+                     char *import_dir);
 
 void
-gd_cart_coord_export(
-  gdinfo_t *gdinfo,
-  gd_t *gdcart,
-  char *fname_coords,
-  char *output_dir);
+gd_cart_coord_export(gdinfo_t *gdinfo,
+                     gd_t *gdcart,
+                     char *fname_coords,
+                     char *output_dir);
 
 void
 gd_curv_metric_export(gdinfo_t        *gdinfo,
@@ -224,9 +224,9 @@ gd_curv_set_minmax(gdinfo_t *gdinfo, gd_t *gdcurv);
 
 void 
 gd_cart_init_set(gdinfo_t *gdinfo, gd_t *gdcart,
-  float dx, float x0_glob,
-  float dy, float y0_glob,
-  float dz, float z0_glob);
+                 float dx, float x0_glob,
+                 float dy, float y0_glob,
+                 float dz, float z0_glob);
 
 int
 gd_curv_coord_to_glob_indx(gdinfo_t *gdinfo,
@@ -241,16 +241,16 @@ gd_curv_coord_to_glob_indx(gdinfo_t *gdinfo,
 
   int
 gd_curv_coord2index_rdinterp(float sx, float sy, float sz, 
-    int num_points,
-    float *points_x, // x coord of all points
-    float *points_y,
-    float *points_z,
-    float *points_i, // curv coord of all points
-    float *points_j,
-    float *points_k,
-    float *si_curv, // interped curv coord
-    float *sj_curv,
-    float *sk_curv);
+                             int num_points,
+                             float *points_x, // x coord of all points
+                             float *points_y,
+                             float *points_z,
+                             float *points_i, // curv coord of all points
+                             float *points_j,
+                             float *points_k,
+                             float *si_curv, // interped curv coord
+                             float *sj_curv,
+                             float *sk_curv);
 
 float
 gd_coord_get_x(gd_t *gd, int i, int j, int k);

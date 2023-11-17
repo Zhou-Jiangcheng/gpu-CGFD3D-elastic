@@ -181,7 +181,7 @@ int main(int argc, char** argv)
     case PAR_GRID_IMPORT : {
 
         if (myid==0) fprintf(stdout,"import grid vars ...\n"); 
-        gd_curv_coord_import(gdcurv, blk->output_fname_part, par->grid_import_dir);
+        gd_curv_coord_import(gdinfo, gdcurv, blk->output_fname_part, par->grid_import_dir);
 
         break;
     }

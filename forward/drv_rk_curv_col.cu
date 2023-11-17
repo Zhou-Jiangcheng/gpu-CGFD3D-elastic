@@ -307,10 +307,6 @@ drv_rk_curv_col_allstep(
           grid.x = (wav_d.siz_ilevel + block.x - 1) / block.x;
           wav_update <<<grid, block>>> (wav_d.siz_ilevel, coef_a, w_tmp_d, w_pre_d, w_rhs_d);
         }
-        // apply Qs
-        //if (md->visco_type == CONST_VISCO_GRAVES_QS) {
-        //  sv_curv_graves_Qs(w_tmp, wave->ncmp, gdinfo, md);
-        //}
 
         // pack and isend
         blk_macdrp_pack_mesg_gpu(w_tmp_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, myid);
@@ -367,10 +363,6 @@ drv_rk_curv_col_allstep(
           grid.x = (wav_d.siz_ilevel + block.x - 1) / block.x;
           wav_update <<<grid, block>>> (wav_d.siz_ilevel, coef_a, w_tmp_d, w_pre_d, w_rhs_d);
         }
-        // apply Qs
-        //if (md->visco_type == CONST_VISCO_GRAVES_QS) {
-        //  sv_curv_graves_Qs(w_tmp, wave->ncmp, gdinfo, md);
-        //}
 
         // pack and isend
         blk_macdrp_pack_mesg_gpu(w_tmp_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, myid);
@@ -427,10 +419,6 @@ drv_rk_curv_col_allstep(
           wav_update_end <<<grid, block>>>(wav_d.siz_ilevel, coef_b, w_end_d, w_rhs_d);
         }
 
-        // apply Qs
-        //if (md->visco_type == CONST_VISCO_GRAVES_QS) {
-        //  sv_curv_graves_Qs(w_end, wav->ncmp, dt, gdinfo, md);
-        //}
         
         // pack and isend
         blk_macdrp_pack_mesg_gpu(w_end_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, myid);
