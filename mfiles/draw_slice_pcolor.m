@@ -8,23 +8,23 @@ close all;
 addmypath;
 % -------------------------- parameters input -------------------------- %
 % file and path name
-parfnm='../project2/test.json';
-output_dir='../project2/output';
-
+parfnm='../project1/test.json';
+output_dir='../project1/output';
 % which slice to plot
-slicedir='Z';
-sliceid=149;
+slicedir='y';
+sliceid=100;
 
 % which variable and time to plot
 varnm='Vz';
-ns=1500;
-ne=1500;
-nt=50;
+ns=12000;
+ne=12000;
+nt=100;
 
 % figure control parameters
 flag_km     = 1;
 flag_emlast = 1;
 flag_print  = 0;
+% scl_caxis=[-100.0 100.0];
 scl_daspect =[1 1 1];
 clrmp       = 'jetwr';
 taut=0.5;

@@ -32,9 +32,9 @@ subt=[1,1,1];
 
 % variable and time to plot
 varnm='Vz';
-ns=300;
-ne=300;
-nt=10;
+ns=1000;
+ne=3000;
+nt=100;
 
 
 % figure control parameters

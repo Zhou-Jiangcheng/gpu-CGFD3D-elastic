@@ -21,13 +21,13 @@ GC     :=  $(CUDAHOME)/bin/nvcc
 #- O3
 CPPFLAGS := -O3 -std=c++11 $(CPPFLAGS)
 
-CFLAGS_CUDA   := -O3 -arch=sm_80 -std=c++11 -w -rdc=true
+CFLAGS_CUDA   := -O3 -arch=$(SMCODE) -std=c++11 -w -rdc=true
 CFLAGS_CUDA += -I$(CUDAHOME)/include -I$(MPIHOME)/include
 CFLAGS_CUDA += -I$(NETCDF)/include -I./lib/ -I./forward/ -I./media/ 
 
 #- dynamic
 LDFLAGS := -L$(NETCDF)/lib -lnetcdf -L$(CUDAHOME)/lib64 -lcudart -L$(MPIHOME)/lib -lmpi
-LDFLAGS += -lm -arch=sm_80
+LDFLAGS += -lm -arch=$(SMCODE)
 
 #- pg
 #CFLAGS_CUDA   := -Wall -pg $(CFLAGS_CUDA)
