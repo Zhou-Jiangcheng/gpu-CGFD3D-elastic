@@ -223,14 +223,14 @@ int main(int argc, char** argv)
                            fd->fdc_coef);
 
         if (myid==0 && verbose>0) fprintf(stdout,"exchange metrics ...\n"); 
-        gd_curv_metric_exchange(gdinfo,gdcurv_metric,mympi->neighid,mympi->topocomm);
+        gd_exchange(gdinfo,gdcurv_metric->v4d,gdcurv_metric->ncmp,mympi->neighid,mympi->topocomm);
 
         break;
     }
     case PAR_METRIC_IMPORT : {
 
         if (myid==0) fprintf(stdout,"import metric file ...\n"); 
-        gd_curv_metric_import(gdcurv_metric, blk->output_fname_part, par->grid_import_dir);
+        gd_curv_metric_import(gdinfo, gdcurv_metric, blk->output_fname_part, par->grid_import_dir);
 
         break;
     }
@@ -289,7 +289,7 @@ int main(int argc, char** argv)
     case PAR_MEDIA_IMPORT : {
 
         if (myid==0) fprintf(stdout,"import discrete medium file ...\n"); 
-        md_import(md, blk->output_fname_part, par->media_import_dir);
+        md_import(gdinfo, md, blk->output_fname_part, par->media_import_dir);
 
         break;
     }

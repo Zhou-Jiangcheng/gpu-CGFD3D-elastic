@@ -161,13 +161,13 @@ typedef struct {
  * function prototype
  *************************************************/
 
-void 
+int 
 gd_curv_init(gdinfo_t *gdinfo, gd_t *gdcurv);
 
-void 
+int 
 gd_curv_metric_init(gdinfo_t        *gdinfo,
                     gdcurv_metric_t *metric);
-void
+int
 gd_curv_metric_cal(gdinfo_t        *gdinfo,
                    gd_t        *gdcurv,
                    gdcurv_metric_t *metric,
@@ -179,50 +179,51 @@ mirror_symmetry(gdinfo_t *gdinfo, float *v4d, int ncmp);
 int 
 geometric_symmetry(gdinfo_t *gdinfo, float *v4d, int ncmp);
 
-void
-gd_curv_metric_exchange(gdinfo_t        *gdinfo,
-                        gdcurv_metric_t *metric,
-                        int             *neighid,
-                        MPI_Comm        topocomm);
+int
+gd_exchange(gdinfo_t *gdinfo,
+            float *g3d,
+            int ncmp,
+            int *neighid,
+            MPI_Comm topocomm);
 
-void
+int
 gd_curv_gen_cart(gdinfo_t *gdinfo,
                  gd_t *gdcurv,
                  float dx, float x0,
                  float dy, float y0,
                  float dz, float z0);
 
-void
-gd_curv_metric_import(gdcurv_metric_t *metric, char *fname_coords, char *import_dir);
+int
+gd_curv_metric_import(gdinfo_t *gdinfo, gdcurv_metric_t *metric, char *fname_coords, char *import_dir);
 
-void
+int
 gd_curv_coord_export(gdinfo_t *gdinfo,
                      gd_t *gdcurv,
                      char *fname_coords,
                      char *output_dir);
 
-void
+int
 gd_curv_coord_import(gdinfo_t *gdinfo,
                      gd_t *gdcurv, 
                      char *fname_coords,
                      char *import_dir);
 
-void
+int
 gd_cart_coord_export(gdinfo_t *gdinfo,
                      gd_t *gdcart,
                      char *fname_coords,
                      char *output_dir);
 
-void
+int
 gd_curv_metric_export(gdinfo_t        *gdinfo,
                       gdcurv_metric_t *metric,
                       char *fname_coords,
                       char *output_dir);
 
-void
+int
 gd_curv_set_minmax(gdinfo_t *gdinfo, gd_t *gdcurv);
 
-void 
+int 
 gd_cart_init_set(gdinfo_t *gdinfo, gd_t *gdcart,
                  float dx, float x0_glob,
                  float dy, float y0_glob,

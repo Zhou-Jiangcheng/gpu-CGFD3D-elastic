@@ -71,13 +71,13 @@ int
 md_init(gdinfo_t *gdinfo, md_t *md, int media_type, int visco_type);
 
 int
-md_import(md_t *md, char *fname_coords, char *in_dir);
+md_import(gdinfo_t *gdinfo, md_t *md, char *fname_coords, char *in_dir);
 
 int
-md_export(gdinfo_t  *gdinfo,
-                 md_t *md,
-                 char *fname_coords,
-                 char *output_dir);
+md_export(gdinfo_t *gdinfo,
+          md_t *md,
+          char *fname_coords,
+          char *output_dir);
 
 int
 md_gen_test_ac_iso(md_t *md);
