@@ -4,19 +4,19 @@ clc;
 addmypath
 % -------------------------- parameters input -------------------------- %
 % file and path name
-parfnm='../../project/params.json';
+parfnm='../../project/test.json';
 output_dir='../../project/output';
 
 % which slice to plot
 % slice 1
 slicedir{1}='y';
-sliceid{1}=120;
+sliceid{1}=100;
 % slice 2
 slicedir{2}='x';
-sliceid{2}=51;
+sliceid{2}=100;
 % slice 3
 slicedir{3}='z';
-sliceid{3}=199;
+sliceid{3}=100;
 
 % which variable and time to plot
 varnm='Vz';
@@ -35,9 +35,9 @@ taut=0.5;
 % read parameter file
 par=loadjson(parfnm);
 
-nproi=1;
+nproi=par.number_of_mpiprocs_x;
 nproj=par.number_of_mpiprocs_y;
-nprok=par.number_of_mpiprocs_z;
+nprok=1;
 
 
 % figure plot
