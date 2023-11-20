@@ -167,8 +167,7 @@ float
 bdry_pml_cal_b(float x, float L, float bmax);
 
 void
-bdry_pml_set(gdinfo_t *gdinfo,
-             gd_t *gd,
+bdry_pml_set(gd_t *gd,
              wav_t *wav,
              bdrypml_t *bdrypml,
              int   *neighid, 
@@ -195,30 +194,29 @@ bdry_cal_abl_len_dh(gd_t *gd,
                     float *avg_L, float *avg_dh);
 
 int
-bdry_free_set(gdinfo_t        *gdinfo,
-              bdryfree_t      *bdryfree,
+bdry_free_set(gd_t        *gd,
+              bdryfree_t  *bdryfree,
               int   *neighid, 
               int   in_is_sides[][2],
               const int verbose);
 
 int
-bdry_ablexp_set(gdinfo_t *gdinfo,
-             gd_t *gd,
-             wav_t *wav,
-             bdryexp_t *bdryexp,
-             int   *neighid, 
-             int   in_is_sides[][2],
-             int   in_num_layers[][2],
-             float in_velocity[][2], //
-             float dt,
-             int  *topoid,
-             int verbose);
+bdry_ablexp_set(gd_t *gd,
+                wav_t *wav,
+                bdryexp_t *bdryexp,
+                int   *neighid, 
+                int   in_is_sides[][2],
+                int   in_num_layers[][2],
+                float in_velocity[][2], //
+                float dt,
+                int  *topoid,
+                int verbose);
 
 float
 bdry_ablexp_cal_mask(int i, float vel, float dt, int num_lay, float dh);
 
 int
-bdry_ablexp_apply(bdryexp_t bdryexp, gdinfo_t *gdinfo, float *w_end, int ncmp);
+bdry_ablexp_apply(bdryexp_t bdryexp, gd_t *gd, float *w_end, int ncmp);
 
 __global__ 
 void

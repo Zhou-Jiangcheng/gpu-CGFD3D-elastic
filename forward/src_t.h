@@ -62,8 +62,7 @@ typedef struct {
  *************************************************/
 
 int
-src_coord_to_glob_indx(gdinfo_t *gdinfo,
-                       gd_t *gdcurv,
+src_coord_to_glob_indx(gd_t *gd,
                        float sx,
                        float sy,
                        float sz,
@@ -74,14 +73,13 @@ src_coord_to_glob_indx(gdinfo_t *gdinfo,
                        float *wrk3d);
 
 int
-src_glob_ext_ishere(int si, int sj, int sk, int half_ext, gdinfo_t *gdinfo);
+src_glob_ext_ishere(int si, int sj, int sk, int half_ext, gd_t *gd);
 
 int
-src_glob_ishere(int si, int sj, int sk, int half_ext, gdinfo_t *gdinfo);
+src_glob_ishere(int si, int sj, int sk, int half_ext, gd_t *gd);
 
 int
-src_coord_to_local_indx(gdinfo_t *gdinfo,
-                        gd_t *gdcurv,
+src_coord_to_local_indx(gd_t *gd,
                         float sx, float sy, float sz,
                         int *si, int *sj, int *sk,
                         float *sx_inc, float *sy_inc, float *sz_inc,
@@ -89,8 +87,7 @@ src_coord_to_local_indx(gdinfo_t *gdinfo,
 
 
 int
-src_read_locate_file(gdinfo_t *gdinfo,
-                     gd_t *gdcurv,
+src_read_locate_file(gd_t *gd,
                      md_t *md,
                      src_t    *src,
                      char *in_src_file,
@@ -173,11 +170,11 @@ src_cal_norm_delt3d(float *delt, float x0, float y0, float z0,
                     float rx0, float ry0, float rz0, int LenDelt);
 
 __global__ void
-src_coords_to_glob_indx(float *all_coords_d, int *all_index_d, float *all_inc_d, gdinfo_t gdinfo_d, 
+src_coords_to_glob_indx(float *all_coords_d, int *all_index_d, float *all_inc_d,
                         gd_t gd_d, int in_num_source, MPI_Comm comm, int myid);
 
 __global__ void
-src_depth_to_axis(float *all_coords_d, gdinfo_t gdinfo_d, gd_t gd_d, 
+src_depth_to_axis(float *all_coords_d, gd_t gd_d, 
                   int in_num_source, MPI_Comm comm, int myid);
 
 int

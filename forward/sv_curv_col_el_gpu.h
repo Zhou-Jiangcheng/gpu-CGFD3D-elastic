@@ -37,6 +37,6 @@ sv_curv_col_el_iso_rhs_src_gpu(
     const int myid, const int verbose);
 
 int
-sv_curv_col_el_graves_Qs(float *w, int ncmp, float dt, gdinfo_t *gdinfo, md_t *md);
+sv_curv_col_el_graves_Qs(float *w, int ncmp, float dt, gd_t *gd, md_t *md);
 
 #endif

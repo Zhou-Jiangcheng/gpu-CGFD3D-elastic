@@ -23,19 +23,20 @@ mympi_set(mympi_t *mympi,
 
   mympi->nprocx = number_of_mpiprocs_x;
   mympi->nprocy = number_of_mpiprocs_y;
+  mympi->nprocz = 1;
 
   mympi->myid = myid;
   mympi->comm = comm;
 
   // mpi topo, only consider 2d topo
-  int pdims[2]   = {number_of_mpiprocs_x, number_of_mpiprocs_y};
-  int periods[2] = {0,0};
+  int pdims[3]   = {number_of_mpiprocs_x, number_of_mpiprocs_y, 1};
+  int periods[3] = {0,0,0};
 
   // create Cartesian topology
-  MPI_Cart_create(comm, 2, pdims, periods, 0, &(mympi->topocomm));
+  MPI_Cart_create(comm, 3, pdims, periods, 0, &(mympi->topocomm));
 
   // get my local x,y coordinates
-  MPI_Cart_coords(mympi->topocomm, myid, 2, mympi->topoid);
+  MPI_Cart_coords(mympi->topocomm, myid, 3, mympi->topoid);
 
   // neighour
   MPI_Cart_shift(mympi->topocomm, 0, 1, &(mympi->neighid[0]), &(mympi->neighid[1]));

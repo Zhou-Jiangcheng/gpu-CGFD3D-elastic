@@ -12,15 +12,15 @@
 #include "wav_t.h"
 
 int 
-wav_init(gdinfo_t *gdinfo,
-               wav_t *V,
-               int number_of_levels)
+wav_init(gd_t *gd,
+         wav_t *V,
+         int number_of_levels)
 {
   int ierr = 0;
 
-  V->nx   = gdinfo->nx;
-  V->ny   = gdinfo->ny;
-  V->nz   = gdinfo->nz;
+  V->nx   = gd->nx;
+  V->ny   = gd->ny;
+  V->nz   = gd->nz;
   V->ncmp = 9;
   V->nlevel = number_of_levels;
 
@@ -113,18 +113,18 @@ wav_init(gdinfo_t *gdinfo,
 }
 
 int 
-wav_ac_init(gdinfo_t *gdinfo,
-               wav_t *V,
-               int number_of_levels)
+wav_ac_init(gd_t *gd,
+            wav_t *V,
+            int number_of_levels)
 {
   int ierr = 0;
 
   // Vx,Vy,Vz,P
   V->ncmp = 4;
 
-  V->nx   = gdinfo->nx;
-  V->ny   = gdinfo->ny;
-  V->nz   = gdinfo->nz;
+  V->nx   = gd->nx;
+  V->ny   = gd->ny;
+  V->nz   = gd->nz;
   V->nlevel = number_of_levels;
 
   V->siz_iy   = V->nx;
@@ -207,20 +207,20 @@ wav_check_value(float *w, wav_t *wav)
 }
 
 __global__ void
-PG_calcu_gpu(float *w_end, float *w_pre, gdinfo_t gdinfo_d, float *PG, float *Dis_accu, float dt)
+PG_calcu_gpu(float *w_end, float *w_pre, gd_t gd_d, float *PG, float *Dis_accu, float dt)
 {
   //Dis_accu is displacement accumulation.
-  int ni = gdinfo_d.ni;
-  int nj = gdinfo_d.nj;
-  int ni1 = gdinfo_d.ni1;
-  int nj1 = gdinfo_d.nj1;
-  int nk1 = gdinfo_d.nk1;
-  int ni2 = gdinfo_d.ni2;
-  int nj2 = gdinfo_d.nj2;
-  int nk2 = gdinfo_d.nk2;
-  size_t siz_iy  = gdinfo_d.siz_iy;
-  size_t siz_iz = gdinfo_d.siz_iz;
-  size_t siz_icmp  = gdinfo_d.siz_icmp;
+  int ni = gd_d.ni;
+  int nj = gd_d.nj;
+  int ni1 = gd_d.ni1;
+  int nj1 = gd_d.nj1;
+  int nk1 = gd_d.nk1;
+  int ni2 = gd_d.ni2;
+  int nj2 = gd_d.nj2;
+  int nk2 = gd_d.nk2;
+  size_t siz_iy = gd_d.siz_iy;
+  size_t siz_iz = gd_d.siz_iz;
+  size_t siz_icmp  = gd_d.siz_icmp;
   // 0-2 Vx1,Vy1,Vz1  it+1 moment V
   // 0-2 Vx0,Vy0,Vz0  it moment V
   float *Vx1 = w_end + 0*siz_icmp;

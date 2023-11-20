@@ -21,8 +21,8 @@ sv_curv_col_el_vti_onestage(
   float *rhs_d, 
   wav_t  wav_d,
   fd_wav_t fd_wav_d,
-  gdinfo_t  gdinfo_d,
-  gdcurv_metric_t metric_d,
+  gd_t  gd_d,
+  gd_metric_t metric_d,
   md_t md_d,
   bdrypml_t  bdrypml_d,
   bdryfree_t bdryfree_d,
@@ -116,8 +116,8 @@ sv_curv_col_el_vti_rhs_cfspml_gpu(
 
 __global__ void
 sv_curv_col_el_vti_dvh2dvz_gpu(
-    gdinfo_t        gdinfo_d,
-    gdcurv_metric_t metric_d,
+    gd_t        gd_d,
+    gd_metric_t metric_d,
     md_t            md_d,
     bdryfree_t      bdryfree_d,
     const int verbose);

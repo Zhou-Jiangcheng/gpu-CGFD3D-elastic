@@ -224,8 +224,7 @@ io_var3d_export_nc(char   *ou_file,
  * read in station list file and locate station
  */
 int
-io_recv_read_locate(gdinfo_t  *gdinfo,
-                    gd_t      *gd,
+io_recv_read_locate(gd_t      *gd,
                     iorecv_t  *iorecv,
                     int       nt_total,
                     int       num_of_vars,
@@ -244,9 +243,9 @@ io_recv_read_locate(gdinfo_t  *gdinfo,
 	    return(1);
 	}
 
-  int total_point_x = gdinfo->total_point_x;
-  int total_point_y = gdinfo->total_point_y;
-  int total_point_z = gdinfo->total_point_z;
+  int total_point_x = gd->total_point_x;
+  int total_point_y = gd->total_point_y;
+  int total_point_z = gd->total_point_z;
   // number of station
   int num_recv;
 
@@ -305,15 +304,7 @@ io_recv_read_locate(gdinfo_t  *gdinfo,
     fprintf(stdout,"recv has physical coords, maybe computational big, use GPU\n");
     fprintf(stdout,"recv_by_coords is %d\n",recv_by_coords);
     gd_t gd_d;
-    if (gd->type == GD_TYPE_CURV) {
-      init_gdcurv_device(gd,&gd_d);
-    }
-    if (gd->type == GD_TYPE_CART){
-      init_gdcart_device(gd,&gd_d);
-    }
-    //init_gdinfo_deviece
-    gdinfo_t gdinfo_d;
-    init_gdinfo_device(gdinfo,&gdinfo_d);
+    init_gd_device(gd,&gd_d);
 
     all_index_tmp  = (int *)   malloc(sizeof(int) * CONST_NDIM * num_recv);
     all_inc_tmp    = (float *) malloc(sizeof(float) * CONST_NDIM * num_recv);
@@ -330,12 +321,12 @@ io_recv_read_locate(gdinfo_t  *gdinfo,
     dim3 block(256);
     dim3 grid;
     grid.x = (num_recv+block.x-1) / block.x;
-    recv_depth_to_axis<<<grid, block>>> (all_coords_d, num_recv, gdinfo_d, gd_d, 
+    recv_depth_to_axis<<<grid, block>>> (all_coords_d, num_recv, gd_d, 
                          flag_coord_d, flag_depth_d, comm, myid);
     CUDACHECK(cudaDeviceSynchronize());
     grid.x = (num_recv+block.x-1) / block.x;
     recv_coords_to_glob_indx<<<grid, block>>> (all_coords_d, all_index_d, 
-                              all_inc_d, num_recv, gdinfo_d, gd_d, flag_coord_d, comm, myid);
+                              all_inc_d, num_recv, gd_d, flag_coord_d, comm, myid);
     CUDACHECK(cudaDeviceSynchronize());
     CUDACHECK(cudaMemcpy(all_coords,all_coords_d,sizeof(float)*num_recv*CONST_NDIM,cudaMemcpyDeviceToHost));
     CUDACHECK(cudaMemcpy(all_index_tmp,all_index_d,sizeof(int)*num_recv*CONST_NDIM,cudaMemcpyDeviceToHost));
@@ -347,10 +338,7 @@ io_recv_read_locate(gdinfo_t  *gdinfo,
     MPI_Allreduce(all_index_tmp, all_index, num_recv*CONST_NDIM, MPI_INT, MPI_MAX, comm);
     MPI_Allreduce(all_inc_tmp, all_inc, num_recv*CONST_NDIM, MPI_FLOAT, MPI_SUM, comm);
     //free temp pointer
-    if (gd->type == GD_TYPE_CURV)
-    {
-      dealloc_gdcurv_device(gd_d);
-    }
+    dealloc_gd_device(gd_d);
     CUDACHECK(cudaFree(flag_coord_d));
     CUDACHECK(cudaFree(flag_depth_d));
     CUDACHECK(cudaFree(all_coords_d));
@@ -386,7 +374,7 @@ io_recv_read_locate(gdinfo_t  *gdinfo,
     {
       // if sz is relative to surface, convert to normal index
       if (flag_depth[ir] == 1) {
-        all_coords[3*ir+2] = gdinfo->gnk2 - all_coords[3*ir+2];
+        all_coords[3*ir+2] = gd->gnk2 - all_coords[3*ir+2];
       }
 
       // do not take nearest value, but use smaller value
@@ -421,12 +409,12 @@ io_recv_read_locate(gdinfo_t  *gdinfo,
     float rx = all_coords[3*ir+0];
     float ry = all_coords[3*ir+1];
     float rz = all_coords[3*ir+2];
-    if (gd_info_gindx_is_inner(ix,iy,iz,gdinfo) == 1)
+    if (gd_info_gindx_is_inner(ix,iy,iz,gd) == 1)
     {
       // convert to local index w ghost
-      int i_local = gd_info_indx_glphy2lcext_i(ix,gdinfo);
-      int j_local = gd_info_indx_glphy2lcext_j(iy,gdinfo);
-      int k_local = gd_info_indx_glphy2lcext_k(iz,gdinfo);
+      int i_local = gd_info_indx_glphy2lcext_i(ix,gd);
+      int j_local = gd_info_indx_glphy2lcext_j(iy,gd);
+      int k_local = gd_info_indx_glphy2lcext_k(iz,gd);
 
       // get coord
       if (flag_coord[ir] == 0)
@@ -505,8 +493,7 @@ io_recv_read_locate(gdinfo_t  *gdinfo,
 }
 
 int
-io_line_locate(gdinfo_t *gdinfo,
-               gd_t *gd,
+io_line_locate(gd_t *gd,
                ioline_t *ioline,
                int    num_of_vars,
                int    nt_total,
@@ -540,7 +527,7 @@ io_line_locate(gdinfo_t *gdinfo,
       int gk = receiver_line_index_start[n*CONST_NDIM+2] 
                  + ipt * receiver_line_index_incre[n*CONST_NDIM+2];
 
-      if (gd_info_gindx_is_inner(gi,gj,gk,gdinfo) == 1)
+      if (gd_info_gindx_is_inner(gi,gj,gk,gd) == 1)
       {
         nr += 1;
       }
@@ -598,11 +585,11 @@ io_line_locate(gdinfo_t *gdinfo,
       int gj = receiver_line_index_start[n*CONST_NDIM+1] + ipt * receiver_line_index_incre[n*CONST_NDIM+1];
       int gk = receiver_line_index_start[n*CONST_NDIM+2] + ipt * receiver_line_index_incre[n*CONST_NDIM+2];
 
-      if (gd_info_gindx_is_inner(gi,gj,gk,gdinfo) == 1)
+      if (gd_info_gindx_is_inner(gi,gj,gk,gd) == 1)
       {
-        int i = gd_info_indx_glphy2lcext_i(gi,gdinfo);
-        int j = gd_info_indx_glphy2lcext_j(gj,gdinfo);
-        int k = gd_info_indx_glphy2lcext_k(gk,gdinfo);
+        int i = gd_info_indx_glphy2lcext_i(gi,gd);
+        int j = gd_info_indx_glphy2lcext_j(gj,gd);
+        int k = gd_info_indx_glphy2lcext_k(gk,gd);
 
         int iptr = i + j * gd->siz_iy + k * gd->siz_iz;
 
@@ -622,7 +609,7 @@ io_line_locate(gdinfo_t *gdinfo,
 }
 
 int
-io_slice_locate(gdinfo_t  *gdinfo,
+io_slice_locate(gd_t  *gd,
                 ioslice_t *ioslice,
                 int  number_of_slice_x,
                 int  number_of_slice_y,
@@ -665,17 +652,17 @@ io_slice_locate(gdinfo_t  *gdinfo,
   for (int n=0; n < number_of_slice_x; n++)
   {
     int gi = slice_x_index[n];
-    if (gd_info_gindx_is_inner_i(gi, gdinfo)==1)
+    if (gd_info_gindx_is_inner_i(gi, gd)==1)
     {
       int islc = ioslice->num_of_slice_x;
 
-      ioslice->slice_x_indx[islc]  = gd_info_indx_glphy2lcext_i(gi, gdinfo);
+      ioslice->slice_x_indx[islc]  = gd_info_indx_glphy2lcext_i(gi, gd);
       sprintf(ioslice->slice_x_fname[islc],"%s/slicex_i%d_%s.nc",
                 output_dir,gi,output_fname_part);
 
       ioslice->num_of_slice_x += 1;
 
-      size_t slice_siz = gdinfo->nj * gdinfo->nk;
+      size_t slice_siz = gd->nj * gd->nk;
       ioslice->siz_max_wrk = slice_siz > ioslice->siz_max_wrk ? 
                              slice_siz : ioslice->siz_max_wrk;
     }
@@ -685,17 +672,17 @@ io_slice_locate(gdinfo_t  *gdinfo,
   for (int n=0; n < number_of_slice_y; n++)
   {
     int gj = slice_y_index[n];
-    if (gd_info_gindx_is_inner_j(gj, gdinfo)==1)
+    if (gd_info_gindx_is_inner_j(gj, gd)==1)
     {
       int islc = ioslice->num_of_slice_y;
 
-      ioslice->slice_y_indx[islc]  = gd_info_indx_glphy2lcext_j(gj, gdinfo);
+      ioslice->slice_y_indx[islc]  = gd_info_indx_glphy2lcext_j(gj, gd);
       sprintf(ioslice->slice_y_fname[islc],"%s/slicey_j%d_%s.nc",
                 output_dir,gj,output_fname_part);
 
       ioslice->num_of_slice_y += 1;
 
-      size_t slice_siz = gdinfo->ni * gdinfo->nk;
+      size_t slice_siz = gd->ni * gd->nk;
       ioslice->siz_max_wrk = slice_siz > ioslice->siz_max_wrk ? 
                              slice_siz : ioslice->siz_max_wrk;
     }
@@ -705,17 +692,17 @@ io_slice_locate(gdinfo_t  *gdinfo,
   for (int n=0; n < number_of_slice_z; n++)
   {
     int gk = slice_z_index[n];
-    if (gd_info_gindx_is_inner_k(gk, gdinfo)==1)
+    if (gd_info_gindx_is_inner_k(gk, gd)==1)
     {
       int islc = ioslice->num_of_slice_z;
 
-      ioslice->slice_z_indx[islc]  = gd_info_indx_glphy2lcext_k(gk, gdinfo);
+      ioslice->slice_z_indx[islc]  = gd_info_indx_glphy2lcext_k(gk, gd);
       sprintf(ioslice->slice_z_fname[islc],"%s/slicez_k%d_%s.nc",
                 output_dir,gk,output_fname_part);
 
       ioslice->num_of_slice_z += 1;
 
-      size_t slice_siz = gdinfo->ni * gdinfo->nj;
+      size_t slice_siz = gd->ni * gd->nj;
       ioslice->siz_max_wrk = slice_siz > ioslice->siz_max_wrk ? 
                              slice_siz : ioslice->siz_max_wrk;
     }
@@ -725,20 +712,20 @@ io_slice_locate(gdinfo_t  *gdinfo,
 }
 
 void
-io_snapshot_locate(gdinfo_t *gdinfo,
+io_snapshot_locate(gd_t *gd,
                    iosnap_t *iosnap,
-                    int  number_of_snapshot,
-                    char **snapshot_name,
-                    int *snapshot_index_start,
-                    int *snapshot_index_count,
-                    int *snapshot_index_incre,
-                    int *snapshot_time_start,
-                    int *snapshot_time_incre,
-                    int *snapshot_save_velocity,
-                    int *snapshot_save_stress,
-                    int *snapshot_save_strain,
-                    char *output_fname_part,
-                    char *output_dir)
+                   int  number_of_snapshot,
+                   char **snapshot_name,
+                   int *snapshot_index_start,
+                   int *snapshot_index_count,
+                   int *snapshot_index_incre,
+                   int *snapshot_time_start,
+                   int *snapshot_time_incre,
+                   int *snapshot_save_velocity,
+                   int *snapshot_save_stress,
+                   int *snapshot_save_strain,
+                   char *output_fname_part,
+                   char *output_dir)
 {
   // malloc to max, num of snap will not be large
   if (number_of_snapshot > 0)
@@ -780,7 +767,7 @@ io_snapshot_locate(gdinfo_t *gdinfo,
     for (int n3=0; n3<snapshot_index_count[iptr0+2]; n3++)
     {
       int gk = snapshot_index_start[iptr0+2] + n3 * snapshot_index_incre[iptr0+2];
-      if (gd_info_gindx_is_inner_k(gk,gdinfo) == 1)
+      if (gd_info_gindx_is_inner_k(gk,gd) == 1)
       {
         if (gk1 == -1) {
           gk1 = gk;
@@ -788,7 +775,7 @@ io_snapshot_locate(gdinfo_t *gdinfo,
         }
         ngk++;
       }
-      if (gk > gdinfo->gnk2) break; // no need to larger k
+      if (gk > gd->gnk2) break; // no need to larger k
     }
 
     // scan output j-index in this proc
@@ -796,7 +783,7 @@ io_snapshot_locate(gdinfo_t *gdinfo,
     for (int n2=0; n2<snapshot_index_count[iptr0+1]; n2++)
     {
       int gj = snapshot_index_start[iptr0+1] + n2 * snapshot_index_incre[iptr0+1];
-      if (gd_info_gindx_is_inner_j(gj,gdinfo) == 1)
+      if (gd_info_gindx_is_inner_j(gj,gd) == 1)
       {
         if (gj1 == -1) {
           gj1 = gj;
@@ -804,7 +791,7 @@ io_snapshot_locate(gdinfo_t *gdinfo,
         }
         ngj++;
       }
-      if (gj > gdinfo->gnj2) break;
+      if (gj > gd->gnj2) break;
     }
 
     // scan output i-index in this proc
@@ -812,7 +799,7 @@ io_snapshot_locate(gdinfo_t *gdinfo,
     for (int n1=0; n1<snapshot_index_count[iptr0+0]; n1++)
     {
       int gi = snapshot_index_start[iptr0+0] + n1 * snapshot_index_incre[iptr0+0];
-      if (gd_info_gindx_is_inner_i(gi,gdinfo) == 1)
+      if (gd_info_gindx_is_inner_i(gi,gd) == 1)
       {
         if (gi1 == -1) {
           gi1 = gi;
@@ -820,15 +807,15 @@ io_snapshot_locate(gdinfo_t *gdinfo,
         }
         ngi++;
       }
-      if (gi > gdinfo->gni2) break;
+      if (gi > gd->gni2) break;
     }
 
     // if in this proc
     if (ngi>0 && ngj>0 && ngk>0)
     {
-      iosnap->i1[isnap]  = gd_info_indx_glphy2lcext_i(gi1, gdinfo);
-      iosnap->j1[isnap]  = gd_info_indx_glphy2lcext_j(gj1, gdinfo);
-      iosnap->k1[isnap]  = gd_info_indx_glphy2lcext_k(gk1, gdinfo);
+      iosnap->i1[isnap]  = gd_info_indx_glphy2lcext_i(gi1, gd);
+      iosnap->j1[isnap]  = gd_info_indx_glphy2lcext_j(gj1, gd);
+      iosnap->k1[isnap]  = gd_info_indx_glphy2lcext_k(gk1, gd);
       iosnap->ni[isnap]  = ngi;
       iosnap->nj[isnap]  = ngj;
       iosnap->nk[isnap]  = ngk;
@@ -1119,7 +1106,7 @@ io_snap_nc_create(iosnap_t *iosnap, iosnap_nc_t *iosnap_nc, int *topoid)
 int
 io_slice_nc_put(ioslice_t    *ioslice,
                 ioslice_nc_t *ioslice_nc,
-                gdinfo_t     *gdinfo,
+                gd_t     *gd,
                 float *w_end_d,
                 float *buff,
                 int   it,
@@ -1129,18 +1116,18 @@ io_slice_nc_put(ioslice_t    *ioslice,
 {
   int ierr = 0;
 
-  int   ni1 = gdinfo->ni1;
-  int   ni2 = gdinfo->ni2;
-  int   nj1 = gdinfo->nj1;
-  int   nj2 = gdinfo->nj2;
-  int   nk1 = gdinfo->nk1;
-  int   nk2 = gdinfo->nk2;
-  int   ni  = gdinfo->ni ;
-  int   nj  = gdinfo->nj ;
-  int   nk  = gdinfo->nk ;
-  size_t   siz_iy = gdinfo->siz_iy;
-  size_t   siz_iz= gdinfo->siz_iz;
-  size_t   siz_icmp = gdinfo->siz_icmp;
+  int   ni1 = gd->ni1;
+  int   ni2 = gd->ni2;
+  int   nj1 = gd->nj1;
+  int   nj2 = gd->nj2;
+  int   nk1 = gd->nk1;
+  int   nk2 = gd->nk2;
+  int   ni  = gd->ni ;
+  int   nj  = gd->nj ;
+  int   nk  = gd->nk ;
+  size_t   siz_iy = gd->siz_iy;
+  size_t   siz_iz = gd->siz_iz;
+  size_t   siz_icmp = gd->siz_icmp;
 
   int  num_of_vars = ioslice_nc->num_of_vars;
 
@@ -1246,7 +1233,7 @@ io_slice_nc_put(ioslice_t    *ioslice,
 int
 io_snap_nc_put(iosnap_t *iosnap,
                iosnap_nc_t *iosnap_nc,
-               gdinfo_t    *gdinfo,
+               gd_t    *gd,
                md_t    *md,
                wav_t   *wav,
                float *w_end_d,
@@ -1261,9 +1248,9 @@ io_snap_nc_put(iosnap_t *iosnap,
   int ierr = 0;
 
   int num_of_snap = iosnap->num_of_snap;
-  size_t siz_iy  = gdinfo->siz_iy;
-  size_t siz_iz = gdinfo->siz_iz;
-  size_t siz_icmp = gdinfo->siz_icmp;
+  size_t siz_iy = gd->siz_iy;
+  size_t siz_iz = gd->siz_iz;
+  size_t siz_icmp = gd->siz_icmp;
 
   for (int n=0; n<num_of_snap; n++)
   {
@@ -1554,7 +1541,7 @@ io_snap_nc_create_ac(iosnap_t *iosnap, iosnap_nc_t *iosnap_nc, int *topoid)
 int
 io_snap_nc_put_ac(iosnap_t *iosnap,
                iosnap_nc_t *iosnap_nc,
-               gdinfo_t    *gdinfo,
+               gd_t    *gd,
                wav_t   *wav,
                float *w4d,
                float *buff,
@@ -1568,8 +1555,8 @@ io_snap_nc_put_ac(iosnap_t *iosnap,
   int ierr = 0;
 
   int num_of_snap = iosnap->num_of_snap;
-  size_t siz_iy  = gdinfo->siz_iy;
-  size_t siz_iz = gdinfo->siz_iz;
+  size_t siz_iy = gd->siz_iy;
+  size_t siz_iz = gd->siz_iz;
 
   for (int n=0; n<num_of_snap; n++)
   {
@@ -1889,7 +1876,7 @@ io_line_keep(ioline_t *ioline, float *w_end_d,
 }
 
 __global__ void
-recv_depth_to_axis(float *all_coords_d, int num_recv, gdinfo_t gdinfo_d, gd_t gd_d, 
+recv_depth_to_axis(float *all_coords_d, int num_recv, gd_t gd_d, 
                    int *flag_coord, int *flag_depth, MPI_Comm comm, int myid)
 {
   size_t ix = blockIdx.x * blockDim.x + threadIdx.x;  
@@ -1901,11 +1888,11 @@ recv_depth_to_axis(float *all_coords_d, int num_recv, gdinfo_t gdinfo_d, gd_t gd
     {
       if(gd_d.type == GD_TYPE_CURV)
       {
-        gd_curv_depth_to_axis(&gdinfo_d,&gd_d,sx,sy,&all_coords_d[3*ix+2],comm,myid);
+        gd_curv_depth_to_axis(&gd_d,sx,sy,&all_coords_d[3*ix+2],comm,myid);
       }
       else if (gd_d.type == GD_TYPE_CART)
       {
-        all_coords_d[3*ix+2] = gd_d.z1d[gdinfo_d.nk2] - all_coords_d[3*ix+2];
+        all_coords_d[3*ix+2] = gd_d.z1d[gd_d.nk2] - all_coords_d[3*ix+2];
       }
       //printf("ix is %d, sx is %f,sy is %f, sz is %f\n",ix, all_coords_d[3*ix+0],all_coords_d[3*ix+1],all_coords_d[3*ix+2]);
     }
@@ -1914,7 +1901,7 @@ recv_depth_to_axis(float *all_coords_d, int num_recv, gdinfo_t gdinfo_d, gd_t gd
 
 __global__ void 
 recv_coords_to_glob_indx(float *all_coords_d, int *all_index_d, 
-                         float *all_inc_d, int num_recv, gdinfo_t gdinfo_d, gd_t gd_d, 
+                         float *all_inc_d, int num_recv, gd_t gd_d, 
                          int *flag_coord, MPI_Comm comm, int myid)
 {
   int ix = blockIdx.x * blockDim.x + threadIdx.x;
@@ -1931,11 +1918,11 @@ recv_coords_to_glob_indx(float *all_coords_d, int *all_index_d,
     {
       if (gd_d.type == GD_TYPE_CURV)
       {
-        gd_curv_coord_to_glob_indx_gpu(&gdinfo_d,&gd_d,sx,sy,sz,comm,myid,&ri_glob, &rj_glob, &rk_glob, &rx_inc,&ry_inc,&rz_inc);
+        gd_curv_coord_to_glob_indx_gpu(&gd_d,sx,sy,sz,comm,myid,&ri_glob, &rj_glob, &rk_glob, &rx_inc,&ry_inc,&rz_inc);
       }
       else if (gd_d.type == GD_TYPE_CART)
       {
-        gd_cart_coord_to_glob_indx(&gdinfo_d,&gd_d,sx,sy,sz,comm,myid,
+        gd_cart_coord_to_glob_indx(&gd_d,sx,sy,sz,comm,myid,
                                &ri_glob,&rj_glob,&rk_glob,&rx_inc,&ry_inc,&rz_inc);
       }
       
@@ -2272,17 +2259,17 @@ iorecv_print(iorecv_t *iorecv)
 }
 
 int
-PG_slice_output(float *PG, gdinfo_t *gdinfo, char *output_dir, char *frame_coords, int *topoid)
+PG_slice_output(float *PG, gd_t *gd, char *output_dir, char *frame_coords, int *topoid)
 {
   // output one time z slice
   // used for PGV PGA and PGD
   // cmp is PGV PGA PGD, component x, y, z
-  int nx = gdinfo->nx; 
-  int ny = gdinfo->ny;
-  int ni = gdinfo->ni; 
-  int nj = gdinfo->nj;
-  int gni1 = gdinfo->gni1; 
-  int gnj1 = gdinfo->gnj1; 
+  int nx = gd->nx; 
+  int ny = gd->ny;
+  int ni = gd->ni; 
+  int nj = gd->nj;
+  int gni1 = gd->gni1; 
+  int gnj1 = gd->gnj1; 
   char PG_cmp[CONST_NDIM_5][CONST_MAX_STRLEN] = {"PGV","PGVh","PGVx","PGVy","PGVz",
                                                  "PGA","PGAh","PGAx","PGAy","PGAz",
                                                  "PGD","PGDh","PGDx","PGDy","PGDz"}; 

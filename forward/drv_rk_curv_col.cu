@@ -25,9 +25,9 @@
 
 void
 drv_rk_curv_col_allstep(
-  fd_t            *fd,
-  gdinfo_t        *gdinfo,
-  gdcurv_metric_t *metric,
+  fd_t        *fd,
+  gd_t        *gd,
+  gd_metric_t *metric,
   md_t      *md,
   src_t     *src,
   bdryfree_t *bdryfree,
@@ -57,9 +57,9 @@ drv_rk_curv_col_allstep(
   int num_of_fdz_op    = fd->num_of_fdz_op;
   
   //gdinfo
-  int ni = gdinfo->ni;
-  int nj = gdinfo->nj;
-  int nk = gdinfo->nk;
+  int ni = gd->ni;
+  int nj = gd->nj;
+  int nk = gd->nk;
 
   // mpi
   int myid = mympi->myid;
@@ -68,26 +68,26 @@ drv_rk_curv_col_allstep(
   int *neighid_d = init_neighid_device(mympi->neighid);
   // local allocated array
   char ou_file[CONST_MAX_STRLEN];
-  gdinfo_t   gdinfo_d;
+  gd_t   gd_d;
   md_t   md_d;
   src_t  src_d;
   wav_t  wav_d;
   bdryfree_t  bdryfree_d;
   bdrypml_t   bdrypml_d;
   bdryexp_t   bdryexp_d;
-  gdcurv_metric_t metric_d;
+  gd_metric_t metric_d;
   fd_wav_t fd_wav_d;
 
   // init device struct, and copy data from host to device
-  init_gdinfo_device(gdinfo, &gdinfo_d);
+  init_gdinfo_device(gd, &gd_d);
   init_md_device(md, &md_d);
   init_fd_device(fd, &fd_wav_d);
   init_src_device(src, &src_d);
   init_metric_device(metric, &metric_d);
   init_wave_device(wav, &wav_d);
-  init_bdryfree_device(gdinfo, bdryfree, &bdryfree_d);
-  init_bdrypml_device(gdinfo, bdrypml, &bdrypml_d);
-  init_bdryexp_device(gdinfo, bdryexp, &bdryexp_d);
+  init_bdryfree_device(gd, bdryfree, &bdryfree_d);
+  init_bdrypml_device(gd, bdrypml, &bdrypml_d);
+  init_bdryexp_device(gd, bdryexp, &bdryexp_d);
   //---------------------------------------
   // get device wavefield 
   float *w_buff = wav->v5d; // size number is V->siz_icmp * (V->ncmp+6)
@@ -112,7 +112,7 @@ drv_rk_curv_col_allstep(
   if (myid==0 && verbose>0) fprintf(stdout,"prepare slice nc output ...\n"); 
   ioslice_nc_t ioslice_nc;
   io_slice_nc_create(ioslice, wav_d.ncmp, wav_d.cmp_name,
-                     gdinfo_d.ni, gdinfo_d.nj, gdinfo_d.nk, topoid,
+                     gd_d.ni, gd_d.nj, gd_d.nk, topoid,
                      &ioslice_nc);
   // create snapshot nc output files
   if (myid==0 && verbose>0) fprintf(stdout,"prepare snap nc output ...\n"); 
@@ -146,9 +146,9 @@ drv_rk_curv_col_allstep(
   float *Dis_accu_d   = NULL;
   if (bdryfree_d.is_sides_free[CONST_NDIM-1][1] == 1)
   {
-    PG_d = init_PGVAD_device(gdinfo);
-    Dis_accu_d = init_Dis_accu_device(gdinfo);
-    PG = (float *) fdlib_mem_calloc_1d_float(CONST_NDIM_5*gdinfo->ny*gdinfo->nx,0.0,"PGV,A,D malloc");
+    PG_d = init_PGVAD_device(gd);
+    Dis_accu_d = init_Dis_accu_device(gd);
+    PG = (float *) fdlib_mem_calloc_1d_float(CONST_NDIM_5*gd->ny*gd->nx,0.0,"PGV,A,D malloc");
   }
   // calculate conversion matrix for free surface
   if (bdryfree_d.is_sides_free[CONST_NDIM-1][1] == 1)
@@ -159,7 +159,7 @@ drv_rk_curv_col_allstep(
       dim3 grid;
       grid.x = (ni+block.x-1)/block.x;
       grid.y = (nj+block.y-1)/block.y;
-      sv_curv_col_el_iso_dvh2dvz_gpu <<<grid, block>>> (gdinfo_d,metric_d,md_d,bdryfree_d,verbose);
+      sv_curv_col_el_iso_dvh2dvz_gpu <<<grid, block>>> (gd_d,metric_d,md_d,bdryfree_d,verbose);
       CUDACHECK(cudaDeviceSynchronize());
     }
     else if (md_d.medium_type == CONST_MEDIUM_ELASTIC_VTI)
@@ -168,7 +168,7 @@ drv_rk_curv_col_allstep(
       dim3 grid;
       grid.x = (ni+block.x-1)/block.x;
       grid.y = (nj+block.y-1)/block.y;
-      sv_curv_col_el_vti_dvh2dvz_gpu <<<grid, block>>> (gdinfo_d,metric_d,md_d,bdryfree_d,verbose);
+      sv_curv_col_el_vti_dvh2dvz_gpu <<<grid, block>>> (gd_d,metric_d,md_d,bdryfree_d,verbose);
       CUDACHECK(cudaDeviceSynchronize());
     }
     else if (md_d.medium_type == CONST_MEDIUM_ELASTIC_ANISO)
@@ -177,7 +177,7 @@ drv_rk_curv_col_allstep(
       dim3 grid;
       grid.x = (ni+block.x-1)/block.x;
       grid.y = (nj+block.y-1)/block.y;
-      sv_curv_col_el_aniso_dvh2dvz_gpu <<<grid, block>>> (gdinfo_d,metric_d,md_d,bdryfree_d,verbose);
+      sv_curv_col_el_aniso_dvh2dvz_gpu <<<grid, block>>> (gd_d,metric_d,md_d,bdryfree_d,verbose);
       CUDACHECK(cudaDeviceSynchronize());
     }
     else
@@ -253,7 +253,7 @@ drv_rk_curv_col_allstep(
 
           sv_curv_col_el_iso_onestage(
               w_cur_d,w_rhs_d,wav_d,fd_wav_d,
-              gdinfo_d, metric_d, md_d, bdrypml_d, bdryfree_d, src_d,
+              gd_d, metric_d, md_d, bdrypml_d, bdryfree_d, src_d,
               fd->num_of_fdx_op, fd->pair_fdx_op[ipair][istage],
               fd->num_of_fdy_op, fd->pair_fdy_op[ipair][istage],
               fd->num_of_fdz_op, fd->pair_fdz_op[ipair][istage],
@@ -266,7 +266,7 @@ drv_rk_curv_col_allstep(
 
           sv_curv_col_el_vti_onestage(
               w_cur_d,w_rhs_d,wav_d,fd_wav_d,
-              gdinfo_d, metric_d, md_d, bdrypml_d, bdryfree_d, src_d,
+              gd_d, metric_d, md_d, bdrypml_d, bdryfree_d, src_d,
               fd->num_of_fdx_op, fd->pair_fdx_op[ipair][istage],
               fd->num_of_fdy_op, fd->pair_fdy_op[ipair][istage],
               fd->num_of_fdz_op, fd->pair_fdz_op[ipair][istage],
@@ -279,7 +279,7 @@ drv_rk_curv_col_allstep(
 
           sv_curv_col_el_aniso_onestage(
               w_cur_d,w_rhs_d,wav_d,fd_wav_d,
-              gdinfo_d, metric_d, md_d, bdrypml_d, bdryfree_d, src_d,
+              gd_d, metric_d, md_d, bdrypml_d, bdryfree_d, src_d,
               fd->num_of_fdx_op, fd->pair_fdx_op[ipair][istage],
               fd->num_of_fdy_op, fd->pair_fdy_op[ipair][istage],
               fd->num_of_fdz_op, fd->pair_fdz_op[ipair][istage],
@@ -309,7 +309,7 @@ drv_rk_curv_col_allstep(
         }
 
         // pack and isend
-        blk_macdrp_pack_mesg_gpu(w_tmp_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, myid);
+        blk_macdrp_pack_mesg_gpu(w_tmp_d, fd, gd, mympi, ipair_mpi, istage_mpi, myid);
 
         MPI_Startall(num_of_s_reqs, mympi->pair_s_reqs[ipair_mpi][istage_mpi]);
         
@@ -365,7 +365,7 @@ drv_rk_curv_col_allstep(
         }
 
         // pack and isend
-        blk_macdrp_pack_mesg_gpu(w_tmp_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, myid);
+        blk_macdrp_pack_mesg_gpu(w_tmp_d, fd, gd, mympi, ipair_mpi, istage_mpi, myid);
         MPI_Startall(num_of_s_reqs, mympi->pair_s_reqs[ipair_mpi][istage_mpi]);
         // pml_tmp
         if(bdrypml_d.is_enable_pml == 1)
@@ -421,7 +421,7 @@ drv_rk_curv_col_allstep(
 
         
         // pack and isend
-        blk_macdrp_pack_mesg_gpu(w_end_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, myid);
+        blk_macdrp_pack_mesg_gpu(w_end_d, fd, gd, mympi, ipair_mpi, istage_mpi, myid);
         MPI_Startall(num_of_s_reqs, mympi->pair_s_reqs[ipair_mpi][istage_mpi]);
         // pml_end
         if(bdrypml_d.is_enable_pml == 1)
@@ -445,10 +445,10 @@ drv_rk_curv_col_allstep(
  
       if (istage != num_rk_stages-1) 
       {
-        blk_macdrp_unpack_mesg_gpu(w_tmp_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, neighid_d);
+        blk_macdrp_unpack_mesg_gpu(w_tmp_d, fd, gd, mympi, ipair_mpi, istage_mpi, neighid_d);
       } else 
       {
-        blk_macdrp_unpack_mesg_gpu(w_end_d, fd, gdinfo, mympi, ipair_mpi, istage_mpi, neighid_d);
+        blk_macdrp_unpack_mesg_gpu(w_end_d, fd, gd, mympi, ipair_mpi, istage_mpi, neighid_d);
       }
     } // RK stages
 
@@ -462,7 +462,7 @@ drv_rk_curv_col_allstep(
 
     //--------------------------------------------
      if (bdryexp_d.is_enable_ablexp == 1) {
-       bdry_ablexp_apply(bdryexp_d, gdinfo, w_end_d, wav->ncmp);
+       bdry_ablexp_apply(bdryexp_d, gd, w_end_d, wav->ncmp);
      }
 
     // save results
@@ -474,7 +474,7 @@ drv_rk_curv_col_allstep(
         dim3 grid;
         grid.x = (ni + block.x - 1) / block.x;
         grid.y = (nj + block.y - 1) / block.y;
-        PG_calcu_gpu<<<grid, block>>> (w_end_d, w_pre_d, gdinfo_d, PG_d, Dis_accu_d, dt);
+        PG_calcu_gpu<<<grid, block>>> (w_end_d, w_pre_d, gd_d, PG_d, Dis_accu_d, dt);
     }
 
     //-- recv by interp
@@ -484,10 +484,10 @@ drv_rk_curv_col_allstep(
     io_line_keep(ioline, w_end_d, w_buff, it, wav->ncmp, wav->siz_icmp);
 
     // write slice, use w_rhs as buff
-    io_slice_nc_put(ioslice,&ioslice_nc,gdinfo,w_end_d,w_buff,it,t_end,0,wav->ncmp-1);
+    io_slice_nc_put(ioslice,&ioslice_nc,gd,w_end_d,w_buff,it,t_end,0,wav->ncmp-1);
 
     // snapshot
-    io_snap_nc_put(iosnap, &iosnap_nc, gdinfo, md, wav, 
+    io_snap_nc_put(iosnap, &iosnap_nc, gd, md, wav, 
                    w_end_d, w_buff, nt_total, it, t_end, 1,1,1);
 
     // swap w_pre and w_end, avoid copying
@@ -506,7 +506,7 @@ drv_rk_curv_col_allstep(
     }
   } // time loop
 
-  cudaMemcpy(PG,PG_d,sizeof(float)*CONST_NDIM_5*gdinfo->ny*gdinfo->nx,cudaMemcpyDeviceToHost);
+  cudaMemcpy(PG,PG_d,sizeof(float)*CONST_NDIM_5*gd->ny*gd->nx,cudaMemcpyDeviceToHost);
   // finish all time loop calculate, cudafree device pointer
   CUDACHECK(cudaFree(PG_d));
   CUDACHECK(cudaFree(Dis_accu_d));
@@ -522,7 +522,7 @@ drv_rk_curv_col_allstep(
   // postproc
   if (bdryfree_d.is_sides_free[CONST_NDIM-1][1] == 1)
   {
-    PG_slice_output(PG,gdinfo,output_dir,output_fname_part,topoid);
+    PG_slice_output(PG,gd,output_dir,output_fname_part,topoid);
   }
   // close nc
   io_slice_nc_close(&ioslice_nc);

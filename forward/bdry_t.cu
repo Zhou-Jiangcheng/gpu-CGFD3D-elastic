@@ -22,7 +22,7 @@
  */
 
 int
-bdry_free_set(gdinfo_t    *gdinfo,
+bdry_free_set(gd_t        *gd,
               bdryfree_t  *bdryfree,
               int   *neighid, 
               int   in_is_sides[][2],
@@ -30,7 +30,7 @@ bdry_free_set(gdinfo_t    *gdinfo,
 {
   int ierr = 0;
 
-  size_t siz_iz  = gdinfo->siz_iz;
+  size_t siz_iz  = gd->siz_iz;
 
   // default disable
   bdryfree->is_enable_free = 0;
@@ -78,8 +78,7 @@ bdry_free_set(gdinfo_t    *gdinfo,
  * set up abs_coefs for cfs-pml
  */
 void
-bdry_pml_set(gdinfo_t *gdinfo,
-             gd_t *gd,
+bdry_pml_set(gd_t *gd,
              wav_t *wav,
              bdrypml_t *bdrypml,
              int   *neighid, 
@@ -90,17 +89,17 @@ bdry_pml_set(gdinfo_t *gdinfo,
              float in_velocity[][2], //
              int verbose)
 {
-  int    ni1 = gdinfo->ni1;
-  int    ni2 = gdinfo->ni2;
-  int    nj1 = gdinfo->nj1;
-  int    nj2 = gdinfo->nj2;
-  int    nk1 = gdinfo->nk1;
-  int    nk2 = gdinfo->nk2;
-  int    nx  = gdinfo->nx ;
-  int    ny  = gdinfo->ny ;
-  int    nz  = gdinfo->nz ;
-  int    siz_iy = gdinfo->siz_iy;
-  int    siz_iz = gdinfo->siz_iz;
+  int    ni1 = gd->ni1;
+  int    ni2 = gd->ni2;
+  int    nj1 = gd->nj1;
+  int    nj2 = gd->nj2;
+  int    nk1 = gd->nk1;
+  int    nk2 = gd->nk2;
+  int    nx  = gd->nx ;
+  int    ny  = gd->ny ;
+  int    nz  = gd->nz ;
+  int    siz_iy = gd->siz_iy;
+  int    siz_iz = gd->siz_iz;
 
   // default disable
   bdrypml->is_enable_pml = 0;
@@ -472,8 +471,7 @@ bdry_cal_abl_len_dh(gd_t *gd,
  */
 
 int
-bdry_ablexp_set(gdinfo_t *gdinfo,
-                gd_t *gd,
+bdry_ablexp_set(gd_t *gd,
                 wav_t *wav,
                 bdryexp_t *bdryexp,
                 int   *neighid, 
@@ -485,20 +483,20 @@ bdry_ablexp_set(gdinfo_t *gdinfo,
                 int verbose)
 {
   int ierr = 0;
-  int ni1 = gdinfo->ni1;
-  int ni2 = gdinfo->ni2;
-  int nj1 = gdinfo->nj1;
-  int nj2 = gdinfo->nj2;
-  int nk1 = gdinfo->nk1;
-  int nk2 = gdinfo->nk2;
-  int ni  = gdinfo->ni ;
-  int nj  = gdinfo->nj ;
-  int nk  = gdinfo->nk ;
-  int nx  = gdinfo->nx ;
-  int ny  = gdinfo->ny ;
-  int nz  = gdinfo->nz ;
-  int siz_iy = gdinfo->siz_iy;
-  int siz_iz = gdinfo->siz_iz;
+  int ni1 = gd->ni1;
+  int ni2 = gd->ni2;
+  int nj1 = gd->nj1;
+  int nj2 = gd->nj2;
+  int nk1 = gd->nk1;
+  int nk2 = gd->nk2;
+  int ni  = gd->ni ;
+  int nj  = gd->nj ;
+  int nk  = gd->nk ;
+  int nx  = gd->nx ;
+  int ny  = gd->ny ;
+  int nz  = gd->nz ;
+  int siz_iy = gd->siz_iy;
+  int siz_iz = gd->siz_iz;
   int abs_number[CONST_NDIM][2];
   int n;
 
@@ -773,15 +771,15 @@ bdry_ablexp_cal_mask(int i, float vel, float dt, int num_lay, float dh)
 }
 
 int
-bdry_ablexp_apply(bdryexp_t bdryexp, gdinfo_t *gdinfo, float *w_end, int ncmp)
+bdry_ablexp_apply(bdryexp_t bdryexp, gd_t *gd, float *w_end, int ncmp)
 {
   float *Ex = bdryexp.ablexp_Ex;
   float *Ey = bdryexp.ablexp_Ey;
   float *Ez = bdryexp.ablexp_Ez;
 
-  size_t siz_iy   = gdinfo->siz_iy;
-  size_t siz_iz   = gdinfo->siz_iz;
-  size_t siz_icmp = gdinfo->siz_icmp;
+  size_t siz_iy   = gd->siz_iy;
+  size_t siz_iz   = gd->siz_iz;
+  size_t siz_icmp = gd->siz_icmp;
 
   bdry_block_t *D = bdryexp.bdry_blk;
 

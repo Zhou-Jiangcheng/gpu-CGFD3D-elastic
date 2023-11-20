@@ -16,9 +16,9 @@
 
 void
 drv_rk_curv_col_allstep(
-  fd_t            *fd,
-  gdinfo_t        *gdinfo,
-  gdcurv_metric_t *metric,
+  fd_t        *fd,
+  gd_t        *gd,
+  gd_metric_t *metric,
   md_t      *md,
   src_t      *src,
   bdryfree_t   *bdryfree,

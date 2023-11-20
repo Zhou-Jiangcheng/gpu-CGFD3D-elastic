@@ -182,8 +182,7 @@ io_var3d_export_nc(char   *ou_file,
                    int  nz);
 
 int
-io_recv_read_locate(gdinfo_t *gdinfo,
-                    gd_t *gd,
+io_recv_read_locate(gd_t *gd,
                     iorecv_t  *iorecv,
                     int       nt_total,
                     int       num_of_vars,
@@ -193,8 +192,7 @@ io_recv_read_locate(gdinfo_t *gdinfo,
                     int       verbose);
 
 int
-io_line_locate(gdinfo_t *gdinfo,
-               gd_t *gd,
+io_line_locate(gd_t *gd,
                ioline_t *ioline,
                int    num_of_vars,
                int    nt_total,
@@ -205,7 +203,7 @@ io_line_locate(gdinfo_t *gdinfo,
                char **receiver_line_name);
 
 int
-io_slice_locate(gdinfo_t  *gdinfo,
+io_slice_locate(gd_t  *gd,
                 ioslice_t *ioslice,
                 int  number_of_slice_x,
                 int  number_of_slice_y,
@@ -217,7 +215,7 @@ io_slice_locate(gdinfo_t  *gdinfo,
                 char *output_dir);
 
 void
-io_snapshot_locate(gdinfo_t *gdinfo,
+io_snapshot_locate(gd_t *gd,
                    iosnap_t *iosnap,
                     int  number_of_snapshot,
                     char **snapshot_name,
@@ -244,7 +242,7 @@ io_snap_nc_create(iosnap_t *iosnap, iosnap_nc_t *iosnap_nc, int *topoid);
 int
 io_slice_nc_put(ioslice_t    *ioslice,
                 ioslice_nc_t *ioslice_nc,
-                gdinfo_t     *gdinfo,
+                gd_t     *gd,
                 float *w4d,
                 float *buff,
                 int   it,
@@ -255,7 +253,7 @@ io_slice_nc_put(ioslice_t    *ioslice,
 int
 io_snap_nc_put(iosnap_t *iosnap,
                iosnap_nc_t *iosnap_nc,
-               gdinfo_t    *gdinfo,
+               gd_t    *gd,
                md_t    *md,
                wav_t   *wav,
                float *w4d,
@@ -273,7 +271,7 @@ io_snap_nc_create_ac(iosnap_t *iosnap, iosnap_nc_t *iosnap_nc, int *topoid);
 int
 io_snap_nc_put_ac(iosnap_t *iosnap,
                iosnap_nc_t *iosnap_nc,
-               gdinfo_t    *gdinfo,
+               gd_t    *gd,
                wav_t   *wav,
                float *w4d,
                float *buff,
@@ -350,13 +348,13 @@ io_line_keep(ioline_t *ioline, float *w_end_d,
              float *buff, int it, int ncmp, size_t siz_icmp);
 
 __global__ void
-recv_depth_to_axis(float *all_coords_d, int num_recv, gdinfo_t gdinfo_d, gd_t gd_d, 
+recv_depth_to_axis(float *all_coords_d, int num_recv, gd_t gd_d, 
                    int *flag_indx, int *flag_depth, 
                    MPI_Comm comm, int myid);
 
 __global__ void 
 recv_coords_to_glob_indx(float *all_coords_d, int *all_index_d, 
-                         float *all_inc_d, int num_recv, gdinfo_t gdinfo_d, gd_t gd_d, 
+                         float *all_inc_d, int num_recv, gd_t gd_d, 
                          int *flag_indx, MPI_Comm comm, int myid);
 
 //use trilinear interpolation 
@@ -426,7 +424,7 @@ int
 iorecv_print(iorecv_t *iorecv);
 
 int
-PG_slice_output(float *PG,  gdinfo_t *gdinfo, char *output_dir, char *frame_coords, int* topoid);
+PG_slice_output(float *PG,  gd_t *gd, char *output_dir, char *frame_coords, int* topoid);
 
 int
 io_get_nextline(FILE *fp, char *str, int length);

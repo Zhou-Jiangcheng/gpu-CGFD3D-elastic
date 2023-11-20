@@ -301,7 +301,7 @@ sv_curv_col_el_iso_rhs_src_gpu(
 }
 
 int
-sv_eq1st_curv_graves_Qs(float *w, int ncmp, float dt, gdinfo_t *gdinfo, md_t *md)
+sv_eq1st_curv_graves_Qs(float *w, int ncmp, float dt, gd_t *gd, md_t *md)
 {
   int ierr = 0;
 
@@ -309,15 +309,15 @@ sv_eq1st_curv_graves_Qs(float *w, int ncmp, float dt, gdinfo_t *gdinfo, md_t *md
 
   for (int icmp=0; icmp<ncmp; icmp++)
   {
-    float *var = w + icmp * gdinfo->siz_icmp;
+    float *var = w + icmp * gd->siz_icmp;
 
-    for (int k = gdinfo->nk1; k <= gdinfo->nk2; k++)
+    for (int k = gd->nk1; k <= gd->nk2; k++)
     {
-      for (int j = gdinfo->nj1; j <= gdinfo->nj2; j++)
+      for (int j = gd->nj1; j <= gd->nj2; j++)
       {
-        for (int i = gdinfo->ni1; i <= gdinfo->ni2; i++)
+        for (int i = gd->ni1; i <= gd->ni2; i++)
         {
-          size_t iptr = i + j * gdinfo->siz_iy + k * gdinfo->siz_iz;
+          size_t iptr = i + j * gd->siz_iy + k * gd->siz_iz;
 
           float Qatt = expf( coef / md->Qs[iptr] );
 

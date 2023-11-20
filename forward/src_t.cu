@@ -101,16 +101,16 @@ src_set_time(src_t *src, int it, int istage)
  */
 
 int
-src_glob_ext_ishere(int si, int sj, int sk, int half_ext, gdinfo_t *gdinfo)
+src_glob_ext_ishere(int si, int sj, int sk, int half_ext, gd_t *gd)
 {
   int is_here = 0;
 
-  if (si-half_ext <= gdinfo->ni2_to_glob_phys0 && // exted left point is less than right bdry
-      si+half_ext >= gdinfo->ni1_to_glob_phys0 && // exted right point is larger than left bdry
-      sj-half_ext <= gdinfo->nj2_to_glob_phys0 && 
-      sj+half_ext >= gdinfo->nj1_to_glob_phys0 &&
-      sk-half_ext <= gdinfo->nk2_to_glob_phys0 && 
-      sk+half_ext >= gdinfo->nk1_to_glob_phys0)
+  if (si-half_ext <= gd->ni2_to_glob_phys0 && // exted left point is less than right bdry
+      si+half_ext >= gd->ni1_to_glob_phys0 && // exted right point is larger than left bdry
+      sj-half_ext <= gd->nj2_to_glob_phys0 && 
+      sj+half_ext >= gd->nj1_to_glob_phys0 &&
+      sk-half_ext <= gd->nk2_to_glob_phys0 && 
+      sk+half_ext >= gd->nk1_to_glob_phys0)
   {
     is_here = 1;
   }
@@ -123,16 +123,16 @@ src_glob_ext_ishere(int si, int sj, int sk, int half_ext, gdinfo_t *gdinfo)
  */
 
 int
-src_glob_ishere(int si, int sj, int sk, int half_ext, gdinfo_t *gdinfo)
+src_glob_ishere(int si, int sj, int sk, int half_ext, gd_t *gd)
 {
   int is_here = 0;
 
-  if (si <= gdinfo->ni2_to_glob_phys0 && 
-      si >= gdinfo->ni1_to_glob_phys0 && 
-      sj <= gdinfo->nj2_to_glob_phys0 && 
-      sj >= gdinfo->nj1_to_glob_phys0 &&
-      sk <= gdinfo->nk2_to_glob_phys0 && 
-      sk >= gdinfo->nk1_to_glob_phys0)
+  if (si <= gd->ni2_to_glob_phys0 && 
+      si >= gd->ni1_to_glob_phys0 && 
+      sj <= gd->nj2_to_glob_phys0 && 
+      sj >= gd->nj1_to_glob_phys0 &&
+      sk <= gd->nk2_to_glob_phys0 && 
+      sk >= gd->nk1_to_glob_phys0)
   {
     is_here = 1;
   }
@@ -141,8 +141,7 @@ src_glob_ishere(int si, int sj, int sk, int half_ext, gdinfo_t *gdinfo)
 }
 
 int
-src_read_locate_file(gdinfo_t *gdinfo,
-                     gd_t *gd,
+src_read_locate_file(gd_t *gd,
                      md_t *md,
                      src_t *src,
                      char *in_src_file,
@@ -157,22 +156,21 @@ src_read_locate_file(gdinfo_t *gdinfo,
 {
   int ierr = 0;
 
-  // get grid info from gdinfo
-  int   ni1 = gdinfo->ni1;
-  int   ni2 = gdinfo->ni2;
-  int   nj1 = gdinfo->nj1;
-  int   nj2 = gdinfo->nj2;
-  int   nk1 = gdinfo->nk1;
-  int   nk2 = gdinfo->nk2;
-  int   nx  = gdinfo->nx ;
-  int   ny  = gdinfo->ny ;
-  int   nz  = gdinfo->nz ;
-  int   npoint_ghosts = gdinfo->npoint_ghosts;
-  size_t   siz_iy = gdinfo->siz_iy;
-  size_t   siz_iz= gdinfo->siz_iz;
-  int total_point_x = gdinfo->total_point_x;
-  int total_point_y = gdinfo->total_point_y;
-  int total_point_z = gdinfo->total_point_z;
+  int   ni1 = gd->ni1;
+  int   ni2 = gd->ni2;
+  int   nj1 = gd->nj1;
+  int   nj2 = gd->nj2;
+  int   nk1 = gd->nk1;
+  int   nk2 = gd->nk2;
+  int   nx  = gd->nx ;
+  int   ny  = gd->ny ;
+  int   nz  = gd->nz ;
+  int   npoint_ghosts = gd->npoint_ghosts;
+  size_t   siz_iy = gd->siz_iy;
+  size_t   siz_iz = gd->siz_iz;
+  int total_point_x = gd->total_point_x;
+  int total_point_y = gd->total_point_y;
+  int total_point_z = gd->total_point_z;
 
   // get total elem of exted src region for a single point
   //    int max_ext = 7 * 7 * 7;
@@ -299,7 +297,7 @@ src_read_locate_file(gdinfo_t *gdinfo,
     for(int is=0; is<in_num_source; is++)
     {
       if(in_3coord_meaning == 1) {
-        all_coords[3*is+2] = gdinfo->gnk2 - all_coords[3*is+2];
+        all_coords[3*is+2] = gd->gnk2 - all_coords[3*is+2];
       }
       // nearest integer index
       si_glob = (int) (all_coords[3*is+0] + 0.5);
@@ -330,12 +328,12 @@ src_read_locate_file(gdinfo_t *gdinfo,
         all_index[3*is+2] = -1000;
       }
       // check if in this thread using index
-      if (src_glob_ext_ishere(si_glob,sj_glob,sk_glob,npoint_half_ext,gdinfo)==1)
+      if (src_glob_ext_ishere(si_glob,sj_glob,sk_glob,npoint_half_ext,gd)==1)
       {
         num_of_src_here += 1;
         all_in_thread[is] = 1;
       }
-      if (src_glob_ishere(si_glob,sj_glob,sk_glob,npoint_half_ext,gdinfo)==1)
+      if (src_glob_ishere(si_glob,sj_glob,sk_glob,npoint_half_ext,gd)==1)
       {
         all_in_thread_without_ghost[is] = 1;
       }
@@ -347,22 +345,15 @@ src_read_locate_file(gdinfo_t *gdinfo,
     //computational big, use GPU
     fprintf(stdout,"physical coords, computational big, use GPU\n");
     gd_t gd_d;
-    if (gd->type == GD_TYPE_CURV) {
-      init_gdcurv_device(gd,&gd_d);
-    }
-    if (gd->type == GD_TYPE_CART){
-      init_gdcart_device(gd,&gd_d);
-    }
-    //init_gdinfo_deviece
-    gdinfo_t gdinfo_d;
-    init_gdinfo_device(gdinfo,&gdinfo_d);
+    init_gd_device(gd,&gd_d);
+
     CUDACHECK(cudaMemcpy(all_coords_d,all_coords,sizeof(float)*in_num_source*CONST_NDIM,cudaMemcpyHostToDevice));
     if(in_3coord_meaning == 1)
     {
       dim3 block(256);
       dim3 grid;
       grid.x = (in_num_source+block.x-1) / block.x;
-      src_depth_to_axis<<<grid, block>>> (all_coords_d, gdinfo_d, gd_d, in_num_source, comm, myid);
+      src_depth_to_axis<<<grid, block>>> (all_coords_d, gd_d, in_num_source, comm, myid);
       CUDACHECK(cudaDeviceSynchronize());
     }
     //GPU modify
@@ -371,7 +362,7 @@ src_read_locate_file(gdinfo_t *gdinfo,
       dim3 grid;
       grid.x = (in_num_source+block.x-1) / block.x;
       src_coords_to_glob_indx<<<grid, block>>> (all_coords_d, all_index_d, 
-                                all_inc_d, gdinfo_d, gd_d, in_num_source, comm, myid);
+                                all_inc_d, gd_d, in_num_source, comm, myid);
       CUDACHECK(cudaDeviceSynchronize());
     }
     CUDACHECK(cudaMemcpy(all_index_tmp,all_index_d,sizeof(int)*in_num_source*CONST_NDIM,cudaMemcpyDeviceToHost));
@@ -388,21 +379,18 @@ src_read_locate_file(gdinfo_t *gdinfo,
       sj_glob = all_index[3*is+1];
       sk_glob = all_index[3*is+2];
 
-      if (src_glob_ext_ishere(si_glob,sj_glob,sk_glob,npoint_half_ext,gdinfo)==1)
+      if (src_glob_ext_ishere(si_glob,sj_glob,sk_glob,npoint_half_ext,gd)==1)
       {
         num_of_src_here += 1;
         all_in_thread[is] = 1;
       }
-      if (src_glob_ishere(si_glob,sj_glob,sk_glob,npoint_half_ext,gdinfo)==1)
+      if (src_glob_ishere(si_glob,sj_glob,sk_glob,npoint_half_ext,gd)==1)
       {
         all_in_thread_without_ghost[is] = 1;
       }
     }
     //free temp pointer
-    if (gd->type == GD_TYPE_CURV)
-    {
-      dealloc_gdcurv_device(gd_d);
-    }
+    dealloc_gd_device(gd_d);
     CUDACHECK(cudaFree(all_coords_d));
     CUDACHECK(cudaFree(all_index_d));
     CUDACHECK(cudaFree(all_inc_d));
@@ -544,9 +532,9 @@ src_read_locate_file(gdinfo_t *gdinfo,
           // convert uDA input into moment tensor
           if (moment_actived==1 && in_mechanism_type ==1)
           {
-            si = gd_info_indx_glphy2lcext_i(all_index[3*is+0], gdinfo);
-            sj = gd_info_indx_glphy2lcext_j(all_index[3*is+1], gdinfo);
-            sk = gd_info_indx_glphy2lcext_k(all_index[3*is+2], gdinfo);
+            si = gd_info_indx_glphy2lcext_i(all_index[3*is+0], gd);
+            sj = gd_info_indx_glphy2lcext_j(all_index[3*is+1], gd);
+            sk = gd_info_indx_glphy2lcext_k(all_index[3*is+2], gd);
             size_t iptr = si + sj * siz_iy + sk * siz_iz;   
             float *mu3d = md->mu;
             float mu =  myz;
@@ -589,9 +577,9 @@ src_read_locate_file(gdinfo_t *gdinfo,
             // convert uDA input into moment tensor
             if (moment_actived==1 && in_mechanism_type ==1)
             {
-              si = gd_info_indx_glphy2lcext_i(all_index[3*is+0], gdinfo);
-              sj = gd_info_indx_glphy2lcext_j(all_index[3*is+1], gdinfo);
-              sk = gd_info_indx_glphy2lcext_k(all_index[3*is+2], gdinfo);
+              si = gd_info_indx_glphy2lcext_i(all_index[3*is+0], gd);
+              sj = gd_info_indx_glphy2lcext_j(all_index[3*is+1], gd);
+              sk = gd_info_indx_glphy2lcext_k(all_index[3*is+2], gd);
               size_t iptr = si + sj * siz_iy + sk * siz_iz;   
               float *mu3d = md->mu;
 
@@ -616,9 +604,9 @@ src_read_locate_file(gdinfo_t *gdinfo,
     if (all_in_thread[is] == 1)
     {
       // convert global index to local index
-      si = gd_info_indx_glphy2lcext_i(all_index[3*is+0], gdinfo);
-      sj = gd_info_indx_glphy2lcext_j(all_index[3*is+1], gdinfo);
-      sk = gd_info_indx_glphy2lcext_k(all_index[3*is+2], gdinfo);
+      si = gd_info_indx_glphy2lcext_i(all_index[3*is+0], gd);
+      sj = gd_info_indx_glphy2lcext_j(all_index[3*is+1], gd);
+      sk = gd_info_indx_glphy2lcext_k(all_index[3*is+2], gd);
   
       // keep into src_t
       src->si[is_local] = si;
@@ -642,7 +630,7 @@ src_read_locate_file(gdinfo_t *gdinfo,
         {
           for (int i=si-npoint_half_ext; i<=si+npoint_half_ext; i++)
           {
-            if (gd_info_lindx_is_inner(i,j,k,gdinfo)==1)
+            if (gd_info_lindx_is_inner(i,j,k,gd)==1)
             {
               // Note index need match coef
               int iptr_grid = i + j * siz_iy + k * siz_iz;
@@ -954,7 +942,7 @@ angle2moment(float strike, float dip, float rake, float* source_moment_tensor)
 
 __global__ void
 src_coords_to_glob_indx(float *all_coords_d, int *all_index_d, float *all_inc_d,
-                        gdinfo_t gdinfo_d, gd_t gd_d, int in_num_source, 
+                        gd_t gd_d, int in_num_source, 
                         MPI_Comm comm, int myid)
 {
   int ix = blockIdx.x * blockDim.x + threadIdx.x;
@@ -972,12 +960,12 @@ src_coords_to_glob_indx(float *all_coords_d, int *all_index_d, float *all_inc_d,
 
     if (gd_d.type == GD_TYPE_CURV)
     {
-      gd_curv_coord_to_glob_indx_gpu(&gdinfo_d,&gd_d,sx,sy,sz,comm,myid,
+      gd_curv_coord_to_glob_indx_gpu(&gd_d,sx,sy,sz,comm,myid,
                              &si_glob,&sj_glob,&sk_glob,&sx_inc,&sy_inc,&sz_inc);
     }
     else if (gd_d.type == GD_TYPE_CART)
     {
-      gd_cart_coord_to_glob_indx(&gdinfo_d,&gd_d,sx,sy,sz,comm,myid,
+      gd_cart_coord_to_glob_indx(&gd_d,sx,sy,sz,comm,myid,
                              &si_glob,&sj_glob,&sk_glob,&sx_inc,&sy_inc,&sz_inc);
     }
     
@@ -992,7 +980,7 @@ src_coords_to_glob_indx(float *all_coords_d, int *all_index_d, float *all_inc_d,
 }
 
 __global__ void
-src_depth_to_axis(float *all_coords_d, gdinfo_t gdinfo_d, gd_t gd_d, 
+src_depth_to_axis(float *all_coords_d, gd_t gd_d, 
                   int in_num_source, MPI_Comm comm, int myid)
 {
   size_t ix = blockIdx.x * blockDim.x + threadIdx.x;
@@ -1002,11 +990,11 @@ src_depth_to_axis(float *all_coords_d, gdinfo_t gdinfo_d, gd_t gd_d,
     float sy = all_coords_d[3*ix+1];
     if (gd_d.type == GD_TYPE_CURV)
     {
-      gd_curv_depth_to_axis(&gdinfo_d,&gd_d,sx,sy,&all_coords_d[3*ix+2],comm,myid);
+      gd_curv_depth_to_axis(&gd_d,sx,sy,&all_coords_d[3*ix+2],comm,myid);
     }
     else if (gd_d.type == GD_TYPE_CART)
     {
-      all_coords_d[3*ix+2] = gd_d.z1d[gdinfo_d.nk2] - all_coords_d[3*ix+2];
+      all_coords_d[3*ix+2] = gd_d.z1d[gd_d.nk2] - all_coords_d[3*ix+2];
     }
   }
 }

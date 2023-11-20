@@ -14,13 +14,13 @@
 #include "md_t.h"
 
 int
-md_init(gdinfo_t *gdinfo, md_t *md, int media_type, int visco_type)
+md_init(gd_t *gd, md_t *md, int media_type, int visco_type)
 {
   int ierr = 0;
 
-  md->nx   = gdinfo->nx;
-  md->ny   = gdinfo->ny;
-  md->nz   = gdinfo->nz;
+  md->nx   = gd->nx;
+  md->ny   = gd->ny;
+  md->nz   = gd->nz;
 
   md->siz_iy   = md->nx;
   md->siz_iz   = md->nx * md->ny;
@@ -226,24 +226,24 @@ md_init(gdinfo_t *gdinfo, md_t *md, int media_type, int visco_type)
 //
 
 int
-md_import(gdinfo_t *gdinfo, md_t *md, char *fname_coords, char *in_dir)
+md_import(gd_t *gd, md_t *md, char *fname_coords, char *in_dir)
 {
   int ierr = 0;
   // construct file name
   char in_file[CONST_MAX_STRLEN];
   sprintf(in_file, "%s/media_%s.nc", in_dir, fname_coords);
 
-  int ni1 = gdinfo->ni1;
-  int nj1 = gdinfo->nj1;
-  int nk1 = gdinfo->nk1;
-  int ni2 = gdinfo->ni2;
-  int nj2 = gdinfo->nj2;
-  int nk2 = gdinfo->nk2;
-  int ni  = gdinfo->ni;
-  int nj  = gdinfo->nj;
-  int nk  = gdinfo->nk;
-  size_t  siz_iy = gdinfo->siz_iy;
-  size_t  siz_iz = gdinfo->siz_iz;
+  int ni1 = gd->ni1;
+  int nj1 = gd->nj1;
+  int nk1 = gd->nk1;
+  int ni2 = gd->ni2;
+  int nj2 = gd->nj2;
+  int nk2 = gd->nk2;
+  int ni  = gd->ni;
+  int nj  = gd->nj;
+  int nk  = gd->nk;
+  size_t  siz_iy = gd->siz_iy;
+  size_t  siz_iz = gd->siz_iz;
   
   size_t iptr, iptr1;
   
@@ -274,7 +274,7 @@ md_import(gdinfo_t *gdinfo, md_t *md, char *fname_coords, char *in_dir)
       }
     }
   }
-  mirror_symmetry(gdinfo, md->v4d, md->ncmp);
+  mirror_symmetry(gd, md->v4d, md->ncmp);
   
   // close file
   ierr = nc_close(ncid); handle_nc_err(ierr);
@@ -285,7 +285,7 @@ md_import(gdinfo_t *gdinfo, md_t *md, char *fname_coords, char *in_dir)
 }
 
 int
-md_export(gdinfo_t *gdinfo,
+md_export(gd_t *gd,
           md_t *md,
           char *fname_coords,
           char *output_dir)
@@ -293,23 +293,23 @@ md_export(gdinfo_t *gdinfo,
   int ierr = 0;
 
   int  number_of_vars = md->ncmp;
-  int  nx = gdinfo->nx;
-  int  ny = gdinfo->ny;
-  int  nz = gdinfo->nz;
-  int  ni1 = gdinfo->ni1;
-  int  nj1 = gdinfo->nj1;
-  int  nk1 = gdinfo->nk1;
-  int  ni2 = gdinfo->ni2;
-  int  nj2 = gdinfo->nj2;
-  int  nk2 = gdinfo->nk2;
-  int  ni  = gdinfo->ni;
-  int  nj  = gdinfo->nj;
-  int  nk  = gdinfo->nk;
-  int  gni1 = gdinfo->ni1_to_glob_phys0;
-  int  gnj1 = gdinfo->nj1_to_glob_phys0;
-  int  gnk1 = gdinfo->nk1_to_glob_phys0;
-  size_t  siz_iy = gdinfo->siz_iy;
-  size_t  siz_iz = gdinfo->siz_iz;
+  int  nx = gd->nx;
+  int  ny = gd->ny;
+  int  nz = gd->nz;
+  int  ni1 = gd->ni1;
+  int  nj1 = gd->nj1;
+  int  nk1 = gd->nk1;
+  int  ni2 = gd->ni2;
+  int  nj2 = gd->nj2;
+  int  nk2 = gd->nk2;
+  int  ni  = gd->ni;
+  int  nj  = gd->nj;
+  int  nk  = gd->nk;
+  int  gni1 = gd->ni1_to_glob_phys0;
+  int  gnj1 = gd->nj1_to_glob_phys0;
+  int  gnk1 = gd->nk1_to_glob_phys0;
+  size_t  siz_iy = gd->siz_iy;
+  size_t  siz_iz = gd->siz_iz;
   size_t iptr, iptr1;
 
   float *var_out = (float *) malloc(sizeof(float)*ni*nj*nk);

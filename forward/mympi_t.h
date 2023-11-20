@@ -12,11 +12,12 @@
 typedef struct {
   int       nprocx;
   int       nprocy;
+  int       nprocz;
 
   int       myid;
   MPI_Comm  comm;
 
-  int    topoid[2];
+  int    topoid[3];
   //int    neighid[4];
   int    neighid[CONST_NDIM_2];
   MPI_Comm    topocomm;

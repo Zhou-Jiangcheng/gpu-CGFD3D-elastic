@@ -1,0 +1,702 @@
+alloc.cu:  int nx = gd->nx;
+alloc.cu:  int ny = gd->ny;
+alloc.cu:  int nz = gd->nz;
+alloc.cu:  size_t siz_icmp = gd->siz_icmp;
+alloc.cu:  CUDACHECK(cudaMemcpy(gd_d->x3d, gd->x3d, sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
+alloc.cu:  CUDACHECK(cudaMemcpy(gd_d->y3d, gd->y3d, sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
+alloc.cu:  CUDACHECK(cudaMemcpy(gd_d->z3d, gd->z3d, sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
+alloc.cu:  CUDACHECK(cudaMemcpy(gd_d->cell_xmin, gd->cell_xmin, sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
+alloc.cu:  CUDACHECK(cudaMemcpy(gd_d->cell_xmax, gd->cell_xmax, sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
+alloc.cu:  CUDACHECK(cudaMemcpy(gd_d->cell_ymin, gd->cell_ymin, sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
+alloc.cu:  CUDACHECK(cudaMemcpy(gd_d->cell_ymax, gd->cell_ymax, sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
+alloc.cu:  CUDACHECK(cudaMemcpy(gd_d->cell_zmin, gd->cell_zmin, sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
+alloc.cu:  CUDACHECK(cudaMemcpy(gd_d->cell_zmax, gd->cell_zmax, sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
+alloc.cu:  CUDACHECK(cudaMemcpy(gd_d->tile_istart, gd->tile_istart, sizeof(int)*GD_TILE_NX, cudaMemcpyHostToDevice));
+alloc.cu:  CUDACHECK(cudaMemcpy(gd_d->tile_iend,   gd->tile_iend, sizeof(int)*GD_TILE_NX, cudaMemcpyHostToDevice));
+alloc.cu:  CUDACHECK(cudaMemcpy(gd_d->tile_jstart, gd->tile_jstart, sizeof(int)*GD_TILE_NY, cudaMemcpyHostToDevice));
+alloc.cu:  CUDACHECK(cudaMemcpy(gd_d->tile_jend,   gd->tile_jend, sizeof(int)*GD_TILE_NY, cudaMemcpyHostToDevice));
+alloc.cu:  CUDACHECK(cudaMemcpy(gd_d->tile_kstart, gd->tile_kstart, sizeof(int)*GD_TILE_NZ, cudaMemcpyHostToDevice));
+alloc.cu:  CUDACHECK(cudaMemcpy(gd_d->tile_kend,   gd->tile_kend, sizeof(int)*GD_TILE_NZ, cudaMemcpyHostToDevice));
+alloc.cu:  CUDACHECK(cudaMemcpy(gd_d->tile_xmin, gd->tile_xmin, sizeof(float)*size, cudaMemcpyHostToDevice));
+alloc.cu:  CUDACHECK(cudaMemcpy(gd_d->tile_xmax, gd->tile_xmax, sizeof(float)*size, cudaMemcpyHostToDevice));
+alloc.cu:  CUDACHECK(cudaMemcpy(gd_d->tile_ymin, gd->tile_ymin, sizeof(float)*size, cudaMemcpyHostToDevice));
+alloc.cu:  CUDACHECK(cudaMemcpy(gd_d->tile_ymax, gd->tile_ymax, sizeof(float)*size, cudaMemcpyHostToDevice));
+alloc.cu:  CUDACHECK(cudaMemcpy(gd_d->tile_zmin, gd->tile_zmin, sizeof(float)*size, cudaMemcpyHostToDevice));
+alloc.cu:  CUDACHECK(cudaMemcpy(gd_d->tile_zmax, gd->tile_zmax, sizeof(float)*size, cudaMemcpyHostToDevice));
+alloc.cu:  int nx = gd->nx;
+alloc.cu:  int ny = gd->ny;
+alloc.cu:  int nz = gd->nz;
+alloc.cu:  int nx = gd->nx;
+alloc.cu:  int ny = gd->ny;
+alloc.cu:  int nz = gd->nz;
+alloc.cu:  int nx = gd->nx;
+alloc.cu:  int ny = gd->ny;
+alloc.cu:  int nz = gd->nz;
+alloc.cu:  int nx = gd->nx;
+alloc.cu:  int ny = gd->ny;
+alloc.cu:  int nx = gd->nx;
+alloc.cu:  int ny = gd->ny;
+bdry_t.cu:  size_t siz_iz  = gd->siz_iz;
+bdry_t.cu:  int    ni1 = gd->ni1;
+bdry_t.cu:  int    ni2 = gd->ni2;
+bdry_t.cu:  int    nj1 = gd->nj1;
+bdry_t.cu:  int    nj2 = gd->nj2;
+bdry_t.cu:  int    nk1 = gd->nk1;
+bdry_t.cu:  int    nk2 = gd->nk2;
+bdry_t.cu:  int    nx  = gd->nx ;
+bdry_t.cu:  int    ny  = gd->ny ;
+bdry_t.cu:  int    nz  = gd->nz ;
+bdry_t.cu:  int    siz_iy = gd->siz_iy;
+bdry_t.cu:  int    siz_iz = gd->siz_iz;
+bdry_t.cu:  int siz_iy  = gd->siz_iy;
+bdry_t.cu:  int siz_iz = gd->siz_iz;
+bdry_t.cu:  if (gd->type == GD_TYPE_CART)
+bdry_t.cu:      *avg_dh = gd->dx;
+bdry_t.cu:      *avg_L  = gd->dx * (abs_ni2 - abs_ni1);
+bdry_t.cu:      *avg_dh = gd->dy;
+bdry_t.cu:      *avg_L  = gd->dy * (abs_nj2 - abs_nj1);
+bdry_t.cu:      *avg_dh = gd->dz;
+bdry_t.cu:      *avg_L  = gd->dz * (abs_nk2 - abs_nk1);
+bdry_t.cu:  else if (gd->type == GD_TYPE_CURV)
+bdry_t.cu:    float *x3d = gd->x3d;
+bdry_t.cu:    float *y3d = gd->y3d;
+bdry_t.cu:    float *z3d = gd->z3d;
+bdry_t.cu:  int ni1 = gd->ni1;
+bdry_t.cu:  int ni2 = gd->ni2;
+bdry_t.cu:  int nj1 = gd->nj1;
+bdry_t.cu:  int nj2 = gd->nj2;
+bdry_t.cu:  int nk1 = gd->nk1;
+bdry_t.cu:  int nk2 = gd->nk2;
+bdry_t.cu:  int ni  = gd->ni ;
+bdry_t.cu:  int nj  = gd->nj ;
+bdry_t.cu:  int nk  = gd->nk ;
+bdry_t.cu:  int nx  = gd->nx ;
+bdry_t.cu:  int ny  = gd->ny ;
+bdry_t.cu:  int nz  = gd->nz ;
+bdry_t.cu:  int siz_iy = gd->siz_iy;
+bdry_t.cu:  int siz_iz = gd->siz_iz;
+bdry_t.cu:  size_t siz_iy   = gd->siz_iy;
+bdry_t.cu:  size_t siz_iz   = gd->siz_iz;
+bdry_t.cu:  size_t siz_icmp = gd->siz_icmp;
+blk_t.cu:  int ni1 = gd->ni1;
+blk_t.cu:  int ni2 = gd->ni2;
+blk_t.cu:  int nj1 = gd->nj1;
+blk_t.cu:  int nj2 = gd->nj2;
+blk_t.cu:  int nk1 = gd->nk1;
+blk_t.cu:  int nk2 = gd->nk2;
+blk_t.cu:  size_t siz_iy  = gd->siz_iy;
+blk_t.cu:  size_t siz_iz  = gd->siz_iz;
+blk_t.cu:  size_t siz_icmp = gd->siz_icmp;
+blk_t.cu:  int ni1 = gd->ni1;
+blk_t.cu:  int ni2 = gd->ni2;
+blk_t.cu:  int nj1 = gd->nj1;
+blk_t.cu:  int nj2 = gd->nj2;
+blk_t.cu:  int nk1 = gd->nk1;
+blk_t.cu:  int nk2 = gd->nk2;
+blk_t.cu:  size_t siz_iy  = gd->siz_iy;
+blk_t.cu:  size_t siz_iz  = gd->siz_iz;
+blk_t.cu:  size_t siz_icmp = gd->siz_icmp;
+blk_t.cu:  float *x3d = gd->x3d;
+blk_t.cu:  float *y3d = gd->y3d;
+blk_t.cu:  float *z3d = gd->z3d;
+blk_t.cu:  for (int k = gd->nk1; k < gd->nk2; k++)
+blk_t.cu:    for (int j = gd->nj1; j < gd->nj2; j++)
+blk_t.cu:      for (int i = gd->ni1; i < gd->ni2; i++)
+blk_t.cu:        size_t iptr = i + j * gd->siz_iy + k * gd->siz_iz;
+blk_t.cu:                float p2[] = { x3d[iptr-jj*gd->siz_iy],
+blk_t.cu:                               y3d[iptr-jj*gd->siz_iy],
+blk_t.cu:                               z3d[iptr-jj*gd->siz_iy] };
+blk_t.cu:                float p3[] = { x3d[iptr-kk*gd->siz_iz],
+blk_t.cu:                               y3d[iptr-kk*gd->siz_iz],
+blk_t.cu:                               z3d[iptr-kk*gd->siz_iz] };
+drv_rk_curv_col.cu:  int ni = gd->ni;
+drv_rk_curv_col.cu:  int nj = gd->nj;
+drv_rk_curv_col.cu:  int nk = gd->nk;
+drv_rk_curv_col.cu:    PG = (float *) fdlib_mem_calloc_1d_float(CONST_NDIM_5*gd->ny*gd->nx,0.0,"PGV,A,D malloc");
+drv_rk_curv_col.cu:  cudaMemcpy(PG,PG_d,sizeof(float)*CONST_NDIM_5*gd->ny*gd->nx,cudaMemcpyDeviceToHost);
+gd_t.cu:  gd->type = GD_TYPE_CURV;
+gd_t.cu:  gd->ncmp = CONST_NDIM;
+gd_t.cu:  gd->v4d = (float *) fdlib_mem_calloc_1d_float(
+gd_t.cu:                  gd->siz_icmp * gd->ncmp, 0.0, "gd_curv_init");
+gd_t.cu:  if (gd->v4d == NULL) {
+gd_t.cu:  size_t *cmp_pos = (size_t *) fdlib_mem_calloc_1d_sizet(gd->ncmp,
+gd_t.cu:  char **cmp_name = (char **) fdlib_mem_malloc_2l_char(gd->ncmp,
+gd_t.cu:  cmp_pos[icmp] = icmp * gd->siz_icmp;
+gd_t.cu:  gd->x3d = gd->v4d + cmp_pos[icmp];
+gd_t.cu:  cmp_pos[icmp] = icmp * gd->siz_icmp;
+gd_t.cu:  gd->y3d = gd->v4d + cmp_pos[icmp];
+gd_t.cu:  cmp_pos[icmp] = icmp * gd->siz_icmp;
+gd_t.cu:  gd->z3d = gd->v4d + cmp_pos[icmp];
+gd_t.cu:  gd->cmp_pos  = cmp_pos;
+gd_t.cu:  gd->cmp_name = cmp_name;
+gd_t.cu:  gd->cell_xmin = (float *) fdlib_mem_calloc_1d_float(
+gd_t.cu:                  gd->siz_icmp, 0.0, "gd_curv_init");
+gd_t.cu:  gd->cell_xmax = (float *) fdlib_mem_calloc_1d_float(
+gd_t.cu:                  gd->siz_icmp, 0.0, "gd_curv_init");
+gd_t.cu:  gd->cell_ymin = (float *) fdlib_mem_calloc_1d_float(
+gd_t.cu:                  gd->siz_icmp, 0.0, "gd_curv_init");
+gd_t.cu:  gd->cell_ymax = (float *) fdlib_mem_calloc_1d_float(
+gd_t.cu:                  gd->siz_icmp, 0.0, "gd_curv_init");
+gd_t.cu:  gd->cell_zmin = (float *) fdlib_mem_calloc_1d_float(
+gd_t.cu:                  gd->siz_icmp, 0.0, "gd_curv_init");
+gd_t.cu:  gd->cell_zmax = (float *) fdlib_mem_calloc_1d_float(
+gd_t.cu:                  gd->siz_icmp, 0.0, "gd_curv_init");
+gd_t.cu:  if (gd->cell_zmax == NULL) {
+gd_t.cu:  gd->tile_istart = (int *) fdlib_mem_calloc_1d_int(
+gd_t.cu:  gd->tile_iend   = (int *) fdlib_mem_calloc_1d_int(
+gd_t.cu:  gd->tile_jstart = (int *) fdlib_mem_calloc_1d_int(
+gd_t.cu:  gd->tile_jend   = (int *) fdlib_mem_calloc_1d_int(
+gd_t.cu:  gd->tile_kstart = (int *) fdlib_mem_calloc_1d_int(
+gd_t.cu:  gd->tile_kend   = (int *) fdlib_mem_calloc_1d_int(
+gd_t.cu:  gd->tile_xmin = (float *) fdlib_mem_calloc_1d_float(
+gd_t.cu:  gd->tile_xmax = (float *) fdlib_mem_calloc_1d_float(
+gd_t.cu:  gd->tile_ymin = (float *) fdlib_mem_calloc_1d_float(
+gd_t.cu:  gd->tile_ymax = (float *) fdlib_mem_calloc_1d_float(
+gd_t.cu:  gd->tile_zmin = (float *) fdlib_mem_calloc_1d_float(
+gd_t.cu:  gd->tile_zmax = (float *) fdlib_mem_calloc_1d_float(
+gd_t.cu:  metric->nx   = gd->nx;
+gd_t.cu:  metric->ny   = gd->ny;
+gd_t.cu:  metric->nz   = gd->nz;
+gd_t.cu:  int ni1 = gd->ni1;
+gd_t.cu:  int ni2 = gd->ni2;
+gd_t.cu:  int nj1 = gd->nj1;
+gd_t.cu:  int nj2 = gd->nj2;
+gd_t.cu:  int nk1 = gd->nk1;
+gd_t.cu:  int nk2 = gd->nk2;
+gd_t.cu:  int nx  = gd->nx;
+gd_t.cu:  int ny  = gd->ny;
+gd_t.cu:  int nz  = gd->nz;
+gd_t.cu:  size_t siz_iy  = gd->siz_iy;
+gd_t.cu:  size_t siz_iz  = gd->siz_iz;
+gd_t.cu:  size_t siz_icmp = gd->siz_icmp;
+gd_t.cu:  float *x3d  = gd->x3d;
+gd_t.cu:  float *y3d  = gd->y3d;
+gd_t.cu:  float *z3d  = gd->z3d;
+gd_t.cu:  int ni1 = gd->ni1;
+gd_t.cu:  int ni2 = gd->ni2;
+gd_t.cu:  int nj1 = gd->nj1;
+gd_t.cu:  int nj2 = gd->nj2;
+gd_t.cu:  int nk1 = gd->nk1;
+gd_t.cu:  int nk2 = gd->nk2;
+gd_t.cu:  int nx  = gd->nx;
+gd_t.cu:  int ny  = gd->ny;
+gd_t.cu:  int nz  = gd->nz;
+gd_t.cu:  size_t siz_iy = gd->siz_iy;
+gd_t.cu:  size_t siz_iz = gd->siz_iz;
+gd_t.cu:  size_t siz_icmp = gd->siz_icmp;
+gd_t.cu:  int ni1 = gd->ni1;
+gd_t.cu:  int ni2 = gd->ni2;
+gd_t.cu:  int nj1 = gd->nj1;
+gd_t.cu:  int nj2 = gd->nj2;
+gd_t.cu:  int nk1 = gd->nk1;
+gd_t.cu:  int nk2 = gd->nk2;
+gd_t.cu:  int nx  = gd->nx;
+gd_t.cu:  int ny  = gd->ny;
+gd_t.cu:  int nz  = gd->nz;
+gd_t.cu:  size_t siz_iy = gd->siz_iy;
+gd_t.cu:  size_t siz_iz = gd->siz_iz;
+gd_t.cu:  size_t siz_icmp = gd->siz_icmp;
+gd_t.cu:  int nx  = gd->nx;
+gd_t.cu:  int ny  = gd->ny;
+gd_t.cu:  int nz  = gd->nz;
+gd_t.cu:  int ni1 = gd->ni1;
+gd_t.cu:  int ni2 = gd->ni2;
+gd_t.cu:  int nj1 = gd->nj1;
+gd_t.cu:  int nj2 = gd->nj2;
+gd_t.cu:  int nk1 = gd->nk1;
+gd_t.cu:  int nk2 = gd->nk2;
+gd_t.cu:  size_t siz_iy   = gd->siz_iy;
+gd_t.cu:  size_t siz_iz   = gd->siz_iz;
+gd_t.cu:  size_t siz_icmp = gd->siz_icmp;
+gd_t.cu:  float *x3d = gd->x3d;
+gd_t.cu:  float *y3d = gd->y3d;
+gd_t.cu:  float *z3d = gd->z3d;
+gd_t.cu:  float x0 = x0_glob + (gd->ni1_to_glob_phys0 - gd->fdx_nghosts) * dx;
+gd_t.cu:  float y0 = y0_glob + (gd->nj1_to_glob_phys0 - gd->fdy_nghosts) * dy;
+gd_t.cu:  float z0 = z0_glob + (gd->nk1_to_glob_phys0 - gd->fdz_nghosts) * dz;
+gd_t.cu:  for (size_t k=0; k<gd->nz; k++)
+gd_t.cu:    for (size_t j=0; j<gd->ny; j++)
+gd_t.cu:      for (size_t i=0; i<gd->nx; i++)
+gd_t.cu:  gd->type = GD_TYPE_CART;
+gd_t.cu:  gd->ncmp = CONST_NDIM;
+gd_t.cu:                  gd->nx, 0.0, "gd_cart_init");
+gd_t.cu:                  gd->ny, 0.0, "gd_cart_init");
+gd_t.cu:                  gd->nz, 0.0, "gd_cart_init");
+gd_t.cu:  float x0 = x0_glob + (gd->ni1_to_glob_phys0 - gd->fdx_nghosts) * dx;
+gd_t.cu:  float y0 = y0_glob + (gd->nj1_to_glob_phys0 - gd->fdy_nghosts) * dy;
+gd_t.cu:  float z0 = z0_glob + (gd->nk1_to_glob_phys0 - gd->fdz_nghosts) * dz;
+gd_t.cu:  for (size_t k=0; k< gd->nz; k++)
+gd_t.cu:  for (size_t j=0; j< gd->ny; j++)
+gd_t.cu:  for (size_t i=0; i< gd->nx; i++)
+gd_t.cu:  gd->dx = dx;
+gd_t.cu:  gd->dy = dy;
+gd_t.cu:  gd->dz = dz;
+gd_t.cu:  gd->xmin = x0;
+gd_t.cu:  gd->ymin = y0;
+gd_t.cu:  gd->zmin = z0;
+gd_t.cu:  gd->xmax = x0 + (gd->nx-1) * dx;
+gd_t.cu:  gd->ymax = y0 + (gd->ny-1) * dy;
+gd_t.cu:  gd->zmax = z0 + (gd->nz-1) * dz;
+gd_t.cu:  gd->x0_glob = x0_glob;
+gd_t.cu:  gd->y0_glob = y0_glob;
+gd_t.cu:  gd->z0_glob = z0_glob;
+gd_t.cu:  gd->x1d = x1d;
+gd_t.cu:  gd->y1d = y1d;
+gd_t.cu:  gd->z1d = z1d;
+gd_t.cu:  int ni1 = gd->ni1;
+gd_t.cu:  int nj1 = gd->nj1;
+gd_t.cu:  int nk1 = gd->nk1;
+gd_t.cu:  int ni2 = gd->ni2;
+gd_t.cu:  int nj2 = gd->nj2;
+gd_t.cu:  int nk2 = gd->nk2;
+gd_t.cu:  int ni  = gd->ni;
+gd_t.cu:  int nj  = gd->nj;
+gd_t.cu:  int nk  = gd->nk;
+gd_t.cu:  int gni1 = gd->ni1_to_glob_phys0;
+gd_t.cu:  int gnj1 = gd->nj1_to_glob_phys0;
+gd_t.cu:  int gnk1 = gd->nk1_to_glob_phys0;
+gd_t.cu:  size_t  siz_iy = gd->siz_iy;
+gd_t.cu:  size_t  siz_iz = gd->siz_iz;
+gd_t.cu:  float *x3d = gd->x3d;
+gd_t.cu:  float *y3d = gd->y3d;
+gd_t.cu:  float *z3d = gd->z3d;
+gd_t.cu:  int ni1 = gd->ni1;
+gd_t.cu:  int nj1 = gd->nj1;
+gd_t.cu:  int nk1 = gd->nk1;
+gd_t.cu:  int ni2 = gd->ni2;
+gd_t.cu:  int nj2 = gd->nj2;
+gd_t.cu:  int nk2 = gd->nk2;
+gd_t.cu:  int ni  = gd->ni;
+gd_t.cu:  int nj  = gd->nj;
+gd_t.cu:  int nk  = gd->nk;
+gd_t.cu:  size_t siz_iy = gd->siz_iy;
+gd_t.cu:  size_t siz_iz = gd->siz_iz;
+gd_t.cu:  float *x3d = gd->x3d;
+gd_t.cu:  float *y3d = gd->y3d;
+gd_t.cu:  float *z3d = gd->z3d;
+gd_t.cu:  geometric_symmetry(gd,gd->v4d,gd->ncmp);
+gd_t.cu:  int  nx = gd->nx;
+gd_t.cu:  int  ny = gd->ny;
+gd_t.cu:  int  nz = gd->nz;
+gd_t.cu:  int  ni1 = gd->ni1;
+gd_t.cu:  int  nj1 = gd->nj1;
+gd_t.cu:  int  nk1 = gd->nk1;
+gd_t.cu:  int  ni  = gd->ni;
+gd_t.cu:  int  nj  = gd->nj;
+gd_t.cu:  int  nk  = gd->nk;
+gd_t.cu:  int  gni1 = gd->ni1_to_glob_phys0;
+gd_t.cu:  int  gnj1 = gd->nj1_to_glob_phys0;
+gd_t.cu:  int  gnk1 = gd->nk1_to_glob_phys0;
+gd_t.cu:  ierr = nc_put_var_float(ncid, varid[0], gd->x1d);  handle_nc_err(ierr);
+gd_t.cu:  ierr = nc_put_var_float(ncid, varid[1], gd->y1d);  handle_nc_err(ierr);
+gd_t.cu:  ierr = nc_put_var_float(ncid, varid[2], gd->z1d);  handle_nc_err(ierr);
+gd_t.cu:  int  nx = gd->nx;
+gd_t.cu:  int  ny = gd->ny;
+gd_t.cu:  int  nz = gd->nz;
+gd_t.cu:  int  ni1 = gd->ni1;
+gd_t.cu:  int  nj1 = gd->nj1;
+gd_t.cu:  int  nk1 = gd->nk1;
+gd_t.cu:  int  ni2 = gd->ni2;
+gd_t.cu:  int  nj2 = gd->nj2;
+gd_t.cu:  int  nk2 = gd->nk2;
+gd_t.cu:  int  ni  = gd->ni;
+gd_t.cu:  int  nj  = gd->nj;
+gd_t.cu:  int  nk  = gd->nk;
+gd_t.cu:  int  gni1 = gd->ni1_to_glob_phys0;
+gd_t.cu:  int  gnj1 = gd->nj1_to_glob_phys0;
+gd_t.cu:  int  gnk1 = gd->nk1_to_glob_phys0;
+gd_t.cu:  size_t  siz_iy = gd->siz_iy;
+gd_t.cu:  size_t  siz_iz = gd->siz_iz;
+gd_t.cu:  int ni1 = gd->ni1;
+gd_t.cu:  int nj1 = gd->nj1;
+gd_t.cu:  int nk1 = gd->nk1;
+gd_t.cu:  int ni2 = gd->ni2;
+gd_t.cu:  int nj2 = gd->nj2;
+gd_t.cu:  int nk2 = gd->nk2;
+gd_t.cu:  int ni  = gd->ni;
+gd_t.cu:  int nj  = gd->nj;
+gd_t.cu:  int nk  = gd->nk;
+gd_t.cu:  size_t  siz_iy = gd->siz_iy;
+gd_t.cu:  size_t  siz_iz = gd->siz_iz;
+gd_t.cu:  float xmin = gd->x3d[0], xmax = gd->x3d[0];
+gd_t.cu:  float ymin = gd->y3d[0], ymax = gd->y3d[0];
+gd_t.cu:  float zmin = gd->z3d[0], zmax = gd->z3d[0];
+gd_t.cu:  for (size_t i=0; i < gd->siz_icmp; i++){
+gd_t.cu:      xmin = xmin < gd->x3d[i] ? xmin : gd->x3d[i];
+gd_t.cu:      xmax = xmax > gd->x3d[i] ? xmax : gd->x3d[i];
+gd_t.cu:      ymin = ymin < gd->y3d[i] ? ymin : gd->y3d[i];
+gd_t.cu:      ymax = ymax > gd->y3d[i] ? ymax : gd->y3d[i];
+gd_t.cu:      zmin = zmin < gd->z3d[i] ? zmin : gd->z3d[i];
+gd_t.cu:      zmax = zmax > gd->z3d[i] ? zmax : gd->z3d[i];
+gd_t.cu:  gd->xmin = xmin;
+gd_t.cu:  gd->xmax = xmax;
+gd_t.cu:  gd->ymin = ymin;
+gd_t.cu:  gd->ymax = ymax;
+gd_t.cu:  gd->zmin = zmin;
+gd_t.cu:  gd->zmax = zmax;
+gd_t.cu:  xmin = gd->xmax;
+gd_t.cu:  xmax = gd->xmin;
+gd_t.cu:  ymin = gd->ymax;
+gd_t.cu:  ymax = gd->ymin;
+gd_t.cu:  zmin = gd->zmax;
+gd_t.cu:  zmax = gd->zmin;
+gd_t.cu:  for (int k = gd->nk1; k <= gd->nk2; k++) {
+gd_t.cu:    for (int j = gd->nj1; j <= gd->nj2; j++) {
+gd_t.cu:      for (int i = gd->ni1; i <= gd->ni2; i++) {
+gd_t.cu:         size_t iptr = i + j * gd->siz_iy + k * gd->siz_iz;
+gd_t.cu:         xmin = xmin < gd->x3d[iptr] ? xmin : gd->x3d[iptr];
+gd_t.cu:         xmax = xmax > gd->x3d[iptr] ? xmax : gd->x3d[iptr];
+gd_t.cu:         ymin = ymin < gd->y3d[iptr] ? ymin : gd->y3d[iptr];
+gd_t.cu:         ymax = ymax > gd->y3d[iptr] ? ymax : gd->y3d[iptr];
+gd_t.cu:         zmin = zmin < gd->z3d[iptr] ? zmin : gd->z3d[iptr];
+gd_t.cu:         zmax = zmax > gd->z3d[iptr] ? zmax : gd->z3d[iptr];
+gd_t.cu:  gd->xmin_phy = xmin;
+gd_t.cu:  gd->xmax_phy = xmax;
+gd_t.cu:  gd->ymin_phy = ymin;
+gd_t.cu:  gd->ymax_phy = ymax;
+gd_t.cu:  gd->zmin_phy = zmin;
+gd_t.cu:  gd->zmax_phy = zmax;
+gd_t.cu:  for (int k = 0; k < gd->nz-1; k++) {
+gd_t.cu:    for (int j = 0; j < gd->ny-1; j++) {
+gd_t.cu:      for (int i = 0; i < gd->nx-1; i++) {
+gd_t.cu:         size_t iptr = i + j * gd->siz_iy + k * gd->siz_iz;
+gd_t.cu:         xmin = gd->x3d[iptr];
+gd_t.cu:         ymin = gd->y3d[iptr];
+gd_t.cu:         zmin = gd->z3d[iptr];
+gd_t.cu:           size_t iptr_pt = iptr + n3 * gd->siz_iz + n2 * gd->siz_iy + n1;
+gd_t.cu:           xmin = xmin < gd->x3d[iptr_pt] ? xmin : gd->x3d[iptr_pt];
+gd_t.cu:           xmax = xmax > gd->x3d[iptr_pt] ? xmax : gd->x3d[iptr_pt];
+gd_t.cu:           ymin = ymin < gd->y3d[iptr_pt] ? ymin : gd->y3d[iptr_pt];
+gd_t.cu:           ymax = ymax > gd->y3d[iptr_pt] ? ymax : gd->y3d[iptr_pt];
+gd_t.cu:           zmin = zmin < gd->z3d[iptr_pt] ? zmin : gd->z3d[iptr_pt];
+gd_t.cu:           zmax = zmax > gd->z3d[iptr_pt] ? zmax : gd->z3d[iptr_pt];
+gd_t.cu:         gd->cell_xmin[iptr] = xmin;
+gd_t.cu:         gd->cell_xmax[iptr] = xmax;
+gd_t.cu:         gd->cell_ymin[iptr] = ymin;
+gd_t.cu:         gd->cell_ymax[iptr] = ymax;
+gd_t.cu:         gd->cell_zmin[iptr] = zmin;
+gd_t.cu:         gd->cell_zmax[iptr] = zmax;
+gd_t.cu:  int nx_avg  = gd->ni / GD_TILE_NX; // only for physcial points
+gd_t.cu:  int nx_left = gd->ni % GD_TILE_NX;
+gd_t.cu:  int ny_avg  = gd->nj / GD_TILE_NY;
+gd_t.cu:  int ny_left = gd->nj % GD_TILE_NY;
+gd_t.cu:  int nz_avg  = gd->nk / GD_TILE_NZ;
+gd_t.cu:  int nz_left = gd->nk % GD_TILE_NZ;
+gd_t.cu:      gd->tile_kstart[k_tile] = gd->nk1;
+gd_t.cu:      gd->tile_kstart[k_tile] = gd->tile_kend[k_tile-1] + 1;
+gd_t.cu:    gd->tile_kend  [k_tile] = gd->tile_kstart[k_tile] + nz_avg -1;
+gd_t.cu:      gd->tile_kend[k_tile] += 1;
+gd_t.cu:        gd->tile_jstart[j_tile] = gd->nj1;
+gd_t.cu:        gd->tile_jstart[j_tile] = gd->tile_jend[j_tile-1] + 1;
+gd_t.cu:      gd->tile_jend  [j_tile] = gd->tile_jstart[j_tile] + ny_avg -1;
+gd_t.cu:        gd->tile_jend[j_tile] += 1;
+gd_t.cu:          gd->tile_istart[i_tile] = gd->ni1;
+gd_t.cu:          gd->tile_istart[i_tile] = gd->tile_iend[i_tile-1] + 1;
+gd_t.cu:        gd->tile_iend  [i_tile] = gd->tile_istart[i_tile] + nx_avg -1;
+gd_t.cu:          gd->tile_iend[i_tile] += 1;
+gd_t.cu:        for (int k = gd->tile_kstart[k_tile]; k <= gd->tile_kend[k_tile]; k++)
+gd_t.cu:          size_t iptr_k = k * gd->siz_iz;
+gd_t.cu:          for (int j = gd->tile_jstart[j_tile]; j <= gd->tile_jend[j_tile]; j++)
+gd_t.cu:            size_t iptr_j = iptr_k + j * gd->siz_iy;
+gd_t.cu:            for (int i = gd->tile_istart[i_tile]; i <= gd->tile_iend[i_tile]; i++)
+gd_t.cu:              xmin = xmin < gd->cell_xmin[iptr] ? xmin : gd->cell_xmin[iptr];
+gd_t.cu:              xmax = xmax > gd->cell_xmax[iptr] ? xmax : gd->cell_xmax[iptr];
+gd_t.cu:              ymin = ymin < gd->cell_ymin[iptr] ? ymin : gd->cell_ymin[iptr];
+gd_t.cu:              ymax = ymax > gd->cell_ymax[iptr] ? ymax : gd->cell_ymax[iptr];
+gd_t.cu:              zmin = zmin < gd->cell_zmin[iptr] ? zmin : gd->cell_zmin[iptr];
+gd_t.cu:              zmax = zmax > gd->cell_zmax[iptr] ? zmax : gd->cell_zmax[iptr];
+gd_t.cu:        gd->tile_xmin[iptr_tile] = xmin;
+gd_t.cu:        gd->tile_xmax[iptr_tile] = xmax;
+gd_t.cu:        gd->tile_ymin[iptr_tile] = ymin;
+gd_t.cu:        gd->tile_ymax[iptr_tile] = ymax;
+gd_t.cu:        gd->tile_zmin[iptr_tile] = zmin;
+gd_t.cu:        gd->tile_zmax[iptr_tile] = zmax;
+gd_t.cu:  int si_glob = (int)( (sx - gd->x0_glob) / gd->dx + 0.5 );
+gd_t.cu:  int sj_glob = (int)( (sy - gd->y0_glob) / gd->dy + 0.5 );
+gd_t.cu:  int sk_glob = (int)( (sz - gd->z0_glob) / gd->dz + 0.5 );
+gd_t.cu:  float sx_inc = si_glob * gd->dx + gd->x0_glob - sx;
+gd_t.cu:  float sy_inc = sj_glob * gd->dy + gd->y0_glob - sy;
+gd_t.cu:  float sz_inc = sk_glob * gd->dz + gd->z0_glob - sz;
+gd_t.cu:  if ( sx < gd->xmin || sx > gd->xmax ||
+gd_t.cu:       sy < gd->ymin || sy > gd->ymax ||
+gd_t.cu:       sz < gd->zmin || sz > gd->zmax)
+gd_t.cu:  int nx = gd->nx;
+gd_t.cu:  int ny = gd->ny;
+gd_t.cu:  int nz = gd->nz;
+gd_t.cu:  int ni1 = gd->ni1;
+gd_t.cu:  int ni2 = gd->ni2;
+gd_t.cu:  int nj1 = gd->nj1;
+gd_t.cu:  int nj2 = gd->nj2;
+gd_t.cu:  int nk1 = gd->nk1;
+gd_t.cu:  int nk2 = gd->nk2;
+gd_t.cu:  size_t siz_iy = gd->siz_iy;
+gd_t.cu:  size_t siz_iz = gd->siz_iz;
+gd_t.cu:  float *x3d = gd->x3d;
+gd_t.cu:  float *y3d = gd->y3d;
+gd_t.cu:  float *z3d = gd->z3d;
+gd_t.cu:  if ( sx < gd->xmin || sx > gd->xmax ||
+gd_t.cu:       sy < gd->ymin || sy > gd->ymax )
+gd_t.cu:        if (  sx < gd->tile_xmin[iptr_tile] ||
+gd_t.cu:              sx > gd->tile_xmax[iptr_tile] ||
+gd_t.cu:              sy < gd->tile_ymin[iptr_tile] ||
+gd_t.cu:              sy > gd->tile_ymax[iptr_tile])
+gd_t.cu:        int k = gd->tile_kend[k_tile];
+gd_t.cu:          iptr_k = k * gd->siz_iz;
+gd_t.cu:          for (int j = gd->tile_jstart[j_tile]; j <= gd->tile_jend[j_tile]; j++)
+gd_t.cu:            iptr_j = iptr_k + j * gd->siz_iy;
+gd_t.cu:            for (int i = gd->tile_istart[i_tile]; i <= gd->tile_iend[i_tile]; i++)
+gd_t.cu:              if (  sx < gd->cell_xmin[iptr] ||
+gd_t.cu:                    sx > gd->cell_xmax[iptr] ||
+gd_t.cu:                    sy < gd->cell_ymin[iptr] ||
+gd_t.cu:                    sy > gd->cell_ymax[iptr] )
+gd_t.cu:                  size_t iptr_pt = (i+n1) + (j+n2) * gd->siz_iy + k * gd->siz_iz;
+gd_t.cu:                  points_x[iptr_cube] = gd->x3d[iptr_pt];
+gd_t.cu:                  points_y[iptr_cube] = gd->y3d[iptr_pt];
+gd_t.cu:                  points_z[iptr_cube] = gd->z3d[iptr_pt];
+gd_t.cu:  if (gd->type == GD_TYPE_CART)
+gd_t.cu:    var = gd->x1d[i];
+gd_t.cu:  else if (gd->type == GD_TYPE_CURV)
+gd_t.cu:    size_t iptr = i + j * gd->siz_iy + k * gd->siz_iz;
+gd_t.cu:    var = gd->x3d[iptr];
+gd_t.cu:  if (gd->type == GD_TYPE_CART)
+gd_t.cu:    var = gd->y1d[j];
+gd_t.cu:  else if (gd->type == GD_TYPE_CURV)
+gd_t.cu:    size_t iptr = i + j * gd->siz_iy + k * gd->siz_iz;
+gd_t.cu:    var = gd->y3d[iptr];
+gd_t.cu:  if (gd->type == GD_TYPE_CART)
+gd_t.cu:    var = gd->z1d[k];
+gd_t.cu:  else if (gd->type == GD_TYPE_CURV)
+gd_t.cu:    size_t iptr = i + j * gd->siz_iy + k * gd->siz_iz;
+gd_t.cu:    var = gd->z3d[iptr];
+gd_t.cu:  if (gd->type == GD_TYPE_CART) {
+gd_t.cu:  } else if (gd->type == GD_TYPE_VMAP) {
+gd_t.cu:  fprintf(stdout," xmin=%g, xmax=%g\n", gd->xmin,gd->xmax);
+gd_t.cu:  fprintf(stdout," ymin=%g, ymax=%g\n", gd->ymin,gd->ymax);
+gd_t.cu:  fprintf(stdout," zmin=%g, zmax=%g\n", gd->zmin,gd->zmax);
+gd_t.cu:                k_tile, gd->tile_kstart[k_tile],gd->tile_kend[k_tile]);
+gd_t.cu:                  j_tile, gd->tile_jstart[j_tile],gd->tile_jend[j_tile]);
+gd_t.cu:                  i_tile, gd->tile_istart[i_tile],gd->tile_iend[i_tile]);
+gd_t.cu:          gd->tile_xmin[iptr_tile],
+gd_t.cu:          gd->tile_xmax[iptr_tile],
+gd_t.cu:          gd->tile_ymin[iptr_tile],
+gd_t.cu:          gd->tile_ymax[iptr_tile],
+gd_t.cu:          gd->tile_zmin[iptr_tile],
+gd_t.cu:          gd->tile_zmax[iptr_tile]);
+gd_t.cu:  gd->total_point_x = number_of_total_grid_points_x;
+gd_t.cu:  gd->total_point_y = number_of_total_grid_points_y;
+gd_t.cu:  gd->total_point_z = number_of_total_grid_points_z;
+gd_t.cu:    gd->gni1 = 0;
+gd_t.cu:    gd->gni1 = mympi->topoid[0] * nx_avg - abs_num_of_layers[0][0];
+gd_t.cu:    gd->gni1 += (mympi->topoid[0] < nx_left)? mympi->topoid[0] : nx_left;
+gd_t.cu:    gd->gnj1 = 0;
+gd_t.cu:    gd->gnj1 = mympi->topoid[1] * ny_avg - abs_num_of_layers[1][0];
+gd_t.cu:    gd->gnj1 += (mympi->topoid[1] < ny_left)? mympi->topoid[1] : ny_left;
+gd_t.cu:  gd->gnk1 = 0;
+gd_t.cu:  gd->ni = ni;
+gd_t.cu:  gd->nj = nj;
+gd_t.cu:  gd->nk = nk;
+gd_t.cu:  gd->nx = nx;
+gd_t.cu:  gd->ny = ny;
+gd_t.cu:  gd->nz = nz;
+gd_t.cu:  gd->ni1 = fdx_nghosts;
+gd_t.cu:  gd->ni2 = gd->ni1 + ni - 1;
+gd_t.cu:  gd->nj1 = fdy_nghosts;
+gd_t.cu:  gd->nj2 = gd->nj1 + nj - 1;
+gd_t.cu:  gd->nk1 = fdz_nghosts;
+gd_t.cu:  gd->nk2 = gd->nk1 + nk - 1;
+gd_t.cu:  gd->gni2 = gd->gni1 + gd->ni - 1;
+gd_t.cu:  gd->gnj2 = gd->gnj1 + gd->nj - 1;
+gd_t.cu:  gd->gnk2 = gd->gnk1 + gd->nk - 1;
+gd_t.cu:  gd->ni1_to_glob_phys0 = gd->gni1;
+gd_t.cu:  gd->ni2_to_glob_phys0 = gd->gni2;
+gd_t.cu:  gd->nj1_to_glob_phys0 = gd->gnj1;
+gd_t.cu:  gd->nj2_to_glob_phys0 = gd->gnj2;
+gd_t.cu:  gd->nk1_to_glob_phys0 = gd->gnk1;
+gd_t.cu:  gd->nk2_to_glob_phys0 = gd->gnk2;
+gd_t.cu:  gd->siz_iy   = nx; 
+gd_t.cu:  gd->siz_iz  = nx * ny; 
+gd_t.cu:  gd->siz_icmp = nx * ny * nz;
+gd_t.cu:  gd->npoint_ghosts = fdz_nghosts;
+gd_t.cu:  gd->fdx_nghosts = fdx_nghosts;
+gd_t.cu:  gd->fdy_nghosts = fdy_nghosts;
+gd_t.cu:  gd->fdz_nghosts = fdz_nghosts;
+gd_t.cu:  gd->index_name = fdlib_mem_malloc_2l_char(
+gd_t.cu:  sprintf(gd->index_name[0],"%s","i");
+gd_t.cu:  sprintf(gd->index_name[1],"%s","j");
+gd_t.cu:  sprintf(gd->index_name[2],"%s","k");
+gd_t.cu:  if (   i >= gd->ni1 && i <= gd->ni2
+gd_t.cu:      && j >= gd->nj1 && j <= gd->nj2
+gd_t.cu:      && k >= gd->nk1 && k <= gd->nk2)
+gd_t.cu:  if ( gi >= gd->ni1_to_glob_phys0 && gi <= gd->ni2_to_glob_phys0 &&
+gd_t.cu:       gj >= gd->nj1_to_glob_phys0 && gj <= gd->nj2_to_glob_phys0 &&
+gd_t.cu:       gk >= gd->nk1_to_glob_phys0 && gk <= gd->nk2_to_glob_phys0 )
+gd_t.cu:  if ( gi >= gd->ni1_to_glob_phys0 && gi <= gd->ni2_to_glob_phys0)
+gd_t.cu:  if ( gj >= gd->nj1_to_glob_phys0 && gj <= gd->nj2_to_glob_phys0)
+gd_t.cu:  if ( gk >= gd->nk1_to_glob_phys0 && gk <= gd->nk2_to_glob_phys0)
+gd_t.cu:  return gi - gd->ni1_to_glob_phys0 + gd->npoint_ghosts;
+gd_t.cu:  return gj - gd->nj1_to_glob_phys0 + gd->npoint_ghosts;
+gd_t.cu:  return gk - gd->nk1_to_glob_phys0 + gd->npoint_ghosts;
+gd_t.cu:  return i - gd->npoint_ghosts + gd->ni1_to_glob_phys0;
+gd_t.cu:  return j - gd->npoint_ghosts + gd->nj1_to_glob_phys0;
+gd_t.cu:  return k - gd->npoint_ghosts + gd->nk1_to_glob_phys0;
+gd_t.cu:  fprintf(stdout, " nx    = %-10d\n", gd->nx);
+gd_t.cu:  fprintf(stdout, " ny    = %-10d\n", gd->ny);
+gd_t.cu:  fprintf(stdout, " nz    = %-10d\n", gd->nz);
+gd_t.cu:  fprintf(stdout, " ni    = %-10d\n", gd->ni);
+gd_t.cu:  fprintf(stdout, " nj    = %-10d\n", gd->nj);
+gd_t.cu:  fprintf(stdout, " nk    = %-10d\n", gd->nk);
+gd_t.cu:  fprintf(stdout, " ni1   = %-10d\n", gd->ni1);
+gd_t.cu:  fprintf(stdout, " ni2   = %-10d\n", gd->ni2);
+gd_t.cu:  fprintf(stdout, " nj1   = %-10d\n", gd->nj1);
+gd_t.cu:  fprintf(stdout, " nj2   = %-10d\n", gd->nj2);
+gd_t.cu:  fprintf(stdout, " nk1   = %-10d\n", gd->nk1);
+gd_t.cu:  fprintf(stdout, " nk2   = %-10d\n", gd->nk2);
+gd_t.cu:  fprintf(stdout, " ni1_to_glob_phys0   = %-10d\n", gd->gni1);
+gd_t.cu:  fprintf(stdout, " ni2_to_glob_phys0   = %-10d\n", gd->gni2);
+gd_t.cu:  fprintf(stdout, " nj1_to_glob_phys0   = %-10d\n", gd->gnj1);
+gd_t.cu:  fprintf(stdout, " nj2_to_glob_phys0   = %-10d\n", gd->gnj2);
+gd_t.cu:  fprintf(stdout, " nk1_to_glob_phys0   = %-10d\n", gd->gnk1);
+gd_t.cu:  fprintf(stdout, " nk2_to_glob_phys0   = %-10d\n", gd->gnk2);
+io_funcs.cu:  int total_point_x = gd->total_point_x;
+io_funcs.cu:  int total_point_y = gd->total_point_y;
+io_funcs.cu:  int total_point_z = gd->total_point_z;
+io_funcs.cu:        all_coords[3*ir+2] = gd->gnk2 - all_coords[3*ir+2];
+io_funcs.cu:      this_recv->indx1d[0] = i_local   + j_local     * gd->siz_iy + k_local * gd->siz_iz;
+io_funcs.cu:      this_recv->indx1d[1] = i_local+1 + j_local     * gd->siz_iy + k_local * gd->siz_iz;
+io_funcs.cu:      this_recv->indx1d[2] = i_local   + (j_local+1) * gd->siz_iy + k_local * gd->siz_iz;
+io_funcs.cu:      this_recv->indx1d[3] = i_local+1 + (j_local+1) * gd->siz_iy + k_local * gd->siz_iz;
+io_funcs.cu:      this_recv->indx1d[4] = i_local   + j_local     * gd->siz_iy + (k_local+1) * gd->siz_iz;
+io_funcs.cu:      this_recv->indx1d[5] = i_local+1 + j_local     * gd->siz_iy + (k_local+1) * gd->siz_iz;
+io_funcs.cu:      this_recv->indx1d[6] = i_local   + (j_local+1) * gd->siz_iy + (k_local+1) * gd->siz_iz;
+io_funcs.cu:      this_recv->indx1d[7] = i_local+1 + (j_local+1) * gd->siz_iy + (k_local+1) * gd->siz_iz;
+io_funcs.cu:        int iptr = i + j * gd->siz_iy + k * gd->siz_iz;
+io_funcs.cu:      size_t slice_siz = gd->nj * gd->nk;
+io_funcs.cu:      size_t slice_siz = gd->ni * gd->nk;
+io_funcs.cu:      size_t slice_siz = gd->ni * gd->nj;
+io_funcs.cu:      if (gk > gd->gnk2) break; // no need to larger k
+io_funcs.cu:      if (gj > gd->gnj2) break;
+io_funcs.cu:      if (gi > gd->gni2) break;
+io_funcs.cu:  int   ni1 = gd->ni1;
+io_funcs.cu:  int   ni2 = gd->ni2;
+io_funcs.cu:  int   nj1 = gd->nj1;
+io_funcs.cu:  int   nj2 = gd->nj2;
+io_funcs.cu:  int   nk1 = gd->nk1;
+io_funcs.cu:  int   nk2 = gd->nk2;
+io_funcs.cu:  int   ni  = gd->ni ;
+io_funcs.cu:  int   nj  = gd->nj ;
+io_funcs.cu:  int   nk  = gd->nk ;
+io_funcs.cu:  size_t   siz_iy = gd->siz_iy;
+io_funcs.cu:  size_t   siz_iz = gd->siz_iz;
+io_funcs.cu:  size_t   siz_icmp = gd->siz_icmp;
+io_funcs.cu:  size_t siz_iy = gd->siz_iy;
+io_funcs.cu:  size_t siz_iz = gd->siz_iz;
+io_funcs.cu:  size_t siz_icmp = gd->siz_icmp;
+io_funcs.cu:  size_t siz_iy = gd->siz_iy;
+io_funcs.cu:  size_t siz_iz = gd->siz_iz;
+io_funcs.cu:  int nx = gd->nx; 
+io_funcs.cu:  int ny = gd->ny;
+io_funcs.cu:  int ni = gd->ni; 
+io_funcs.cu:  int nj = gd->nj;
+io_funcs.cu:  int gni1 = gd->gni1; 
+io_funcs.cu:  int gnj1 = gd->gnj1; 
+main_curv_col_el_3d.cu:                                     gd->x3d, gd->y3d, gd->z3d,
+main_curv_col_el_3d.cu:                                     gd->nx,  gd->ny,  gd->nz,
+main_curv_col_el_3d.cu:                                     gd->x3d, gd->y3d, gd->z3d,
+main_curv_col_el_3d.cu:                                     gd->nx,  gd->ny,  gd->nz,
+main_curv_col_el_3d.cu:                                     gd->x3d, gd->y3d, gd->z3d,
+main_curv_col_el_3d.cu:                                     gd->nx,  gd->ny,  gd->nz,
+main_curv_col_el_3d.cu:                                     gd->x3d, gd->y3d, gd->z3d,
+main_curv_col_el_3d.cu:                                     gd->nx,  gd->ny,  gd->nz,
+main_curv_col_el_3d.cu:                                     gd->xmin,gd->xmax,
+main_curv_col_el_3d.cu:                                     gd->ymin,gd->ymax,
+main_curv_col_el_3d.cu:                                     gd->x3d, gd->y3d, gd->z3d,
+main_curv_col_el_3d.cu:                                     gd->nx,  gd->ny,  gd->nz,
+main_curv_col_el_3d.cu:                                     gd->xmin,gd->xmax,
+main_curv_col_el_3d.cu:                                     gd->ymin,gd->ymax,
+main_curv_col_el_3d.cu:                                     gd->x3d, gd->y3d, gd->z3d,
+main_curv_col_el_3d.cu:                                     gd->nx,  gd->ny,  gd->nz,
+main_curv_col_el_3d.cu:                                     gd->xmin,gd->xmax,
+main_curv_col_el_3d.cu:                                     gd->ymin,gd->ymax,
+main_curv_col_el_3d.cu:                                   gd->x3d, gd->y3d, gd->z3d,
+main_curv_col_el_3d.cu:                                   gd->nx,  gd->ny,  gd->nz,
+main_curv_col_el_3d.cu:                                   gd->xmin,gd->xmax,
+main_curv_col_el_3d.cu:                                   gd->ymin,gd->ymax,
+main_curv_col_el_3d.cu:                                     gd->x3d, gd->y3d, gd->z3d,
+main_curv_col_el_3d.cu:                                     gd->nx,  gd->ny,  gd->nz,
+main_curv_col_el_3d.cu:                                     gd->xmin,gd->xmax,
+main_curv_col_el_3d.cu:                                     gd->ymin,gd->ymax,
+main_curv_col_el_3d.cu:                                     gd->x3d, gd->y3d, gd->z3d,
+main_curv_col_el_3d.cu:                                     gd->nx,  gd->ny,  gd->nz,
+main_curv_col_el_3d.cu:                                     gd->xmin,gd->xmax,
+main_curv_col_el_3d.cu:                                     gd->ymin,gd->ymax,
+main_curv_col_el_3d.cu:  blk_macdrp_mesg_init(mympi, fd, gd->ni, gd->nj, gd->nk,
+md_t.cu:  md->nx   = gd->nx;
+md_t.cu:  md->ny   = gd->ny;
+md_t.cu:  md->nz   = gd->nz;
+md_t.cu:  int ni1 = gd->ni1;
+md_t.cu:  int nj1 = gd->nj1;
+md_t.cu:  int nk1 = gd->nk1;
+md_t.cu:  int ni2 = gd->ni2;
+md_t.cu:  int nj2 = gd->nj2;
+md_t.cu:  int nk2 = gd->nk2;
+md_t.cu:  int ni  = gd->ni;
+md_t.cu:  int nj  = gd->nj;
+md_t.cu:  int nk  = gd->nk;
+md_t.cu:  size_t  siz_iy = gd->siz_iy;
+md_t.cu:  size_t  siz_iz = gd->siz_iz;
+md_t.cu:  int  nx = gd->nx;
+md_t.cu:  int  ny = gd->ny;
+md_t.cu:  int  nz = gd->nz;
+md_t.cu:  int  ni1 = gd->ni1;
+md_t.cu:  int  nj1 = gd->nj1;
+md_t.cu:  int  nk1 = gd->nk1;
+md_t.cu:  int  ni2 = gd->ni2;
+md_t.cu:  int  nj2 = gd->nj2;
+md_t.cu:  int  nk2 = gd->nk2;
+md_t.cu:  int  ni  = gd->ni;
+md_t.cu:  int  nj  = gd->nj;
+md_t.cu:  int  nk  = gd->nk;
+md_t.cu:  int  gni1 = gd->ni1_to_glob_phys0;
+md_t.cu:  int  gnj1 = gd->nj1_to_glob_phys0;
+md_t.cu:  int  gnk1 = gd->nk1_to_glob_phys0;
+md_t.cu:  size_t  siz_iy = gd->siz_iy;
+md_t.cu:  size_t  siz_iz = gd->siz_iz;
+src_t.cu:  if (si-half_ext <= gd->ni2_to_glob_phys0 && // exted left point is less than right bdry
+src_t.cu:      si+half_ext >= gd->ni1_to_glob_phys0 && // exted right point is larger than left bdry
+src_t.cu:      sj-half_ext <= gd->nj2_to_glob_phys0 && 
+src_t.cu:      sj+half_ext >= gd->nj1_to_glob_phys0 &&
+src_t.cu:      sk-half_ext <= gd->nk2_to_glob_phys0 && 
+src_t.cu:      sk+half_ext >= gd->nk1_to_glob_phys0)
+src_t.cu:  if (si <= gd->ni2_to_glob_phys0 && 
+src_t.cu:      si >= gd->ni1_to_glob_phys0 && 
+src_t.cu:      sj <= gd->nj2_to_glob_phys0 && 
+src_t.cu:      sj >= gd->nj1_to_glob_phys0 &&
+src_t.cu:      sk <= gd->nk2_to_glob_phys0 && 
+src_t.cu:      sk >= gd->nk1_to_glob_phys0)
+src_t.cu:  int   ni1 = gd->ni1;
+src_t.cu:  int   ni2 = gd->ni2;
+src_t.cu:  int   nj1 = gd->nj1;
+src_t.cu:  int   nj2 = gd->nj2;
+src_t.cu:  int   nk1 = gd->nk1;
+src_t.cu:  int   nk2 = gd->nk2;
+src_t.cu:  int   nx  = gd->nx ;
+src_t.cu:  int   ny  = gd->ny ;
+src_t.cu:  int   nz  = gd->nz ;
+src_t.cu:  int   npoint_ghosts = gd->npoint_ghosts;
+src_t.cu:  size_t   siz_iy = gd->siz_iy;
+src_t.cu:  size_t   siz_iz = gd->siz_iz;
+src_t.cu:  int total_point_x = gd->total_point_x;
+src_t.cu:  int total_point_y = gd->total_point_y;
+src_t.cu:  int total_point_z = gd->total_point_z;
+src_t.cu:        all_coords[3*is+2] = gd->gnk2 - all_coords[3*is+2];
+sv_curv_col_el_gpu.cu:    float *var = w + icmp * gd->siz_icmp;
+sv_curv_col_el_gpu.cu:    for (int k = gd->nk1; k <= gd->nk2; k++)
+sv_curv_col_el_gpu.cu:      for (int j = gd->nj1; j <= gd->nj2; j++)
+sv_curv_col_el_gpu.cu:        for (int i = gd->ni1; i <= gd->ni2; i++)
+sv_curv_col_el_gpu.cu:          size_t iptr = i + j * gd->siz_iy + k * gd->siz_iz;
+wav_t.cu:  V->nx   = gd->nx;
+wav_t.cu:  V->ny   = gd->ny;
+wav_t.cu:  V->nz   = gd->nz;
+wav_t.cu:  V->nx   = gd->nx;
+wav_t.cu:  V->ny   = gd->ny;
+wav_t.cu:  V->nz   = gd->nz;

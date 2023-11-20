@@ -21,19 +21,17 @@ typedef enum {
 
 } gd_type_t;
 
+//  grid coordinate for both cart, vmap and curv
+//    to reduce duplicated functions
 typedef struct {
-  int ni;
-  int nj;
-  int nk;
-  int nx;
-  int ny;
-  int nz;
-  int ni1;
-  int ni2;
-  int nj1;
-  int nj2;
-  int nk1;
-  int nk2;
+
+  gd_type_t type;
+
+  int ni, nj, nk;
+  int nx, ny, nz;
+  int ni1, ni2;
+  int nj1, nj2;
+  int nk1, nk2;
 
   int total_point_x;
   int total_point_y;
@@ -63,17 +61,7 @@ typedef struct {
   // curvilinear coord name,
   char **index_name;
   
-  //size_t siz_vars; // volume * num_of_vars, not easy for understand, may named with w3d and aux
-} gdinfo_t;
-
-//  grid coordinate for both cart, vmap and curv
-//    to reduce duplicated functions
-typedef struct {
-
-  gd_type_t type;
-
-  int n1, n2, n3, n4;
-  int nx, ny, nz, ncmp;
+  int ncmp;
   float *v4d; // allocated var
 
   //to avoid ref x3d at different funcs
@@ -124,17 +112,12 @@ typedef struct {
   float *tile_zmin;
   float *tile_zmax;
 
-  size_t siz_iy;
-  size_t siz_iz;
-  size_t siz_icmp;
-
   size_t *cmp_pos;
   char  **cmp_name;
 } gd_t;
 
 //  for metric
 typedef struct {
-  int n1, n2, n3, n4;
   int nx, ny, nz, ncmp;
   float *v4d; // allocated var
 
@@ -155,83 +138,77 @@ typedef struct {
 
   size_t *cmp_pos;
   char  **cmp_name;
-} gdcurv_metric_t;
+} gd_metric_t;
 
 /*************************************************
  * function prototype
  *************************************************/
 
 int 
-gd_curv_init(gdinfo_t *gdinfo, gd_t *gdcurv);
+gd_curv_init(gd_t *gd);
 
 int 
-gd_curv_metric_init(gdinfo_t        *gdinfo,
-                    gdcurv_metric_t *metric);
+gd_curv_metric_init(gd_t        *gd,
+                    gd_metric_t *metric);
 int
-gd_curv_metric_cal(gdinfo_t        *gdinfo,
-                   gd_t        *gdcurv,
-                   gdcurv_metric_t *metric,
+gd_curv_metric_cal(gd_t        *gd,
+                   gd_metric_t *metric,
                    int fd_len, int *fd_indx, float *fd_coef);
 
 int 
-mirror_symmetry(gdinfo_t *gdinfo, float *v4d, int ncmp);
+mirror_symmetry(gd_t *gd, float *v4d, int ncmp);
 
 int 
-geometric_symmetry(gdinfo_t *gdinfo, float *v4d, int ncmp);
+geometric_symmetry(gd_t *gd, float *v4d, int ncmp);
 
 int
-gd_exchange(gdinfo_t *gdinfo,
+gd_exchange(gd_t *gd,
             float *g3d,
             int ncmp,
             int *neighid,
             MPI_Comm topocomm);
 
 int
-gd_curv_gen_cart(gdinfo_t *gdinfo,
-                 gd_t *gdcurv,
+gd_curv_gen_cart(gd_t *gd,
                  float dx, float x0,
                  float dy, float y0,
                  float dz, float z0);
 
 int
-gd_curv_metric_import(gdinfo_t *gdinfo, gdcurv_metric_t *metric, char *fname_coords, char *import_dir);
+gd_curv_metric_import(gd_t *gd, gd_metric_t *metric, char *fname_coords, char *import_dir);
 
 int
-gd_curv_coord_export(gdinfo_t *gdinfo,
-                     gd_t *gdcurv,
+gd_curv_coord_export(gd_t *gd,
                      char *fname_coords,
                      char *output_dir);
 
 int
-gd_curv_coord_import(gdinfo_t *gdinfo,
-                     gd_t *gdcurv, 
+gd_curv_coord_import(gd_t *gd,
                      char *fname_coords,
                      char *import_dir);
 
 int
-gd_cart_coord_export(gdinfo_t *gdinfo,
-                     gd_t *gdcart,
+gd_cart_coord_export(gd_t *gd,
                      char *fname_coords,
                      char *output_dir);
 
 int
-gd_curv_metric_export(gdinfo_t        *gdinfo,
-                      gdcurv_metric_t *metric,
+gd_curv_metric_export(gd_t            *gd,
+                      gd_metric_t *metric,
                       char *fname_coords,
                       char *output_dir);
 
 int
-gd_curv_set_minmax(gdinfo_t *gdinfo, gd_t *gdcurv);
+gd_curv_set_minmax(gd_t *gd);
 
 int 
-gd_cart_init_set(gdinfo_t *gdinfo, gd_t *gdcart,
+gd_cart_init_set(gd_t *gdcart,
                  float dx, float x0_glob,
                  float dy, float y0_glob,
                  float dz, float z0_glob);
 
 int
-gd_curv_coord_to_glob_indx(gdinfo_t *gdinfo,
-                           gd_t *gdcurv,
+gd_curv_coord_to_glob_indx(gd_t *gd,
                            float sx,
                            float sy,
                            float sz,
@@ -268,8 +245,7 @@ gd_print(gd_t *gd);
 
 __host__ __device__
 int
-gd_cart_coord_to_glob_indx(gdinfo_t *gdinfo,
-                           gd_t *gdcart,
+gd_cart_coord_to_glob_indx(gd_t *gdcart,
                            float sx,
                            float sy,
                            float sz,
@@ -281,15 +257,13 @@ gd_cart_coord_to_glob_indx(gdinfo_t *gdinfo,
 
 __host__ __device__
 int
-gd_curv_coord_to_local_indx(gdinfo_t *gdinfo,
-                            gd_t *gd,
+gd_curv_coord_to_local_indx(gd_t *gd,
                             float sx, float sy, float sz,
                             int *si, int *sj, int *sk,
                             float *sx_inc, float *sy_inc, float *sz_inc);
 
 __host__ __device__
-int gd_curv_depth_to_axis(gdinfo_t *gdinfo,
-                          gd_t  *gd,
+int gd_curv_depth_to_axis(gd_t  *gd,
                           float sx,
                           float sy,
                           float *sz,
@@ -336,8 +310,7 @@ __host__ __device__
 int face_normal(float (*hexa2d)[3], float *normal_unit);
 
 __device__ int
-gd_curv_coord_to_glob_indx_gpu(gdinfo_t *gdinfo,
-                               gd_t *gdcurv,
+gd_curv_coord_to_glob_indx_gpu(gd_t *gd,
                                float sx,
                                float sy,
                                float sz,
@@ -347,54 +320,54 @@ gd_curv_coord_to_glob_indx_gpu(gdinfo_t *gdinfo,
                                float *ou_sx_inc, float *ou_sy_inc, float *ou_sz_inc);
 
 int
-gd_info_set(gdinfo_t *const gdinfo,
-            const mympi_t *const mympi,
-            const int number_of_total_grid_points_x,
-            const int number_of_total_grid_points_y,
-            const int number_of_total_grid_points_z,
-                  int abs_num_of_layers[][2],
-            const int fdx_nghosts,
-            int const fdy_nghosts,
-            const int fdz_nghosts,
-            const int verbose);
+gd_info_set(gd_t *gd,
+            mympi_t *mympi,
+            int number_of_total_grid_points_x,
+            int number_of_total_grid_points_y,
+            int number_of_total_grid_points_z,
+            int abs_num_of_layers[][2],
+            int fdx_nghosts,
+            int fdy_nghosts,
+            int fdz_nghosts,
+            int verbose);
 
 int
-gd_info_lindx_is_inner(int i, int j, int k, gdinfo_t *gdinfo);
+gd_info_lindx_is_inner(int i, int j, int k, gd_t *gd);
 
 int
-gd_info_gindx_is_inner(int gi, int gj, int gk, gdinfo_t *gdinfo);
+gd_info_gindx_is_inner(int gi, int gj, int gk, gd_t *gd);
 
 int
-gd_info_gindx_is_inner_i(int gi, gdinfo_t *gdinfo);
+gd_info_gindx_is_inner_i(int gi, gd_t *gd);
 
 int
-gd_info_gindx_is_inner_j(int gj, gdinfo_t *gdinfo);
+gd_info_gindx_is_inner_j(int gj, gd_t *gd);
 
 int
-gd_info_gindx_is_inner_k(int gk, gdinfo_t *gdinfo);
+gd_info_gindx_is_inner_k(int gk, gd_t *gd);
 
 int
-gd_info_indx_glphy2lcext_i(int gi, gdinfo_t *gdinfo);
+gd_info_indx_glphy2lcext_i(int gi, gd_t *gd);
 
 int
-gd_info_indx_glphy2lcext_j(int gj, gdinfo_t *gdinfo);
+gd_info_indx_glphy2lcext_j(int gj, gd_t *gd);
 
 int
-gd_info_indx_glphy2lcext_k(int gk, gdinfo_t *gdinfo);
-
-__host__ __device__
-int
-gd_info_indx_lcext2glphy_i(int i, gdinfo_t *gdinfo);
+gd_info_indx_glphy2lcext_k(int gk, gd_t *gd);
 
 __host__ __device__
 int
-gd_info_indx_lcext2glphy_j(int j, gdinfo_t *gdinfo);
+gd_info_indx_lcext2glphy_i(int i, gd_t *gd);
 
 __host__ __device__
 int
-gd_info_indx_lcext2glphy_k(int k, gdinfo_t *gdinfo);
+gd_info_indx_lcext2glphy_j(int j, gd_t *gd);
+
+__host__ __device__
+int
+gd_info_indx_lcext2glphy_k(int k, gd_t *gd);
 
 int
-gd_info_print(gdinfo_t *gdinfo);
+gd_info_print(gd_t *gd);
 
 #endif

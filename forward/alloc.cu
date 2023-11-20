@@ -5,73 +5,74 @@
 #include "alloc.h"
 #include "cuda_common.h"
 
-
-int init_gdinfo_device(gdinfo_t *gdinfo, gdinfo_t *gdinfo_d)
+// only copy grid info
+int init_gdinfo_device(gd_t *gd, gd_t *gd_d)
 {
-  memcpy(gdinfo_d,gdinfo,sizeof(gdinfo_t));
+  memcpy(gd_d,gd,sizeof(gd_t));
+
   return 0;
 }
 
-int init_gdcart_device(gd_t *gdcart, gd_t *gdcart_d)
+int init_gd_device(gd_t *gd, gd_t *gd_d)
 {
-  memcpy(gdcart_d,gdcart,sizeof(gd_t));
-  return 0;
-}
+  int nx = gd->nx;
+  int ny = gd->ny;
+  int nz = gd->nz;
+  size_t siz_icmp = gd->siz_icmp;
+  memcpy(gd_d,gd,sizeof(gd_t));
+  gd_d->x3d = (float *) cuda_malloc(sizeof(float)*siz_icmp);
+  gd_d->y3d = (float *) cuda_malloc(sizeof(float)*siz_icmp);
+  gd_d->z3d = (float *) cuda_malloc(sizeof(float)*siz_icmp);
+  gd_d->x1d = (float *) cuda_malloc(sizeof(float)*nx);
+  gd_d->y1d = (float *) cuda_malloc(sizeof(float)*ny);
+  gd_d->z1d = (float *) cuda_malloc(sizeof(float)*nz);
 
-int init_gdcurv_device(gd_t *gdcurv, gd_t *gdcurv_d)
-{
-  size_t siz_icmp = gdcurv->siz_icmp;
-  memcpy(gdcurv_d,gdcurv,sizeof(gd_t));
-  gdcurv_d->x3d = (float *) cuda_malloc(sizeof(float)*siz_icmp);
-  gdcurv_d->y3d = (float *) cuda_malloc(sizeof(float)*siz_icmp);
-  gdcurv_d->z3d = (float *) cuda_malloc(sizeof(float)*siz_icmp);
+  gd_d->cell_xmin = (float *) cuda_malloc(sizeof(float)*siz_icmp);
+  gd_d->cell_xmax = (float *) cuda_malloc(sizeof(float)*siz_icmp);
+  gd_d->cell_ymin = (float *) cuda_malloc(sizeof(float)*siz_icmp);
+  gd_d->cell_ymax = (float *) cuda_malloc(sizeof(float)*siz_icmp);
+  gd_d->cell_zmin = (float *) cuda_malloc(sizeof(float)*siz_icmp);
+  gd_d->cell_zmax = (float *) cuda_malloc(sizeof(float)*siz_icmp);
 
-  gdcurv_d->cell_xmin = (float *) cuda_malloc(sizeof(float)*siz_icmp);
-  gdcurv_d->cell_xmax = (float *) cuda_malloc(sizeof(float)*siz_icmp);
-  gdcurv_d->cell_ymin = (float *) cuda_malloc(sizeof(float)*siz_icmp);
-  gdcurv_d->cell_ymax = (float *) cuda_malloc(sizeof(float)*siz_icmp);
-  gdcurv_d->cell_zmin = (float *) cuda_malloc(sizeof(float)*siz_icmp);
-  gdcurv_d->cell_zmax = (float *) cuda_malloc(sizeof(float)*siz_icmp);
-
-  gdcurv_d->tile_istart = (int *) cuda_malloc(sizeof(int)*GD_TILE_NX);
-  gdcurv_d->tile_iend   = (int *) cuda_malloc(sizeof(int)*GD_TILE_NX);
-  gdcurv_d->tile_jstart = (int *) cuda_malloc(sizeof(int)*GD_TILE_NY);
-  gdcurv_d->tile_jend   = (int *) cuda_malloc(sizeof(int)*GD_TILE_NY);
-  gdcurv_d->tile_kstart = (int *) cuda_malloc(sizeof(int)*GD_TILE_NZ);
-  gdcurv_d->tile_kend   = (int *) cuda_malloc(sizeof(int)*GD_TILE_NZ);
+  gd_d->tile_istart = (int *) cuda_malloc(sizeof(int)*GD_TILE_NX);
+  gd_d->tile_iend   = (int *) cuda_malloc(sizeof(int)*GD_TILE_NX);
+  gd_d->tile_jstart = (int *) cuda_malloc(sizeof(int)*GD_TILE_NY);
+  gd_d->tile_jend   = (int *) cuda_malloc(sizeof(int)*GD_TILE_NY);
+  gd_d->tile_kstart = (int *) cuda_malloc(sizeof(int)*GD_TILE_NZ);
+  gd_d->tile_kend   = (int *) cuda_malloc(sizeof(int)*GD_TILE_NZ);
 
   int size = GD_TILE_NX * GD_TILE_NY * GD_TILE_NZ;
-  gdcurv_d->tile_xmin = (float *) cuda_malloc(sizeof(float)*size);
-  gdcurv_d->tile_xmax = (float *) cuda_malloc(sizeof(float)*size);
-  gdcurv_d->tile_ymin = (float *) cuda_malloc(sizeof(float)*size);
-  gdcurv_d->tile_ymax = (float *) cuda_malloc(sizeof(float)*size);
-  gdcurv_d->tile_zmin = (float *) cuda_malloc(sizeof(float)*size);
-  gdcurv_d->tile_zmax = (float *) cuda_malloc(sizeof(float)*size);
+  gd_d->tile_xmin = (float *) cuda_malloc(sizeof(float)*size);
+  gd_d->tile_xmax = (float *) cuda_malloc(sizeof(float)*size);
+  gd_d->tile_ymin = (float *) cuda_malloc(sizeof(float)*size);
+  gd_d->tile_ymax = (float *) cuda_malloc(sizeof(float)*size);
+  gd_d->tile_zmin = (float *) cuda_malloc(sizeof(float)*size);
+  gd_d->tile_zmax = (float *) cuda_malloc(sizeof(float)*size);
 
-  CUDACHECK(cudaMemcpy(gdcurv_d->x3d, gdcurv->x3d, sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
-  CUDACHECK(cudaMemcpy(gdcurv_d->y3d, gdcurv->y3d, sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
-  CUDACHECK(cudaMemcpy(gdcurv_d->z3d, gdcurv->z3d, sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(gd_d->x3d, gd->x3d, sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(gd_d->y3d, gd->y3d, sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(gd_d->z3d, gd->z3d, sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
 
-  CUDACHECK(cudaMemcpy(gdcurv_d->cell_xmin, gdcurv->cell_xmin, sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
-  CUDACHECK(cudaMemcpy(gdcurv_d->cell_xmax, gdcurv->cell_xmax, sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
-  CUDACHECK(cudaMemcpy(gdcurv_d->cell_ymin, gdcurv->cell_ymin, sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
-  CUDACHECK(cudaMemcpy(gdcurv_d->cell_ymax, gdcurv->cell_ymax, sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
-  CUDACHECK(cudaMemcpy(gdcurv_d->cell_zmin, gdcurv->cell_zmin, sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
-  CUDACHECK(cudaMemcpy(gdcurv_d->cell_zmax, gdcurv->cell_zmax, sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(gd_d->cell_xmin, gd->cell_xmin, sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(gd_d->cell_xmax, gd->cell_xmax, sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(gd_d->cell_ymin, gd->cell_ymin, sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(gd_d->cell_ymax, gd->cell_ymax, sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(gd_d->cell_zmin, gd->cell_zmin, sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(gd_d->cell_zmax, gd->cell_zmax, sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
 
-  CUDACHECK(cudaMemcpy(gdcurv_d->tile_istart, gdcurv->tile_istart, sizeof(int)*GD_TILE_NX, cudaMemcpyHostToDevice));
-  CUDACHECK(cudaMemcpy(gdcurv_d->tile_iend, gdcurv->tile_iend, sizeof(int)*GD_TILE_NX, cudaMemcpyHostToDevice));
-  CUDACHECK(cudaMemcpy(gdcurv_d->tile_jstart, gdcurv->tile_jstart, sizeof(int)*GD_TILE_NY, cudaMemcpyHostToDevice));
-  CUDACHECK(cudaMemcpy(gdcurv_d->tile_jend, gdcurv->tile_jend, sizeof(int)*GD_TILE_NY, cudaMemcpyHostToDevice));
-  CUDACHECK(cudaMemcpy(gdcurv_d->tile_kstart, gdcurv->tile_kstart, sizeof(int)*GD_TILE_NZ, cudaMemcpyHostToDevice));
-  CUDACHECK(cudaMemcpy(gdcurv_d->tile_kend, gdcurv->tile_kend, sizeof(int)*GD_TILE_NZ, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(gd_d->tile_istart, gd->tile_istart, sizeof(int)*GD_TILE_NX, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(gd_d->tile_iend,   gd->tile_iend, sizeof(int)*GD_TILE_NX, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(gd_d->tile_jstart, gd->tile_jstart, sizeof(int)*GD_TILE_NY, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(gd_d->tile_jend,   gd->tile_jend, sizeof(int)*GD_TILE_NY, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(gd_d->tile_kstart, gd->tile_kstart, sizeof(int)*GD_TILE_NZ, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(gd_d->tile_kend,   gd->tile_kend, sizeof(int)*GD_TILE_NZ, cudaMemcpyHostToDevice));
 
-  CUDACHECK(cudaMemcpy(gdcurv_d->tile_xmin, gdcurv->tile_xmin, sizeof(float)*size, cudaMemcpyHostToDevice));
-  CUDACHECK(cudaMemcpy(gdcurv_d->tile_xmax, gdcurv->tile_xmax, sizeof(float)*size, cudaMemcpyHostToDevice));
-  CUDACHECK(cudaMemcpy(gdcurv_d->tile_ymin, gdcurv->tile_ymin, sizeof(float)*size, cudaMemcpyHostToDevice));
-  CUDACHECK(cudaMemcpy(gdcurv_d->tile_ymax, gdcurv->tile_ymax, sizeof(float)*size, cudaMemcpyHostToDevice));
-  CUDACHECK(cudaMemcpy(gdcurv_d->tile_zmin, gdcurv->tile_zmin, sizeof(float)*size, cudaMemcpyHostToDevice));
-  CUDACHECK(cudaMemcpy(gdcurv_d->tile_zmax, gdcurv->tile_zmax, sizeof(float)*size, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(gd_d->tile_xmin, gd->tile_xmin, sizeof(float)*size, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(gd_d->tile_xmax, gd->tile_xmax, sizeof(float)*size, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(gd_d->tile_ymin, gd->tile_ymin, sizeof(float)*size, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(gd_d->tile_ymax, gd->tile_ymax, sizeof(float)*size, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(gd_d->tile_zmin, gd->tile_zmin, sizeof(float)*size, cudaMemcpyHostToDevice));
+  CUDACHECK(cudaMemcpy(gd_d->tile_zmax, gd->tile_zmax, sizeof(float)*size, cudaMemcpyHostToDevice));
 
   return 0;
 }
@@ -177,11 +178,11 @@ int init_fd_device(fd_t *fd, fd_wav_t *fd_wav_d)
   return 0;
 }
 
-int init_metric_device(gdcurv_metric_t *metric, gdcurv_metric_t *metric_d)
+int init_metric_device(gd_metric_t *metric, gd_metric_t *metric_d)
 {
   size_t siz_icmp = metric->siz_icmp;
 
-  memcpy(metric_d,metric,sizeof(gdcurv_metric_t));
+  memcpy(metric_d,metric,sizeof(gd_metric_t));
   metric_d->jac     = (float *) cuda_malloc(sizeof(float)*siz_icmp);
   metric_d->xi_x    = (float *) cuda_malloc(sizeof(float)*siz_icmp);
   metric_d->xi_y    = (float *) cuda_malloc(sizeof(float)*siz_icmp);
@@ -252,11 +253,11 @@ int init_src_device(src_t *src, src_t *src_d)
   return 0;
 }
 
-int init_bdryfree_device(gdinfo_t *gdinfo, bdryfree_t *bdryfree, bdryfree_t *bdryfree_d)
+int init_bdryfree_device(gd_t *gd, bdryfree_t *bdryfree, bdryfree_t *bdryfree_d)
 {
-  int nx = gdinfo->nx;
-  int ny = gdinfo->ny;
-  int nz = gdinfo->nz;
+  int nx = gd->nx;
+  int ny = gd->ny;
+  int nz = gd->nz;
 
   memcpy(bdryfree_d,bdryfree,sizeof(bdryfree_t));
   // copy bdryfree
@@ -272,11 +273,11 @@ int init_bdryfree_device(gdinfo_t *gdinfo, bdryfree_t *bdryfree, bdryfree_t *bdr
   return 0;
 }
 
-int init_bdrypml_device(gdinfo_t *gdinfo, bdrypml_t *bdrypml, bdrypml_t *bdrypml_d)
+int init_bdrypml_device(gd_t *gd, bdrypml_t *bdrypml, bdrypml_t *bdrypml_d)
 {
-  int nx = gdinfo->nx;
-  int ny = gdinfo->ny;
-  int nz = gdinfo->nz;
+  int nx = gd->nx;
+  int ny = gd->ny;
+  int nz = gd->nz;
 
   memcpy(bdrypml_d,bdrypml,sizeof(bdrypml_t));
   // copy bdrypml
@@ -316,11 +317,11 @@ int init_bdrypml_device(gdinfo_t *gdinfo, bdrypml_t *bdrypml, bdrypml_t *bdrypml
   return 0;
 }
 
-int init_bdryexp_device(gdinfo_t *gdinfo, bdryexp_t *bdryexp, bdryexp_t *bdryexp_d)
+int init_bdryexp_device(gd_t *gd, bdryexp_t *bdryexp, bdryexp_t *bdryexp_d)
 {
-  int nx = gdinfo->nx;
-  int ny = gdinfo->ny;
-  int nz = gdinfo->nz;
+  int nx = gd->nx;
+  int ny = gd->ny;
+  int nz = gd->nz;
 
   memcpy(bdryexp_d,bdryexp,sizeof(bdryexp_t));
   // copy bdryexp
@@ -348,22 +349,22 @@ int init_wave_device(wav_t *wav, wav_t *wav_d)
   return 0;
 }
 
-float *init_PGVAD_device(gdinfo_t *gdinfo)
+float *init_PGVAD_device(gd_t *gd)
 {
   float *PG_d;
-  int nx = gdinfo->nx;
-  int ny = gdinfo->ny;
+  int nx = gd->nx;
+  int ny = gd->ny;
   PG_d = (float *) cuda_malloc(sizeof(float)*CONST_NDIM_5*nx*ny);
   CUDACHECK(cudaMemset(PG_d,0,sizeof(float)*CONST_NDIM_5*nx*ny));
 
   return PG_d;
 }
 
-float *init_Dis_accu_device(gdinfo_t *gdinfo)
+float *init_Dis_accu_device(gd_t *gd)
 {
   float *Dis_accu_d;
-  int nx = gdinfo->nx;
-  int ny = gdinfo->ny;
+  int nx = gd->nx;
+  int ny = gd->ny;
   Dis_accu_d = (float *) cuda_malloc(sizeof(float)*CONST_NDIM*nx*ny);
   CUDACHECK(cudaMemset(Dis_accu_d,0,sizeof(float)*CONST_NDIM*nx*ny));
 
@@ -379,18 +380,34 @@ int *init_neighid_device(int *neighid)
   return neighid_d;
 }
 
-int dealloc_gdcurv_device(gd_t gdcurv_d)
+int dealloc_gd_device(gd_t gd_d)
 {
-  CUDACHECK(cudaFree(gdcurv_d.x3d)); 
-  CUDACHECK(cudaFree(gdcurv_d.y3d)); 
-  CUDACHECK(cudaFree(gdcurv_d.z3d)); 
+  CUDACHECK(cudaFree(gd_d.x3d)); 
+  CUDACHECK(cudaFree(gd_d.y3d)); 
+  CUDACHECK(cudaFree(gd_d.z3d)); 
+  CUDACHECK(cudaFree(gd_d.x1d)); 
+  CUDACHECK(cudaFree(gd_d.y1d)); 
+  CUDACHECK(cudaFree(gd_d.z1d)); 
 
-  CUDACHECK(cudaFree(gdcurv_d.cell_xmin)); 
-  CUDACHECK(cudaFree(gdcurv_d.cell_xmax)); 
-  CUDACHECK(cudaFree(gdcurv_d.cell_ymin)); 
-  CUDACHECK(cudaFree(gdcurv_d.cell_ymax)); 
-  CUDACHECK(cudaFree(gdcurv_d.cell_zmin)); 
-  CUDACHECK(cudaFree(gdcurv_d.cell_zmax)); 
+  CUDACHECK(cudaFree(gd_d.cell_xmin)); 
+  CUDACHECK(cudaFree(gd_d.cell_xmax)); 
+  CUDACHECK(cudaFree(gd_d.cell_ymin)); 
+  CUDACHECK(cudaFree(gd_d.cell_ymax)); 
+  CUDACHECK(cudaFree(gd_d.cell_zmin)); 
+  CUDACHECK(cudaFree(gd_d.cell_zmax)); 
+  CUDACHECK(cudaFree(gd_d.tile_istart));
+  CUDACHECK(cudaFree(gd_d.tile_iend));  
+  CUDACHECK(cudaFree(gd_d.tile_jstart));
+  CUDACHECK(cudaFree(gd_d.tile_jend));  
+  CUDACHECK(cudaFree(gd_d.tile_kstart));
+  CUDACHECK(cudaFree(gd_d.tile_kend));  
+  CUDACHECK(cudaFree(gd_d.tile_xmin));
+  CUDACHECK(cudaFree(gd_d.tile_xmax));
+  CUDACHECK(cudaFree(gd_d.tile_ymin));
+  CUDACHECK(cudaFree(gd_d.tile_ymax));
+  CUDACHECK(cudaFree(gd_d.tile_zmin));
+  CUDACHECK(cudaFree(gd_d.tile_zmax));  
+
   return 0;
 }
 
@@ -461,7 +478,7 @@ int dealloc_fd_device(fd_wav_t fd_wav_d)
 
   return 0;
 }
-int dealloc_metric_device(gdcurv_metric_t metric_d)
+int dealloc_metric_device(gd_metric_t metric_d)
 {
   CUDACHECK(cudaFree(metric_d.jac   )); 
   CUDACHECK(cudaFree(metric_d.xi_x  )); 

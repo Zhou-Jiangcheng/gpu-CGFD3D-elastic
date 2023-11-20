@@ -102,9 +102,8 @@ int main(int argc, char** argv)
 
   fd_t            *fd            = blk->fd    ;
   mympi_t         *mympi         = blk->mympi ;
-  gdinfo_t        *gdinfo        = blk->gdinfo;
-  gd_t            *gdcurv        = blk->gd;
-  gdcurv_metric_t *gdcurv_metric = blk->gdcurv_metric;
+  gd_t            *gd            = blk->gd;
+  gd_metric_t     *gd_metric     = blk->gd_metric;
   md_t            *md            = blk->md;
   wav_t           *wav           = blk->wav;
   src_t           *src           = blk->src;
@@ -130,7 +129,7 @@ int main(int argc, char** argv)
             myid, verbose);
 
   // set gdinfo
-  gd_info_set(gdinfo, mympi,
+  gd_info_set(gd, mympi,
               par->number_of_total_grid_points_x,
               par->number_of_total_grid_points_y,
               par->number_of_total_grid_points_z,
@@ -154,10 +153,10 @@ int main(int argc, char** argv)
   if (myid==0 && verbose>0) fprintf(stdout,"allocate grid vars ...\n"); 
 
   // malloc var in gdcurv
-  gd_curv_init(gdinfo, gdcurv);
+  gd_curv_init(gd);
 
-  // malloc var in gdcurv_metric
-  gd_curv_metric_init(gdinfo, gdcurv_metric);
+  // malloc var in gd_metric
+  gd_curv_metric_init(gd, gd_metric);
 
   // generate grid coord
   switch (par->grid_generation_itype)
@@ -174,21 +173,21 @@ int main(int argc, char** argv)
         float y0 = par->cartesian_grid_origin[1];
         float z0 = par->cartesian_grid_origin[2];
 
-        gd_curv_gen_cart(gdinfo,gdcurv,dx,x0,dy,y0,dz,z0);
+        gd_curv_gen_cart(gd,dx,x0,dy,y0,dz,z0);
 
         break;
     }
     case PAR_GRID_IMPORT : {
 
         if (myid==0) fprintf(stdout,"import grid vars ...\n"); 
-        gd_curv_coord_import(gdinfo, gdcurv, blk->output_fname_part, par->grid_import_dir);
+        gd_curv_coord_import(gd, blk->output_fname_part, par->grid_import_dir);
 
         break;
     }
   }
 
   // cal min/max of this thread
-  gd_curv_set_minmax(gdinfo,gdcurv);
+  gd_curv_set_minmax(gd);
   if (myid==0) {
     fprintf(stdout,"calculated min/max of grid/tile/cell\n"); 
     fflush(stdout);
@@ -201,7 +200,7 @@ int main(int argc, char** argv)
   if (par->is_export_grid==1)
   {
     if (myid==0) fprintf(stdout,"export coord to file ...\n"); 
-    gd_curv_coord_export(gdinfo, gdcurv,
+    gd_curv_coord_export(gd,
                          blk->output_fname_part,
                          blk->grid_export_dir);
   } else {
@@ -215,22 +214,21 @@ int main(int argc, char** argv)
     case PAR_METRIC_CALCULATE : {
 
         if (myid==0 && verbose>0) fprintf(stdout,"calculate metrics ...\n"); 
-        gd_curv_metric_cal(gdinfo,
-                           gdcurv,
-                           gdcurv_metric,
+        gd_curv_metric_cal(gd,
+                           gd_metric,
                            fd->fdc_len,
                            fd->fdc_indx,
                            fd->fdc_coef);
 
         if (myid==0 && verbose>0) fprintf(stdout,"exchange metrics ...\n"); 
-        gd_exchange(gdinfo,gdcurv_metric->v4d,gdcurv_metric->ncmp,mympi->neighid,mympi->topocomm);
+        gd_exchange(gd,gd_metric->v4d,gd_metric->ncmp,mympi->neighid,mympi->topocomm);
 
         break;
     }
     case PAR_METRIC_IMPORT : {
 
         if (myid==0) fprintf(stdout,"import metric file ...\n"); 
-        gd_curv_metric_import(gdinfo, gdcurv_metric, blk->output_fname_part, par->grid_import_dir);
+        gd_curv_metric_import(gd, gd_metric, blk->output_fname_part, par->grid_import_dir);
 
         break;
     }
@@ -241,7 +239,7 @@ int main(int argc, char** argv)
   if (par->is_export_metric==1)
   {
     if (myid==0) fprintf(stdout,"export metric to file ...\n"); 
-    gd_curv_metric_export(gdinfo,gdcurv_metric,
+    gd_curv_metric_export(gd,gd_metric,
                           blk->output_fname_part,
                           blk->grid_export_dir);
   } else {
@@ -250,14 +248,14 @@ int main(int argc, char** argv)
   if (myid==0 && verbose>0) { fprintf(stdout, " --> done\n"); fflush(stdout); }
   // print basic info for QC
   fprintf(stdout,"gdcurv info at topoid=%d,%d\n", mympi->topoid[0],mympi->topoid[1]); 
-  //gd_print(gdcurv);
+  //gd_print(gd);
 //-------------------------------------------------------------------------------
 //-- media generation or import
 //-------------------------------------------------------------------------------
 
   // allocate media vars
   if (myid==0 && verbose>0) {fprintf(stdout,"allocate media vars ...\n"); fflush(stdout);}
-  md_init(gdinfo, md, par->media_itype, par->visco_itype);
+  md_init(gd, md, par->media_itype, par->visco_itype);
 
   time_t t_start_md = time(NULL);
   // read or discrete velocity model
@@ -289,7 +287,7 @@ int main(int argc, char** argv)
     case PAR_MEDIA_IMPORT : {
 
         if (myid==0) fprintf(stdout,"import discrete medium file ...\n"); 
-        md_import(gdinfo, md, blk->output_fname_part, par->media_import_dir);
+        md_import(gd, md, blk->output_fname_part, par->media_import_dir);
 
         break;
     }
@@ -301,8 +299,8 @@ int main(int argc, char** argv)
         if (md->medium_type == CONST_MEDIUM_ELASTIC_ISO)
         {
             media_layer2model_el_iso(md->lambda, md->mu, md->rho,
-                                     gdcurv->x3d, gdcurv->y3d, gdcurv->z3d,
-                                     gdcurv->nx, gdcurv->ny, gdcurv->nz,
+                                     gd->x3d, gd->y3d, gd->z3d,
+                                     gd->nx,  gd->ny,  gd->nz,
                                      MEDIA_USE_CURV,
                                      par->media_input_file,
                                      par->equivalent_medium_method);
@@ -311,8 +309,8 @@ int main(int argc, char** argv)
         {
             media_layer2model_el_vti(md->rho, md->c11, md->c33,
                                      md->c55,md->c66,md->c13,
-                                     gdcurv->x3d, gdcurv->y3d, gdcurv->z3d,
-                                     gdcurv->nx, gdcurv->ny, gdcurv->nz,
+                                     gd->x3d, gd->y3d, gd->z3d,
+                                     gd->nx,  gd->ny,  gd->nz,
                                      MEDIA_USE_CURV,
                                      par->media_input_file,
                                      par->equivalent_medium_method);
@@ -325,8 +323,8 @@ int main(int argc, char** argv)
                                                              md->c44,md->c45,md->c46,
                                                                      md->c55,md->c56,
                                                                              md->c66,
-                                     gdcurv->x3d, gdcurv->y3d, gdcurv->z3d,
-                                     gdcurv->nx, gdcurv->ny, gdcurv->nz,
+                                     gd->x3d, gd->y3d, gd->z3d,
+                                     gd->nx,  gd->ny,  gd->nz,
                                      MEDIA_USE_CURV,
                                      par->media_input_file,
                                      par->equivalent_medium_method);
@@ -342,10 +340,10 @@ int main(int argc, char** argv)
         if (md->medium_type == CONST_MEDIUM_ELASTIC_ISO)
         {
             media_grid2model_el_iso(md->rho,md->lambda, md->mu, 
-                                     gdcurv->x3d, gdcurv->y3d, gdcurv->z3d,
-                                     gdcurv->nx, gdcurv->ny, gdcurv->nz,
-                                     gdcurv->xmin,gdcurv->xmax,
-                                     gdcurv->ymin,gdcurv->ymax,
+                                     gd->x3d, gd->y3d, gd->z3d,
+                                     gd->nx,  gd->ny,  gd->nz,
+                                     gd->xmin,gd->xmax,
+                                     gd->ymin,gd->ymax,
                                      MEDIA_USE_CURV,
                                      par->media_input_file,
                                      par->equivalent_medium_method);
@@ -354,10 +352,10 @@ int main(int argc, char** argv)
         {
             media_grid2model_el_vti(md->rho, md->c11, md->c33,
                                      md->c55,md->c66,md->c13,
-                                     gdcurv->x3d, gdcurv->y3d, gdcurv->z3d,
-                                     gdcurv->nx, gdcurv->ny, gdcurv->nz,
-                                     gdcurv->xmin,gdcurv->xmax,
-                                     gdcurv->ymin,gdcurv->ymax,
+                                     gd->x3d, gd->y3d, gd->z3d,
+                                     gd->nx,  gd->ny,  gd->nz,
+                                     gd->xmin,gd->xmax,
+                                     gd->ymin,gd->ymax,
                                      MEDIA_USE_CURV,
                                      par->media_input_file,
                                      par->equivalent_medium_method);
@@ -370,10 +368,10 @@ int main(int argc, char** argv)
                                                              md->c44,md->c45,md->c46,
                                                                      md->c55,md->c56,
                                                                              md->c66,
-                                     gdcurv->x3d, gdcurv->y3d, gdcurv->z3d,
-                                     gdcurv->nx, gdcurv->ny, gdcurv->nz,
-                                     gdcurv->xmin,gdcurv->xmax,
-                                     gdcurv->ymin,gdcurv->ymax,
+                                     gd->x3d, gd->y3d, gd->z3d,
+                                     gd->nx,  gd->ny,  gd->nz,
+                                     gd->xmin,gd->xmax,
+                                     gd->ymin,gd->ymax,
                                      MEDIA_USE_CURV,
                                      par->media_input_file,
                                      par->equivalent_medium_method);
@@ -389,10 +387,10 @@ int main(int argc, char** argv)
         if (md->medium_type == CONST_MEDIUM_ELASTIC_ISO)
         {
           media_bin2model_el_iso(md->rho,md->lambda, md->mu, 
-                                   gdcurv->x3d, gdcurv->y3d, gdcurv->z3d,
-                                   gdcurv->nx, gdcurv->ny, gdcurv->nz,
-                                   gdcurv->xmin,gdcurv->xmax,
-                                   gdcurv->ymin,gdcurv->ymax,
+                                   gd->x3d, gd->y3d, gd->z3d,
+                                   gd->nx,  gd->ny,  gd->nz,
+                                   gd->xmin,gd->xmax,
+                                   gd->ymin,gd->ymax,
                                    MEDIA_USE_CURV,
                                    par->bin_order,
                                    par->bin_size,
@@ -410,10 +408,10 @@ int main(int argc, char** argv)
             
             media_bin2model_el_vti_thomsen(md->rho, md->c11, md->c33,
                                      md->c55,md->c66,md->c13,
-                                     gdcurv->x3d, gdcurv->y3d, gdcurv->z3d,
-                                     gdcurv->nx, gdcurv->ny, gdcurv->nz,
-                                     gdcurv->xmin,gdcurv->xmax,
-                                     gdcurv->ymin,gdcurv->ymax,
+                                     gd->x3d, gd->y3d, gd->z3d,
+                                     gd->nx,  gd->ny,  gd->nz,
+                                     gd->xmin,gd->xmax,
+                                     gd->ymin,gd->ymax,
                                      MEDIA_USE_CURV,
                                      par->bin_order,
                                      par->bin_size,
@@ -440,10 +438,10 @@ int main(int argc, char** argv)
                                                              md->c44,md->c45,md->c46,
                                                                      md->c55,md->c56,
                                                                              md->c66,
-                                     gdcurv->x3d, gdcurv->y3d, gdcurv->z3d,
-                                     gdcurv->nx, gdcurv->ny, gdcurv->nz,
-                                     gdcurv->xmin,gdcurv->xmax,
-                                     gdcurv->ymin,gdcurv->ymax,
+                                     gd->x3d, gd->y3d, gd->z3d,
+                                     gd->nx,  gd->ny,  gd->nz,
+                                     gd->xmin,gd->xmax,
+                                     gd->ymin,gd->ymax,
                                      MEDIA_USE_CURV,
                                      par->bin_order,
                                      par->bin_size,
@@ -489,7 +487,7 @@ int main(int argc, char** argv)
   {
     if (myid==0) fprintf(stdout,"export discrete medium to file ...\n"); 
 
-    md_export(gdinfo, md,
+    md_export(gd, md,
               blk->output_fname_part,
               blk->media_export_dir);
   } else {
@@ -512,7 +510,7 @@ int main(int argc, char** argv)
 
     //-- estimate time step
     if (myid==0) fprintf(stdout,"   estimate time step ...\n"); 
-    blk_dt_esti_curv(gdinfo, gdcurv,md,fd->CFL,
+    blk_dt_esti_curv(gd,md,fd->CFL,
             &dtmax, &dtmaxVp, &dtmaxL, &dtmaxi, &dtmaxj, &dtmaxk);
     
     //-- print for QC
@@ -568,7 +566,7 @@ int main(int argc, char** argv)
 //-------------------------------------------------------------------------------
       
   time_t t_start_src = time(NULL);
-  src_read_locate_file(gdinfo, gdcurv, md, src,
+  src_read_locate_file(gd, md, src,
                        par->source_input_file,
                        t0,
                        dt,
@@ -601,7 +599,7 @@ int main(int argc, char** argv)
 //-------------------------------------------------------------------------------
 
   if (myid==0 && verbose>0) fprintf(stdout,"allocate solver vars ...\n"); 
-  wav_init(gdinfo, wav, fd->num_rk_stages);
+  wav_init(gd, wav, fd->num_rk_stages);
 
 //-------------------------------------------------------------------------------
 //-- setup output, may require coord info
@@ -610,12 +608,12 @@ int main(int argc, char** argv)
   if (myid==0 && verbose>0) fprintf(stdout,"setup output info ...\n"); 
 
   // receiver: need to do
-  io_recv_read_locate(gdinfo, gdcurv, iorecv,
+  io_recv_read_locate(gd, iorecv,
                       nt_total, wav->ncmp, par->in_station_file,
                       comm, myid, verbose);
 
   // line
-  io_line_locate(gdinfo, gdcurv, ioline,
+  io_line_locate(gd, ioline,
                  wav->ncmp,
                  nt_total,
                  par->number_of_receiver_line,
@@ -625,7 +623,7 @@ int main(int argc, char** argv)
                  par->receiver_line_name);
   
   // slice
-  io_slice_locate(gdinfo, ioslice,
+  io_slice_locate(gd, ioslice,
                   par->number_of_slice_x,
                   par->number_of_slice_y,
                   par->number_of_slice_z,
@@ -636,7 +634,7 @@ int main(int argc, char** argv)
                   blk->output_dir);
   
   // snapshot
-  io_snapshot_locate(gdinfo, iosnap,
+  io_snapshot_locate(gd, iosnap,
                      par->number_of_snapshot,
                      par->snapshot_name,
                      par->snapshot_index_start,
@@ -658,7 +656,7 @@ int main(int argc, char** argv)
 
   if (par->bdry_has_cfspml == 1)
   {
-    bdry_pml_set(gdinfo, gdcurv, wav, bdrypml,
+    bdry_pml_set(gd, wav, bdrypml,
                  mympi->neighid,
                  par->cfspml_is_sides,
                  par->abs_num_of_layers,
@@ -672,7 +670,7 @@ int main(int argc, char** argv)
   {
     if (myid==0 && verbose>0) fprintf(stdout,"setup sponge layer ...\n"); 
 
-    bdry_ablexp_set(gdinfo, gdcurv, wav, bdryexp,
+    bdry_ablexp_set(gd, wav, bdryexp,
                     mympi->neighid,
                     par->ablexp_is_sides,
                     par->abs_num_of_layers,
@@ -689,7 +687,7 @@ int main(int argc, char** argv)
   if (par->bdry_has_free == 1)
   {
     if (myid==0 && verbose>0) fprintf(stdout,"cal free surface matrix ...\n"); 
-    bdry_free_set(gdinfo, bdryfree, mympi->neighid, par->free_is_sides, verbose);
+    bdry_free_set(gd, bdryfree, mympi->neighid, par->free_is_sides, verbose);
   }
 
 //-------------------------------------------------------------------------------
@@ -697,7 +695,7 @@ int main(int argc, char** argv)
 //-------------------------------------------------------------------------------
 
   if (myid==0 && verbose>0) fprintf(stdout,"init mesg ...\n"); 
-  blk_macdrp_mesg_init(mympi, fd, gdinfo->ni, gdinfo->nj, gdinfo->nk,
+  blk_macdrp_mesg_init(mympi, fd, gd->ni, gd->nj, gd->nk,
                   wav->ncmp);
 
 //-------------------------------------------------------------------------------
@@ -708,7 +706,7 @@ int main(int argc, char** argv)
 
   blk_print(blk);
 
-  gd_info_print(gdinfo);
+  gd_info_print(gd);
 
   ioslice_print(ioslice);
 
@@ -725,7 +723,7 @@ int main(int argc, char** argv)
   
   time_t t_start = time(NULL);
   
-  drv_rk_curv_col_allstep(fd, gdinfo, gdcurv_metric, md,
+  drv_rk_curv_col_allstep(fd, gd, gd_metric, md,
                           src, bdryfree, bdrypml, bdryexp, wav, mympi,
                           iorecv, ioline, ioslice, iosnap,
                           dt, nt_total, t0,

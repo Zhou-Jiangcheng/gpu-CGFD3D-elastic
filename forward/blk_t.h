@@ -28,15 +28,12 @@ typedef struct
 
   // mpi
   mympi_t *mympi;
-
-  // grid index info
-  gdinfo_t *gdinfo;
   
   // coordnate: x3d, y3d, z3d
   gd_t *gd;
 
   // grid metrics: jac, xi_x, etc
-  gdcurv_metric_t *gdcurv_metric;
+  gd_metric_t *gd_metric;
 
   // media: rho, lambda, mu etc
   md_t *md;
@@ -112,7 +109,7 @@ blk_macdrp_mesg_init(mympi_t *mympi,
 int
 blk_macdrp_pack_mesg_gpu(float *w_cur,
                          fd_t *fd,
-                         gdinfo_t *gdinfo,
+                         gd_t *gd,
                          mympi_t *mpmpi,
                          int ipair_mpi,
                          int istage_mpi,
@@ -144,7 +141,7 @@ blk_macdrp_pack_mesg_y2(
 int 
 blk_macdrp_unpack_mesg_gpu(float *w_cur, 
                            fd_t *fd,
-                           gdinfo_t *gdinfo,
+                           gd_t *gd,
                            mympi_t *mympi, 
                            int ipair_mpi,
                            int istage_mpi,
@@ -175,7 +172,7 @@ int
 blk_print(blk_t *blk);
 
 int
-blk_dt_esti_curv(gdinfo_t *gdinfo, gd_t *gdcurv, md_t *md,
+blk_dt_esti_curv(gd_t *gd, md_t *md,
     float CFL, float *dtmax, float *dtmaxVp, float *dtmaxL,
     int *dtmaxi, int *dtmaxj, int *dtmaxk);
 
