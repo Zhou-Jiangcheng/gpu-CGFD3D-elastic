@@ -272,6 +272,7 @@ int
 io_snap_nc_put_ac(iosnap_t *iosnap,
                iosnap_nc_t *iosnap_nc,
                gd_t    *gd,
+               md_t    *md,
                wav_t   *wav,
                float *w4d,
                float *buff,

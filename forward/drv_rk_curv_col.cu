@@ -12,6 +12,7 @@
 #include "fdlib_math.h"
 #include "blk_t.h"
 #include "sv_curv_col_el_gpu.h"
+#include "sv_curv_col_ac_iso_gpu.h"
 #include "sv_curv_col_el_iso_gpu.h"
 #include "sv_curv_col_el_vti_gpu.h"
 #include "sv_curv_col_el_aniso_gpu.h"
@@ -72,11 +73,11 @@ drv_rk_curv_col_allstep(
   md_t   md_d;
   src_t  src_d;
   wav_t  wav_d;
+  gd_metric_t metric_d;
+  fd_wav_t fd_wav_d;
   bdryfree_t  bdryfree_d;
   bdrypml_t   bdrypml_d;
   bdryexp_t   bdryexp_d;
-  gd_metric_t metric_d;
-  fd_wav_t fd_wav_d;
 
   // init device struct, and copy data from host to device
   init_gdinfo_device(gd, &gd_d);
@@ -117,7 +118,11 @@ drv_rk_curv_col_allstep(
   // create snapshot nc output files
   if (myid==0 && verbose>0) fprintf(stdout,"prepare snap nc output ...\n"); 
   iosnap_nc_t  iosnap_nc;
-  io_snap_nc_create(iosnap, &iosnap_nc, topoid);
+  if (md->medium_type == CONST_MEDIUM_ACOUSTIC_ISO) {
+    io_snap_nc_create_ac(iosnap, &iosnap_nc, topoid);
+  } else {
+    io_snap_nc_create(iosnap, &iosnap_nc, topoid);
+  }
 
   // only x/y mpi
   int num_of_r_reqs = 4;
@@ -179,6 +184,10 @@ drv_rk_curv_col_allstep(
       grid.y = (nj+block.y-1)/block.y;
       sv_curv_col_el_aniso_dvh2dvz_gpu <<<grid, block>>> (gd_d,metric_d,md_d,bdryfree_d,verbose);
       CUDACHECK(cudaDeviceSynchronize());
+    }
+    else if (md_d.medium_type == CONST_MEDIUM_ACOUSTIC_ISO)
+    {
+      // not need
     }
     else
     {
@@ -249,6 +258,19 @@ drv_rk_curv_col_allstep(
       // compute rhs
       switch (md_d.medium_type)
       {
+        case CONST_MEDIUM_ACOUSTIC_ISO : {
+
+          sv_curv_col_ac_iso_onestage(
+              w_cur_d,w_rhs_d,wav_d,fd_wav_d,
+              gd_d, metric_d, md_d, bdrypml_d, bdryfree_d, src_d,
+              fd->num_of_fdx_op, fd->pair_fdx_op[ipair][istage],
+              fd->num_of_fdy_op, fd->pair_fdy_op[ipair][istage],
+              fd->num_of_fdz_op, fd->pair_fdz_op[ipair][istage],
+              fd->fdz_max_len,
+              myid, verbose);
+          break;
+        }
+
         case CONST_MEDIUM_ELASTIC_ISO : {
 
           sv_curv_col_el_iso_onestage(
@@ -309,7 +331,7 @@ drv_rk_curv_col_allstep(
         }
 
         // pack and isend
-        blk_macdrp_pack_mesg_gpu(w_tmp_d, fd, gd, mympi, ipair_mpi, istage_mpi, myid);
+        blk_macdrp_pack_mesg_gpu(w_tmp_d, fd, gd, mympi, wav->ncmp, ipair_mpi, istage_mpi, myid);
 
         MPI_Startall(num_of_s_reqs, mympi->pair_s_reqs[ipair_mpi][istage_mpi]);
         
@@ -365,7 +387,7 @@ drv_rk_curv_col_allstep(
         }
 
         // pack and isend
-        blk_macdrp_pack_mesg_gpu(w_tmp_d, fd, gd, mympi, ipair_mpi, istage_mpi, myid);
+        blk_macdrp_pack_mesg_gpu(w_tmp_d, fd, gd, mympi, wav->ncmp, ipair_mpi, istage_mpi, myid);
         MPI_Startall(num_of_s_reqs, mympi->pair_s_reqs[ipair_mpi][istage_mpi]);
         // pml_tmp
         if(bdrypml_d.is_enable_pml == 1)
@@ -421,7 +443,7 @@ drv_rk_curv_col_allstep(
 
         
         // pack and isend
-        blk_macdrp_pack_mesg_gpu(w_end_d, fd, gd, mympi, ipair_mpi, istage_mpi, myid);
+        blk_macdrp_pack_mesg_gpu(w_end_d, fd, gd, mympi, wav->ncmp, ipair_mpi, istage_mpi, myid);
         MPI_Startall(num_of_s_reqs, mympi->pair_s_reqs[ipair_mpi][istage_mpi]);
         // pml_end
         if(bdrypml_d.is_enable_pml == 1)
@@ -445,10 +467,10 @@ drv_rk_curv_col_allstep(
  
       if (istage != num_rk_stages-1) 
       {
-        blk_macdrp_unpack_mesg_gpu(w_tmp_d, fd, gd, mympi, ipair_mpi, istage_mpi, neighid_d);
+        blk_macdrp_unpack_mesg_gpu(w_tmp_d, fd, gd, mympi, wav->ncmp, ipair_mpi, istage_mpi, neighid_d);
       } else 
       {
-        blk_macdrp_unpack_mesg_gpu(w_end_d, fd, gd, mympi, ipair_mpi, istage_mpi, neighid_d);
+        blk_macdrp_unpack_mesg_gpu(w_end_d, fd, gd, mympi, wav->ncmp, ipair_mpi, istage_mpi, neighid_d);
       }
     } // RK stages
 

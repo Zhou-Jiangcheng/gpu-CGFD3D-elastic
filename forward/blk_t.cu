@@ -307,6 +307,7 @@ blk_macdrp_pack_mesg_gpu(float * w_cur,
                          fd_t *fd,
                          gd_t *gd, 
                          mympi_t *mympi, 
+                         int num_of_vars,
                          int ipair_mpi,
                          int istage_mpi,
                          int myid)
@@ -352,7 +353,7 @@ blk_macdrp_pack_mesg_gpu(float * w_cur,
     grid.z = (nk + block.z - 1) / block.z;
     blk_macdrp_pack_mesg_x1<<<grid, block >>>(
            w_cur, sbuff_x1, siz_iy, siz_iz, siz_icmp,
-           ni1, nj1, nk1, nx1_g, nj, nk);
+           num_of_vars, ni1, nj1, nk1, nx1_g, nj, nk);
     CUDACHECK(cudaDeviceSynchronize());
   }
   {
@@ -363,7 +364,7 @@ blk_macdrp_pack_mesg_gpu(float * w_cur,
     grid.z = (nk + block.z - 1) / block.z;
     blk_macdrp_pack_mesg_x2<<<grid, block >>>(
            w_cur, sbuff_x2, siz_iy, siz_iz, siz_icmp,
-           ni2, nj1, nk1, nx2_g, nj, nk);
+           num_of_vars, ni2, nj1, nk1, nx2_g, nj, nk);
     CUDACHECK(cudaDeviceSynchronize());
   }
   {
@@ -374,7 +375,7 @@ blk_macdrp_pack_mesg_gpu(float * w_cur,
     grid.z = (nk + block.z - 1) / block.z;
     blk_macdrp_pack_mesg_y1<<<grid, block >>>(
            w_cur, sbuff_y1, siz_iy, siz_iz, siz_icmp,
-           ni1, nj1, nk1, ni, ny1_g, nk);
+           num_of_vars, ni1, nj1, nk1, ni, ny1_g, nk);
     CUDACHECK(cudaDeviceSynchronize());
   }
   {
@@ -385,7 +386,7 @@ blk_macdrp_pack_mesg_gpu(float * w_cur,
     grid.z = (nk + block.z - 1) / block.z;
     blk_macdrp_pack_mesg_y2<<<grid, block >>>(
            w_cur, sbuff_y2, siz_iy, siz_iz, siz_icmp,
-           ni1, nj2, nk1, ni, ny2_g, nk);
+           num_of_vars, ni1, nj2, nk1, ni, ny2_g, nk);
     CUDACHECK(cudaDeviceSynchronize());
   }
 
@@ -395,7 +396,7 @@ blk_macdrp_pack_mesg_gpu(float * w_cur,
 __global__ void
 blk_macdrp_pack_mesg_x1(
            float *w_cur, float *sbuff_x1, size_t siz_iy, size_t siz_iz, size_t siz_icmp,
-           int ni1, int nj1, int nk1, int nx1_g, int nj, int nk)
+           int num_of_vars, int ni1, int nj1, int nk1, int nx1_g, int nj, int nk)
 {
   int ix = blockIdx.x * blockDim.x + threadIdx.x;
   int iy = blockIdx.y * blockDim.y + threadIdx.y;
@@ -406,8 +407,7 @@ blk_macdrp_pack_mesg_x1(
   {
     iptr     = (iz+nk1) * siz_iz + (iy+nj1) * siz_iy + (ix+ni1);
     iptr_b   = iz*nj*nx1_g + iy*nx1_g + ix;
-#pragma unroll 9
-    for(int i=0; i<9; i++)
+    for(int i=0; i<num_of_vars; i++)
     {
       sbuff_x1[iptr_b + i*nx1_g*nj*nk] = w_cur[iptr + i*siz_icmp];
     }
@@ -418,7 +418,7 @@ blk_macdrp_pack_mesg_x1(
 __global__ void
 blk_macdrp_pack_mesg_x2(
            float *w_cur, float *sbuff_x2, size_t siz_iy, size_t siz_iz, size_t siz_icmp,
-           int ni2, int nj1, int nk1, int nx2_g, int nj, int nk)
+           int num_of_vars, int ni2, int nj1, int nk1, int nx2_g, int nj, int nk)
 {
   int ix = blockIdx.x * blockDim.x + threadIdx.x;
   int iy = blockIdx.y * blockDim.y + threadIdx.y;
@@ -429,8 +429,7 @@ blk_macdrp_pack_mesg_x2(
   {
     iptr     = (iz+nk1) * siz_iz + (iy+nj1) * siz_iy + (ix+ni2-nx2_g+1);
     iptr_b   = iz*nj*nx2_g + iy*nx2_g + ix;
-#pragma unroll 9
-    for(int i=0; i<9; i++)
+    for(int i=0; i<num_of_vars; i++)
     {
       sbuff_x2[iptr_b + i*nx2_g*nj*nk] = w_cur[iptr + i*siz_icmp];
     }
@@ -441,7 +440,7 @@ blk_macdrp_pack_mesg_x2(
 __global__ void
 blk_macdrp_pack_mesg_y1(
            float *w_cur, float *sbuff_y1, size_t siz_iy, size_t siz_iz, size_t siz_icmp,
-           int ni1, int nj1, int nk1, int ni, int ny1_g, int nk)
+           int num_of_vars, int ni1, int nj1, int nk1, int ni, int ny1_g, int nk)
 {
   int ix = blockIdx.x * blockDim.x + threadIdx.x;
   int iy = blockIdx.y * blockDim.y + threadIdx.y;
@@ -452,8 +451,7 @@ blk_macdrp_pack_mesg_y1(
   {
     iptr     = (iz+nk1) * siz_iz + (iy+nj1) * siz_iy + (ix+ni1);
     iptr_b   = iz*ni*ny1_g + iy*ni + ix;
-#pragma unroll 9
-    for(int i=0; i<9; i++)
+    for(int i=0; i<num_of_vars; i++)
     {
       sbuff_y1[iptr_b + i*ny1_g*ni*nk] = w_cur[iptr + i*siz_icmp];
     }
@@ -465,7 +463,7 @@ blk_macdrp_pack_mesg_y1(
 __global__ void
 blk_macdrp_pack_mesg_y2(
            float *w_cur, float *sbuff_y2, size_t siz_iy, size_t siz_iz, size_t siz_icmp,
-           int ni1, int nj2, int nk1, int ni, int ny2_g, int nk)
+           int num_of_vars, int ni1, int nj2, int nk1, int ni, int ny2_g, int nk)
 {
   int ix = blockIdx.x * blockDim.x + threadIdx.x;
   int iy = blockIdx.y * blockDim.y + threadIdx.y;
@@ -476,8 +474,7 @@ blk_macdrp_pack_mesg_y2(
   {
     iptr     = (iz+nk1) * siz_iz + (iy+nj2-ny2_g+1) * siz_iy + (ix+ni1);
     iptr_b   = iz*ni*ny2_g + iy*ni + ix;
-#pragma unroll 9
-    for(int i=0; i<9; i++)
+    for(int i=0; i<num_of_vars; i++)
     {
       sbuff_y2[iptr_b + i*ny2_g*ni*nk] = w_cur[iptr + i*siz_icmp];
     }
@@ -490,6 +487,7 @@ blk_macdrp_unpack_mesg_gpu(float *w_cur,
                            fd_t *fd,
                            gd_t *gd,
                            mympi_t *mympi, 
+                           int num_of_vars,
                            int ipair_mpi,
                            int istage_mpi,
                            int *neighid)
@@ -534,7 +532,7 @@ blk_macdrp_unpack_mesg_gpu(float *w_cur,
     grid.z = (nk + block.z - 1) / block.z;
     blk_macdrp_unpack_mesg_x1<<< grid, block >>>(
            w_cur, rbuff_x1, siz_iy, siz_iz, siz_icmp,
-           ni1, nj1, nk1, nx2_g, nj, nk, neighid);
+           num_of_vars, ni1, nj1, nk1, nx2_g, nj, nk, neighid);
     CUDACHECK(cudaDeviceSynchronize());
   }
   {
@@ -545,7 +543,7 @@ blk_macdrp_unpack_mesg_gpu(float *w_cur,
     grid.z = (nk + block.z - 1) / block.z;
     blk_macdrp_unpack_mesg_x2<<< grid, block >>>(
            w_cur, rbuff_x2, siz_iy, siz_iz, siz_icmp,
-           ni2, nj1, nk1, nx1_g, nj, nk, neighid);
+           num_of_vars, ni2, nj1, nk1, nx1_g, nj, nk, neighid);
     CUDACHECK(cudaDeviceSynchronize());
   }
   {
@@ -556,7 +554,7 @@ blk_macdrp_unpack_mesg_gpu(float *w_cur,
     grid.z = (nk + block.z - 1) / block.z;
     blk_macdrp_unpack_mesg_y1<<< grid, block >>>(
            w_cur, rbuff_y1, siz_iy, siz_iz, siz_icmp,
-           ni1, nj1, nk1, ni, ny2_g, nk, neighid);
+           num_of_vars, ni1, nj1, nk1, ni, ny2_g, nk, neighid);
     CUDACHECK(cudaDeviceSynchronize());
   }
   {
@@ -567,7 +565,7 @@ blk_macdrp_unpack_mesg_gpu(float *w_cur,
     grid.z = (nk + block.z - 1) / block.z;
     blk_macdrp_unpack_mesg_y2<<< grid, block >>>(
            w_cur, rbuff_y2, siz_iy, siz_iz, siz_icmp,
-           ni1, nj2, nk1, ni, ny1_g, nk, neighid);
+           num_of_vars, ni1, nj2, nk1, ni, ny1_g, nk, neighid);
     CUDACHECK(cudaDeviceSynchronize());
   }
   return 0;
@@ -577,7 +575,7 @@ blk_macdrp_unpack_mesg_gpu(float *w_cur,
 __global__ void
 blk_macdrp_unpack_mesg_x1(
            float *w_cur, float *rbuff_x1, size_t siz_iy, size_t siz_iz, size_t siz_icmp,
-           int ni1, int nj1, int nk1, int nx2_g, int nj, int nk, int *neighid)
+           int num_of_vars, int ni1, int nj1, int nk1, int nx2_g, int nj, int nk, int *neighid)
 {
   int ix = blockIdx.x * blockDim.x + threadIdx.x;
   int iy = blockIdx.y * blockDim.y + threadIdx.y;
@@ -588,8 +586,7 @@ blk_macdrp_unpack_mesg_x1(
     if(ix<nx2_g && iy<nj && iz<nk){
       iptr   = (iz+nk1) * siz_iz + (iy+nj1) * siz_iy + (ix+ni1-nx2_g);
       iptr_b = iz*nj*nx2_g + iy*nx2_g + ix;
-#pragma unroll 9
-      for(int i=0; i<9; i++)
+      for(int i=0; i<num_of_vars; i++)
       {
         w_cur[iptr + i*siz_icmp] = rbuff_x1[iptr_b+ i*nx2_g*nj*nk];
       }
@@ -602,7 +599,7 @@ blk_macdrp_unpack_mesg_x1(
 __global__ void
 blk_macdrp_unpack_mesg_x2(
            float *w_cur, float *rbuff_x2, size_t siz_iy, size_t siz_iz, size_t siz_icmp,
-           int ni2, int nj1, int nk1, int nx1_g, int nj, int nk, int *neighid)
+           int num_of_vars, int ni2, int nj1, int nk1, int nx1_g, int nj, int nk, int *neighid)
 {
   int ix = blockIdx.x * blockDim.x + threadIdx.x;
   int iy = blockIdx.y * blockDim.y + threadIdx.y;
@@ -613,8 +610,7 @@ blk_macdrp_unpack_mesg_x2(
     if(ix<nx1_g && iy<nj && iz<nk){
       iptr   = (iz+nk1) * siz_iz + (iy+nj1) * siz_iy + (ix+ni2+1);
       iptr_b = iz*nj*nx1_g + iy*nx1_g + ix;
-#pragma unroll 9
-      for(int i=0; i<9; i++)
+      for(int i=0; i<num_of_vars; i++)
       {
         w_cur[iptr + i*siz_icmp] = rbuff_x2[iptr_b+ i*nx1_g*nj*nk];
       }
@@ -627,7 +623,7 @@ blk_macdrp_unpack_mesg_x2(
 __global__ void
 blk_macdrp_unpack_mesg_y1(
            float *w_cur, float *rbuff_y1, size_t siz_iy, size_t siz_iz, size_t siz_icmp,
-           int ni1, int nj1, int nk1, int ni, int ny2_g, int nk, int *neighid)
+           int num_of_vars, int ni1, int nj1, int nk1, int ni, int ny2_g, int nk, int *neighid)
 {
   int ix = blockIdx.x * blockDim.x + threadIdx.x;
   int iy = blockIdx.y * blockDim.y + threadIdx.y;
@@ -638,8 +634,7 @@ blk_macdrp_unpack_mesg_y1(
     if(ix<ni && iy<ny2_g && iz<nk){
       iptr   = (iz+nk1) * siz_iz + (iy+nj1-ny2_g) * siz_iy + (ix+ni1);
       iptr_b = iz*ni*ny2_g + iy*ni + ix;
-#pragma unroll 9
-      for(int i=0; i<9; i++)
+      for(int i=0; i<num_of_vars; i++)
       {
         w_cur[iptr + i*siz_icmp] = rbuff_y1[iptr_b+ i*ny2_g*ni*nk];
       }
@@ -652,7 +647,7 @@ blk_macdrp_unpack_mesg_y1(
 __global__ void
 blk_macdrp_unpack_mesg_y2(
            float *w_cur, float *rbuff_y2, size_t siz_iy, size_t siz_iz, size_t siz_icmp,
-           int ni1, int nj2, int nk1, int ni, int ny1_g, int nk, int *neighid)
+           int num_of_vars, int ni1, int nj2, int nk1, int ni, int ny1_g, int nk, int *neighid)
 {
   int ix = blockIdx.x * blockDim.x + threadIdx.x;
   int iy = blockIdx.y * blockDim.y + threadIdx.y;
@@ -663,8 +658,7 @@ blk_macdrp_unpack_mesg_y2(
     if(ix<ni && iy<ny1_g && iz<nk){
       iptr   = (iz+nk1) * siz_iz + (iy+nj2+1) * siz_iy + (ix+ni1);
       iptr_b = iz*ni*ny1_g + iy*ni + ix;
-#pragma unroll 9
-      for(int i=0; i<9; i++)
+      for(int i=0; i<num_of_vars; i++)
       {
         w_cur[iptr + i*siz_icmp] = rbuff_y2[iptr_b+ i*ny1_g*ni*nk];
       }

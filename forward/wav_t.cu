@@ -133,7 +133,6 @@ wav_ac_init(gd_t *gd,
   V->siz_ilevel = V->siz_icmp * V->ncmp;
 
   // vars
-  // 3 Vi, 6 Tij, 4 rk stages
   V->v5d = (float *) fdlib_mem_calloc_1d_float(V->siz_ilevel * V->nlevel,
                         0.0, "v5d, wf_ac3d_1st");
   // position of each var

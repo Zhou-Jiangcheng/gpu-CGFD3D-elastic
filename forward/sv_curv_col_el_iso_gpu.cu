@@ -20,7 +20,7 @@
  * perform one stage calculation of rhs
  ******************************************************************************/
 
-void
+int
 sv_curv_col_el_iso_onestage(
   float *w_cur_d,
   float *rhs_d, 
@@ -281,7 +281,7 @@ sv_curv_col_el_iso_onestage(
   }
   
   // end func
-  return;
+  return 0;
 }
 
 /*******************************************************************************

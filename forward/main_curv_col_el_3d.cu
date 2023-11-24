@@ -599,7 +599,12 @@ int main(int argc, char** argv)
 //-------------------------------------------------------------------------------
 
   if (myid==0 && verbose>0) fprintf(stdout,"allocate solver vars ...\n"); 
-  wav_init(gd, wav, fd->num_rk_stages);
+  if(md->medium_type == CONST_MEDIUM_ACOUSTIC_ISO)
+  {
+    wav_ac_init(gd, wav, fd->num_rk_stages);
+  } else {
+    wav_init(gd, wav, fd->num_rk_stages);
+  }
 
 //-------------------------------------------------------------------------------
 //-- setup output, may require coord info

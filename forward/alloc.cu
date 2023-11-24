@@ -76,11 +76,19 @@ int init_gd_device(gd_t *gd, gd_t *gd_d)
 
   return 0;
 }
+
 int init_md_device(md_t *md, md_t *md_d)
 {
   size_t siz_icmp = md->siz_icmp;
 
   memcpy(md_d,md,sizeof(md_t));
+  if (md->medium_type == CONST_MEDIUM_ACOUSTIC_ISO)
+  {
+    md_d->rho    = (float *) cuda_malloc(sizeof(float)*siz_icmp);
+    md_d->kappa  = (float *) cuda_malloc(sizeof(float)*siz_icmp);
+    CUDACHECK(cudaMemcpy(md_d->rho,    md->rho,    sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
+    CUDACHECK(cudaMemcpy(md_d->kappa,  md->kappa,  sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
+  }
   if (md->medium_type == CONST_MEDIUM_ELASTIC_ISO)
   {
     md_d->rho    = (float *) cuda_malloc(sizeof(float)*siz_icmp);
@@ -279,9 +287,9 @@ int init_bdrypml_device(gd_t *gd, bdrypml_t *bdrypml, bdrypml_t *bdrypml_d)
   int ny = gd->ny;
   int nz = gd->nz;
 
-  memcpy(bdrypml_d,bdrypml,sizeof(bdrypml_t));
   // copy bdrypml
-  if (bdrypml_d->is_enable_pml == 1)
+  memcpy(bdrypml_d,bdrypml,sizeof(bdrypml_t));
+  if (bdrypml->is_enable_pml == 1)
   {
     for(int idim=0; idim<CONST_NDIM; idim++){
       for(int iside=0; iside<2; iside++){
@@ -323,9 +331,9 @@ int init_bdryexp_device(gd_t *gd, bdryexp_t *bdryexp, bdryexp_t *bdryexp_d)
   int ny = gd->ny;
   int nz = gd->nz;
 
-  memcpy(bdryexp_d,bdryexp,sizeof(bdryexp_t));
   // copy bdryexp
-  if (bdryexp_d->is_enable_ablexp == 1)
+  memcpy(bdryexp_d,bdryexp,sizeof(bdryexp_t));
+  if (bdryexp->is_enable_ablexp == 1)
   {
     bdryexp_d->ablexp_Ex = (float *) cuda_malloc(nx * sizeof(float));
     bdryexp_d->ablexp_Ey = (float *) cuda_malloc(ny * sizeof(float));
@@ -533,7 +541,7 @@ int dealloc_bdryfree_device(bdryfree_t bdryfree_d)
 
 int dealloc_bdrypml_device(bdrypml_t bdrypml_d)
 {
-  if (bdrypml_d.is_enable_pml == 1)
+  if(bdrypml_d.is_enable_pml == 1)
   {
     for(int idim=0; idim<CONST_NDIM; idim++){
       for(int iside=0; iside<2; iside++){
@@ -559,12 +567,13 @@ int dealloc_bdrypml_device(bdrypml_t bdrypml_d)
 
 int dealloc_bdryexp_device(bdryexp_t bdryexp_d)
 {
-  if (bdryexp_d.is_enable_ablexp == 1)
+  if(bdryexp_d.is_enable_ablexp == 1)
   {
     CUDACHECK(cudaFree(bdryexp_d.ablexp_Ex)); 
     CUDACHECK(cudaFree(bdryexp_d.ablexp_Ey));
     CUDACHECK(cudaFree(bdryexp_d.ablexp_Ez));
   }
+
   return 0;
 }
 

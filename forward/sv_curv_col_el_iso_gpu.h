@@ -15,7 +15,7 @@
  * function prototype
  *************************************************/
 
-void
+int
 sv_curv_col_el_iso_onestage(
   float  *w_cur_d,
   float  *rhs_d, 
