@@ -16,7 +16,7 @@ echo "EXEC_WAVE=${EXEC_WAVE}"
 INPUTDIR=`pwd`
 
 #-- output and conf
-PROJDIR=`pwd`/../project1
+PROJDIR=`pwd`/../project
 PAR_FILE=${PROJDIR}/test.json
 GRID_DIR=${PROJDIR}/output
 MEDIA_DIR=${PROJDIR}/../project/output
@@ -36,11 +36,11 @@ mkdir -p ${MEDIA_DIR}
 #----------------------------------------------------------------------
 
 #-- total x grid points
-NX=241
+NX=300
 #-- total y grid points
-NY=241
+NY=250
 #-- total z grid points
-NZ=201
+NZ=200
 #-- total x mpi procs
 NPROCS_X=2
 #-- total y mpi procs
@@ -57,8 +57,8 @@ cat << ieof > ${PAR_FILE}
   "number_of_mpiprocs_x" : $NPROCS_X,
   "number_of_mpiprocs_y" : $NPROCS_Y,
 
-  "size_of_time_step" : 0.008,
-  "number_of_time_steps" : 12000,
+  "size_of_time_step" : 0.01,
+  "number_of_time_steps" : 2000,
   "#time_window_length" : 8,
   "check_stability" : 1,
 
@@ -109,7 +109,7 @@ cat << ieof > ${PAR_FILE}
   "grid_generation_method" : {
       "#import" : "$INPUTDIR/grid_model1",
       "cartesian" : {
-        "origin"  : [0.0, 0.0, -14900.0 ],
+        "origin"  : [0.0, 0.0, -19900.0 ],
         "inteval" : [ 100.0, 100.0, 100.0 ]
       }
   },
@@ -123,7 +123,8 @@ cat << ieof > ${PAR_FILE}
   "is_export_metric" : 1,
 
   "medium" : {
-      "type" : "elastic_iso",
+      "#type" : "elastic_iso",
+      "type" : "acoustic_iso",
       "#input_way" : "infile_layer",
       "#input_way" : "binfile",
       "input_way" : "code",
