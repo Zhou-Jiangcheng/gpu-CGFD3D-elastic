@@ -103,7 +103,7 @@ sv_curv_col_ac_iso_rhs_cfspml_gpu(int idim, int iside,
 
 __global__ void
 sv_curv_col_ac_iso_rhs_src_gpu(
-    float *hVx , float *hVy , float *hVz ,
+    float *hVx, float *hVy, float *hVz,
     float *hP, 
     float *jac3d, float *slw3d,
     src_t src, 

@@ -59,7 +59,7 @@ sv_curv_col_ac_iso_onestage(
 
   float *kappa3d = md_d.kappa;
   float *slw3d   = md_d.rho;
-
+  
   // grid size
   int ni1 = gd_d.ni1;
   int ni2 = gd_d.ni2;
@@ -77,6 +77,7 @@ sv_curv_col_ac_iso_onestage(
   size_t siz_iy   = gd_d.siz_iy;
   size_t siz_iz   = gd_d.siz_iz;
   size_t siz_icmp = gd_d.siz_icmp;
+
 
   // local fd op
   int    fdx_len;
@@ -821,7 +822,7 @@ sv_curv_col_ac_iso_rhs_cfspml_gpu(int idim, int iside,
 
 __global__ void
 sv_curv_col_ac_iso_rhs_src_gpu(
-    float *hVx , float *hVy , float *hVz ,
+    float *hVx, float *hVy, float *hVz,
     float *hP, 
     float *jac3d, float *slw3d,
     src_t src, 
@@ -849,9 +850,9 @@ sv_curv_col_ac_iso_rhs_src_gpu(
       int   *ptr_ext_indx = src.ext_indx + ix * max_ext;
       float *ptr_ext_coef = src.ext_coef + ix * max_ext;
       int it_to_it_start = it - it_start;
-      size_t iptr_cur_stage =   ix * src.max_nt * src.max_stage // skip other src
-                           + it_to_it_start * src.max_stage // skip other time step
-                           + istage;
+      size_t iptr_cur_stage = ix * src.max_nt * src.max_stage // skip other src
+                            + it_to_it_start * src.max_stage // skip other time step
+                            + istage;
       if (src.force_actived == 1) {
         fx = src.Fx[iptr_cur_stage];
         fy = src.Fy[iptr_cur_stage];

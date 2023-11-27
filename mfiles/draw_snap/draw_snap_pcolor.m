@@ -12,7 +12,7 @@ id=1;
 
 %-- z slice
 subs=[1,1,1];      % start from index '1'
-subc=[-1,-1,1];     % '-1' to plot all points in this dimension
+subc=[-1,1,-1];     % '-1' to plot all points in this dimension
 subt=[1,1,1];
 
 %-- y slice
@@ -26,9 +26,9 @@ subt=[1,1,1];
 %subt=[1,1,1];
 
 % variable and time to plot
-varnm='Vz';
-ns=100;
-ne=2000;
+varnm='Vx';
+ns=1000;
+ne=1000;
 nt=100;
 
 

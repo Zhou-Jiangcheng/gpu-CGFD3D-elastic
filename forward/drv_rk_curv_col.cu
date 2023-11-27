@@ -331,7 +331,7 @@ drv_rk_curv_col_allstep(
         }
 
         // pack and isend
-        blk_macdrp_pack_mesg_gpu(w_tmp_d, fd, gd, mympi, wav->ncmp, ipair_mpi, istage_mpi, myid);
+        blk_macdrp_pack_mesg_gpu(w_tmp_d, fd, gd, mympi, wav_d.ncmp, ipair_mpi, istage_mpi, myid);
 
         MPI_Startall(num_of_s_reqs, mympi->pair_s_reqs[ipair_mpi][istage_mpi]);
         
@@ -387,7 +387,7 @@ drv_rk_curv_col_allstep(
         }
 
         // pack and isend
-        blk_macdrp_pack_mesg_gpu(w_tmp_d, fd, gd, mympi, wav->ncmp, ipair_mpi, istage_mpi, myid);
+        blk_macdrp_pack_mesg_gpu(w_tmp_d, fd, gd, mympi, wav_d.ncmp, ipair_mpi, istage_mpi, myid);
         MPI_Startall(num_of_s_reqs, mympi->pair_s_reqs[ipair_mpi][istage_mpi]);
         // pml_tmp
         if(bdrypml_d.is_enable_pml == 1)
@@ -443,7 +443,7 @@ drv_rk_curv_col_allstep(
 
         
         // pack and isend
-        blk_macdrp_pack_mesg_gpu(w_end_d, fd, gd, mympi, wav->ncmp, ipair_mpi, istage_mpi, myid);
+        blk_macdrp_pack_mesg_gpu(w_end_d, fd, gd, mympi, wav_d.ncmp, ipair_mpi, istage_mpi, myid);
         MPI_Startall(num_of_s_reqs, mympi->pair_s_reqs[ipair_mpi][istage_mpi]);
         // pml_end
         if(bdrypml_d.is_enable_pml == 1)
@@ -467,10 +467,10 @@ drv_rk_curv_col_allstep(
  
       if (istage != num_rk_stages-1) 
       {
-        blk_macdrp_unpack_mesg_gpu(w_tmp_d, fd, gd, mympi, wav->ncmp, ipair_mpi, istage_mpi, neighid_d);
+        blk_macdrp_unpack_mesg_gpu(w_tmp_d, fd, gd, mympi, wav_d.ncmp, ipair_mpi, istage_mpi, neighid_d);
       } else 
       {
-        blk_macdrp_unpack_mesg_gpu(w_end_d, fd, gd, mympi, wav->ncmp, ipair_mpi, istage_mpi, neighid_d);
+        blk_macdrp_unpack_mesg_gpu(w_end_d, fd, gd, mympi, wav_d.ncmp, ipair_mpi, istage_mpi, neighid_d);
       }
     } // RK stages
 

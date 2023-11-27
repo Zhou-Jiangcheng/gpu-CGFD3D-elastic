@@ -265,6 +265,10 @@ int main(int argc, char** argv)
 
         if (myid==0) fprintf(stdout,"generate simple medium in code ...\n"); 
 
+        if (md->medium_type == CONST_MEDIUM_ACOUSTIC_ISO) {
+          md_gen_test_ac_iso(md);
+        }
+
         if (md->medium_type == CONST_MEDIUM_ELASTIC_ISO) {
           md_gen_test_el_iso(md);
         }

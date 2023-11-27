@@ -583,15 +583,8 @@ md_rho_to_slow(float *rho, size_t siz_icmp)
 {
   int ierr = 0;
 
-  /*
-  for (size_t k=0; k<nx; k++) {
-    for (size_t j=0; j<ny; j++) {
-      for (size_t i=0; i<nx; i++) {
-      }
-    }
-  }
-  */
-  for (size_t iptr=0; iptr<siz_icmp; iptr++) {
+  for (size_t iptr=0; iptr<siz_icmp; iptr++) 
+  {
     if (rho[iptr] > 1e-10) {
       rho[iptr] = 1.0 / rho[iptr];
     } else {
