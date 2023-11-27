@@ -1,7 +1,5 @@
 function [V, X, Y, Z, t] = gather_slice_y(output_dir,nlayer,varnm,sliceid,nproi,nprok)
 
-
-
   for kp=0:nprok-1
     for ip=0:nproi-1
       % snapshot data
@@ -16,7 +14,7 @@ function [V, X, Y, Z, t] = gather_slice_y(output_dir,nlayer,varnm,sliceid,nproi,
           VV=squeeze(nc_varget(slicenm_dir,varnm,[nlayer-1,0,0],[1,pnk,pni],[1,1,1]));
       else
           VV0=squeeze(nc_varget(slicenm_dir,varnm,[nlayer-1,0,0],[1,pnk,pni],[1,1,1]));
-          VV=vertcat(VV,VV0);
+          VV=horzcat(VV,VV0);
       end
       t=nc_varget(slicenm_dir,'time',[nlayer-1],[1]);
       
@@ -37,9 +35,9 @@ function [V, X, Y, Z, t] = gather_slice_y(output_dir,nlayer,varnm,sliceid,nproi,
         XX0=squeeze(nc_varget(coordnm_dir,'x',[ghostp,j_index,ghostp],[pnk,1,pni],[1,1,1]));
         YY0=squeeze(nc_varget(coordnm_dir,'y',[ghostp,j_index,ghostp],[pnk,1,pni],[1,1,1]));
         ZZ0=squeeze(nc_varget(coordnm_dir,'z',[ghostp,j_index,ghostp],[pnk,1,pni],[1,1,1]));
-        XX=vertcat(XX,XX0);
-        YY=vertcat(YY,YY0);
-        ZZ=vertcat(ZZ,ZZ0);
+        XX=horzcat(XX,XX0);
+        YY=horzcat(YY,YY0);
+        ZZ=horzcat(ZZ,ZZ0);
       end  
     end % end ip
     if kp==0

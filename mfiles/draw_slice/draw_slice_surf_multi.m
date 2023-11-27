@@ -21,7 +21,7 @@ sliceid{3}=100;
 % which variable and time to plot
 varnm='Vz';
 ns=100;
-ne=600;
+ne=800;
 nt=50;
 
 % figure control parameters

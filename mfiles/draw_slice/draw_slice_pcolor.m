@@ -8,14 +8,14 @@ parfnm='../../project/test.json';
 output_dir='../../project/output';
 
 % which slice to plot
-slicedir='x';
+slicedir='y';
 sliceid=100;
 
 % which variable and time to plot
-varnm='Vz';
+varnm='Vx';
 ns=100;
 ne=1000;
-nt=50;
+nt=100;
 
 % figure control parameters
 flag_km     = 1;
