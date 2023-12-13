@@ -23,6 +23,22 @@ int media_bin2model_el_iso(
     const char *bin_file_vp,
     const char *bin_file_vs  );
 
+int media_bin2model_vis_iso(
+    float *Qp3d,
+    float *Qs3d,
+    const float *x3d,
+    const float *y3d,
+    const float *z3d,
+    size_t nx, size_t ny, size_t nz,
+    float xmin, float xmax,
+    float ymin, float ymax,
+    int grid_type,
+    int  *bin_order,    // eg, [2, 0, 1]=[z, x, y] 0:x, 1:y, 2:z
+    int  *bin_size,     // [ndim1, ndim2, ndim3],
+    float  *bin_spacing,  // [dh1, dh2, dh3],
+    float  *bin_origin,   // [h0_1, h0_2, h0_3],
+    const char *bin_file_Qp,
+    const char *bin_file_Qs  );
 
 void parameterization_bin_el_iso_loc(
     float *rho3d,
@@ -39,34 +55,10 @@ void parameterization_bin_el_iso_loc(
     float *bin_rho,
     float *bin_vp,
     float *bin_vs ); 
-int media_bin2model_el_vti_thomsen(
-    float *rho3d,
-    float *c11_3d,
-    float *c33_3d, 
-    float *c55_3d, 
-    float *c66_3d, 
-    float *c13_3d, 
-    const float *x3d,
-    const float *y3d,
-    const float *z3d,
-    size_t nx, size_t ny, size_t nz,
-    float xmin, float xmax,
-    float ymin, float ymax,
-    int grid_type,
-    int  *bin_order,    // eg, [2, 0, 1]=[z, x, y] 0:x, 1:y, 2:z
-    int  *bin_size,     // [ndim1, ndim2, ndim3],
-    float  *bin_spacing,  // [dh1, dh2, dh3],
-    float  *bin_origin,   // [h0_1, h0_2, h0_3],
-    const char *bin_file_rho,
-    const char *bin_file_vp,
-    const char *bin_file_vs, const char *bin_file_epsilon, const char *bin_file_delta);
-void parameterization_bin_el_vti_loc(
-    float *rho3d,
-    float *c11_3d,
-    float *c33_3d, 
-    float *c55_3d, 
-    float *c66_3d, 
-    float *c13_3d, 
+
+void parameterization_bin_vis_iso_loc(
+    float *Qp3d,
+    float *Qs3d, 
     const float *x3d,
     const float *y3d,
     const float *z3d,
@@ -75,11 +67,7 @@ void parameterization_bin_el_vti_loc(
     std::vector<float> &xvec, 
     std::vector<float> &yvec, 
     std::vector<float> &zvec,
-    float *bin_rho,
-    float *bin_vp,
-    float *bin_vs,
-    float *bin_epsilon,
-    float *bin_delta ) ;
-
+    float *bin_Qp,
+    float *bin_Qs );
 
 #endif  // MEDIA_BIN2MODEL 

@@ -41,6 +41,7 @@ typedef struct{
   //char source_dir   [PAR_MAX_STRLEN];
   //char station_dir  [PAR_MAX_STRLEN];
   //char log_file_name[PAR_MAX_STRLEN];
+  char tmp_dir[PAR_MAX_STRLEN];
 
   // MPI
   int number_of_mpiprocs_x;
@@ -53,7 +54,7 @@ typedef struct{
   int   time_end_index;
   float time_start;
   //float time_end  ;
-  float time_check_stability;
+  int time_check_stability;
   float time_window_length;
 
   // for each block
@@ -121,6 +122,8 @@ typedef struct{
   char media_export_dir[PAR_MAX_STRLEN];
   char media_import_dir[PAR_MAX_STRLEN];
   char media_input_file[PAR_MAX_STRLEN];
+  char Qp_input_file[PAR_MAX_STRLEN];
+  char Qs_input_file[PAR_MAX_STRLEN];
 
   // medium in bin file
   int bin_size[CONST_NDIM];
@@ -157,6 +160,8 @@ typedef struct{
   char bin_file_c55[PAR_MAX_STRLEN];
   char bin_file_c56[PAR_MAX_STRLEN];
   char bin_file_c66[PAR_MAX_STRLEN];
+  char bin_file_Qp[PAR_MAX_STRLEN];
+  char bin_file_Qs[PAR_MAX_STRLEN];
 
   // following not used 
   char media_input_rho[PAR_MAX_STRLEN];
@@ -177,11 +182,20 @@ typedef struct{
   char visco_type[PAR_MAX_STRLEN]; // graves_Qs
   int  visco_itype; // graves_Qs
   float visco_Qs_freq;
+  int nmaxwell;
+  float fmax;
+  float fmin;
+  float fr;
 
   // source
+  //int source_input_itype;
   char source_input_file[PAR_MAX_STRLEN];
   int is_export_source;
   char source_export_dir[PAR_MAX_STRLEN];
+
+  char source_dd_input_file[PAR_MAX_STRLEN];
+  int  source_dd_add_at_point;
+  int  source_dd_nt_per_read;
 
   // output
   // receiver

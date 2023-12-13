@@ -25,13 +25,10 @@ int media_bin2model_el_iso(
     const char *bin_file_rho,
     const char *bin_file_vp,
     const char *bin_file_vs  );
-int media_bin2model_el_vti_thomsen(
-    float *rho3d,
-    float *c11_3d,
-    float *c33_3d,
-    float *c55_3d,
-    float *c66_3d,
-    float *c13_3d,
+//---- 0. viscoelastic for Qp,Qs
+int media_bin2model_vis_iso(
+    float *Qp3d,
+    float *Qs3d,
     const float *x3d,
     const float *y3d,
     const float *z3d,
@@ -43,10 +40,8 @@ int media_bin2model_el_vti_thomsen(
     int  *bin_size,     // [ndim1, ndim2, ndim3],
     float  *bin_spacing,  // [dh1, dh2, dh3],
     float  *bin_origin,   // [h0_1, h0_2, h0_3],
-    const char *bin_file_rho,
-    const char *bin_file_vp,
-    const char *bin_file_vs, const char *bin_file_epsilon, const char *bin_file_delta);
-
+    const char *bin_file_Qp,
+    const char *bin_file_Qs  );
 
 /*--------------------------- layer2model --------------------- */
 //---- 0. one component
@@ -59,7 +54,8 @@ int media_layer2model_onecmp(float *var3d,
                              size_t nz,
                              int grid_type, 
                              const char *in_var_file,
-                             const char *average_method);
+                             const char *average_method,
+                             int myid);
 
 //---- 1. elastic isotropic
 int media_layer2model_ac_iso(
@@ -73,7 +69,8 @@ int media_layer2model_ac_iso(
         size_t nz,
         int grid_type, 
         const char *in_3lay_file,
-        const char *equivalent_medium_method);
+        const char *equivalent_medium_method,
+        int myid);
 
 //----  2. elastic isotropic
 int media_layer2model_el_iso(
@@ -88,7 +85,8 @@ int media_layer2model_el_iso(
         size_t nz,
         int grid_type, 
         const char *in_3lay_file,
-        const char *equivalent_medium_method);
+        const char *equivalent_medium_method,
+        int myid);
 
 //--- 3. elastic vti
 int media_layer2model_el_vti(
@@ -106,7 +104,8 @@ int media_layer2model_el_vti(
         size_t nz,
         int grid_type, 
         const char *in_3lay_file, 
-        const char *equivalent_medium_method);
+        const char *equivalent_medium_method,
+        int myid);
 
 //--- 4. elastic anisotropic/TTI
 int media_layer2model_el_aniso(
@@ -126,7 +125,8 @@ int media_layer2model_el_aniso(
         size_t nz,
         int grid_type, 
         const char *in_3lay_file,
-        const char *equivalent_medium_method); 
+        const char *equivalent_medium_method,
+        int myid); 
 
 
 /*-------------- grid2model -------------*/
@@ -144,7 +144,8 @@ int media_grid2model_onecmp(
     float Ymin, float Ymax, 
     int grid_type,
     const char *in_media_file,
-    const char *equivalent_medium_method);
+    const char *equivalent_medium_method,
+    int myid);
 
 //--- 1. acoustic isotropic
 int media_grid2model_ac_iso(
@@ -160,7 +161,8 @@ int media_grid2model_ac_iso(
     float Ymin, float Ymax, 
     int grid_type,
     const char *in_media_file,
-    const char *equivalent_medium_method);
+    const char *equivalent_medium_method, 
+    int myid);
 
 //--- 2. elastic isotropic
 int media_grid2model_el_iso(
@@ -177,7 +179,8 @@ int media_grid2model_el_iso(
     float Ymin, float Ymax, 
     int grid_type,
     const char *in_media_file,
-    const char *equivalent_medium_method);
+    const char *equivalent_medium_method,
+    int myid);
 
 //--- 3. elastic vti
 int media_grid2model_el_vti(
@@ -197,7 +200,8 @@ int media_grid2model_el_vti(
     float Ymin, float Ymax, 
     int grid_type,
     const char *in_media_file,
-    const char *equivalent_medium_method);
+    const char *equivalent_medium_method, 
+    int myid);
 
 int media_grid2model_el_aniso(
     float *rho,
@@ -218,7 +222,8 @@ int media_grid2model_el_aniso(
     float Ymin, float Ymax, 
     int grid_type,
     const char *in_media_file,
-    const char *equivalent_medium_method); 
+    const char *equivalent_medium_method,
+    int myid); 
 
 //================== bin2model ===================
 int media_bin2model_el_iso(
@@ -238,5 +243,6 @@ int media_bin2model_el_iso(
     float  *bin_origin,   // [h0_1, h0_2, h0_3],
     const char *bin_file_rho,
     const char *bin_file_vp,
-    const char *bin_file_vs  );
+    const char *bin_file_vs );
+
 #endif

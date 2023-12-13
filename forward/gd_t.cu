@@ -250,9 +250,9 @@ gd_curv_metric_cal(gd_t        *gd,
 
   // use local stack array for speedup
   float  lfd_coef [fd_len];
-  int    lfdx_shift[fd_len];
-  int    lfdy_shift[fd_len];
-  int    lfdz_shift[fd_len];
+  size_t lfdx_shift[fd_len];
+  size_t lfdy_shift[fd_len];
+  size_t lfdz_shift[fd_len];
   // put fd op into local array
   for (int k=0; k < fd_len; k++) {
     lfd_coef [k] = fd_coef[k];

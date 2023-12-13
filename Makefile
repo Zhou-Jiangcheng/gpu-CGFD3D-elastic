@@ -58,6 +58,7 @@ main_curv_col_el_3d: \
 		drv_rk_curv_col.o \
 		sv_curv_col_el_gpu.o \
 		sv_curv_col_el_iso_gpu.o \
+		sv_curv_col_vis_iso_gpu.o \
 		sv_curv_col_el_vti_gpu.o \
 		sv_curv_col_el_aniso_gpu.o \
 		sv_curv_col_ac_iso_gpu.o \
@@ -116,6 +117,8 @@ drv_rk_curv_col.o:          forward/drv_rk_curv_col.cu
 sv_curv_col_el_gpu.o:          forward/sv_curv_col_el_gpu.cu
 	${GC} -c -o $@ $(CFLAGS_CUDA) $<
 sv_curv_col_el_iso_gpu.o:   forward/sv_curv_col_el_iso_gpu.cu
+	${GC} -c -o $@ $(CFLAGS_CUDA) $<
+sv_curv_col_vis_iso_gpu.o:   forward/sv_curv_col_vis_iso_gpu.cu
 	${GC} -c -o $@ $(CFLAGS_CUDA) $<
 sv_curv_col_el_vti_gpu.o:   forward/sv_curv_col_el_vti_gpu.cu
 	${GC} -c -o $@ $(CFLAGS_CUDA) $<

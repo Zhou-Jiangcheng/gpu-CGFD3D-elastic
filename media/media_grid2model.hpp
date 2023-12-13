@@ -4,7 +4,6 @@
 #include "media_geometry3d.hpp"
 #include "media_read_file.hpp"
 
-
 // --- 0. one component
 int media_grid2model_onecmp(
     float *var3d,
@@ -18,7 +17,8 @@ int media_grid2model_onecmp(
     float Ymin, float Ymax, 
     int grid_type,
     const char *in_media_file,
-    const char *equivalent_medium_method);
+    const char *equivalent_medium_method,
+    int myid);
 
 //--- 1. acoustic isotropic
 int media_grid2model_ac_iso(
@@ -34,7 +34,8 @@ int media_grid2model_ac_iso(
     float Ymin, float Ymax, 
     int grid_type,
     const char *in_media_file,
-    const char *equivalent_medium_method);
+    const char *equivalent_medium_method,
+    int myid);
 
 //--- 2. elastic isotropic
 int media_grid2model_el_iso(
@@ -51,7 +52,8 @@ int media_grid2model_el_iso(
     float Ymin, float Ymax, 
     int grid_type,
     const char *in_media_file,
-    const char *equivalent_medium_method);
+    const char *equivalent_medium_method,
+    int myid);
 
 //--- 3. elastic vti
 int media_grid2model_el_vti(
@@ -71,7 +73,8 @@ int media_grid2model_el_vti(
     float Ymin, float Ymax, 
     int grid_type,
     const char *in_media_file,
-    const char *equivalent_medium_method);
+    const char *equivalent_medium_method,
+    int myid);
 
 int media_grid2model_el_aniso(
     float *rho,
@@ -92,8 +95,8 @@ int media_grid2model_el_aniso(
     float Ymin, float Ymax, 
     int grid_type,
     const char *in_media_file,
-    const char *equivalent_medium_method);
-
+    const char *equivalent_medium_method,
+    int myid);
 
 int AssignGridMediaPara2Point(
     size_t ix, size_t iy, size_t iz, 
@@ -129,7 +132,7 @@ void parametrization_grid_onecmp_loc(
     int grid_type,
     int NL, std::vector<int> &NGz,
     inter_t &interfaces,
-    float *var3d);
+    float *var3d, int myid);
 
 //- 1. assign the parameter directly (use the local values): isotropic, acoustic 
 void parametrization_grid_ac_iso_loc(
@@ -143,7 +146,7 @@ void parametrization_grid_ac_iso_loc(
     int NL, std::vector<int> &NGz,
     inter_t &interfaces,
     float *rho3d,
-    float *kappa);
+    float *kappa, int myid);
 
 //- 2. assign the parameter directly (use the local values): elastic isotropic 
 void parametrization_grid_el_iso_loc(
@@ -158,7 +161,7 @@ void parametrization_grid_el_iso_loc(
     inter_t &interfaces,
     float *rho3d, 
     float *lam3d,
-    float *mu3d);
+    float *mu3d, int myid);
 
 //- 3. Assign the parameter directly (use the local values): elastic vti
 void parametrization_grid_el_vti_loc(
@@ -176,7 +179,8 @@ void parametrization_grid_el_vti_loc(
     float *c55,
     float *c66,
     float *c13,
-    float *rho);
+    float *rho,
+    int myid);
 
 //- 4. Assign the parameter directly (use the local values): elastic tti
 void parametrization_grid_el_aniso_loc(
@@ -210,7 +214,8 @@ void parametrization_grid_el_aniso_loc(
     float *c55,
     float *c56,
     float *c66,
-    float *rho);
+    float *rho, 
+    int myid);
 
 //======================= averaging/equivalent medium method =========================
 
@@ -244,7 +249,7 @@ int parametrization_grid_onecmp_har(
     int NL, 
     std::vector <int> &NGz,
     inter_t &interfaces,
-    float *var3d);
+    float *var3d, int myid);
 
 //- 0.2 assign the parameter by volume arithmetic averaging
 //- one component
@@ -259,7 +264,7 @@ int parametrization_grid_onecmp_ari(
     int NL, 
     std::vector <int> &NGz,
     inter_t &interfaces,
-    float *var3d);
+    float *var3d, int myid);
 
 //- 1.1 assign the parameter by volume arithmetic and harmonic averaging method
 //- acoustic isotropic 
@@ -275,7 +280,8 @@ int parametrization_grid_ac_iso_har(
     std::vector <int> &NGz,
     inter_t &interfaces,
     float *rho3d,
-    float *kappa);
+    float *kappa, 
+    int myid);
 
 //- 1.2 assign the parameter by volume arithmetic averaging method
 //- acoustic isotropic 
@@ -291,7 +297,8 @@ int parametrization_grid_ac_iso_ari(
     std::vector <int> &NGz,
     inter_t &interfaces,
     float *rho3d,
-    float *kappa);
+    float *kappa, 
+    int myid);
 
 //- 2.1 assign the parameter by volume arithmetic and harmonic averaging method
 //- elastic isotropic
@@ -309,7 +316,8 @@ int parametrization_grid_el_iso_har(
     inter_t &interfaces,
     float *rho3d,
     float *lam3d,
-    float *mu3d );
+    float *mu3d, 
+    int myid );
 
 //- 2.1 assign the parameter by volume arithmetic averaging method
 //- elastic isotropic
@@ -326,7 +334,8 @@ int parametrization_grid_el_iso_ari(
     inter_t &interfaces,
     float *rho3d,
     float *lam3d,
-    float *mu3d);
+    float *mu3d, 
+    int myid);
 
 //- 3.1 assign the parameter by volume arithmetic and harmonic averaging method
 //- elastic vti
@@ -346,7 +355,8 @@ int parametrization_grid_el_vti_har(
     float *c55,
     float *c66,
     float *c13,
-    float *rho);
+    float *rho, 
+    int myid);
 
 //- 3.1 assign the parameter by volume arithmetic and harmonic averaging method
 //- elastic vti
@@ -366,7 +376,8 @@ int parametrization_grid_el_vti_ari(
     float *c55,
     float *c66,
     float *c13,
-    float *rho);
+    float *rho, 
+    int myid);
 
 //- 4.1 assign the parameter by volume arithmetic averaging method
 //- elastic tti/anisotropic
@@ -402,7 +413,8 @@ int parametrization_grid_el_aniso_har(
     float *c55,
     float *c56,
     float *c66,
-    float *rho);
+    float *rho, 
+    int myid);
 
 //- 4.2 assign the parameter by volume arithmetic averaging method
 //- elastic tti
@@ -438,6 +450,7 @@ int parametrization_grid_el_aniso_ari(
     float *c55,
     float *c56,
     float *c66,
-    float *rho);
+    float *rho, 
+    int myid);
 
 #endif // MEIDA_GRID2MODEL

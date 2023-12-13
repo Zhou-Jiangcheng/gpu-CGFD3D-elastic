@@ -17,7 +17,7 @@ int
 init_md_device(md_t *md, md_t *md_d);
 
 int
-init_fd_device(fd_t *fd, fd_wav_t *fd_wav_d);
+init_fd_device(fd_t *fd, fd_wav_t *fd_wav_d, gd_t *gd);
 
 int
 init_metric_device(gd_metric_t *metric, gd_metric_t *metric_d);

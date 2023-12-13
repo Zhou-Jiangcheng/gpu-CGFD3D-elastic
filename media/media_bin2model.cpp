@@ -196,7 +196,7 @@ void parameterization_bin_el_iso_loc(
     std::vector<float> &zvec,
     float *bin_rho,
     float *bin_vp,
-    float *bin_vs ) 
+    float *bin_vs) 
 {
 
   size_t siz_line   = nx;
@@ -229,15 +229,12 @@ void parameterization_bin_el_iso_loc(
       }
     }
   }
-
 }
-int media_bin2model_el_vti_thomsen(
-    float *rho3d,
-    float *c11_3d,
-    float *c33_3d, 
-    float *c55_3d, 
-    float *c66_3d, 
-    float *c13_3d, 
+
+
+int media_bin2model_vis_iso(
+    float *Qp3d,
+    float *Qs3d,
     const float *x3d,
     const float *y3d,
     const float *z3d,
@@ -249,9 +246,8 @@ int media_bin2model_el_vti_thomsen(
     int  *bin_size,     // [ndim1, ndim2, ndim3],
     float  *bin_spacing,  // [dh1, dh2, dh3],
     float  *bin_origin,   // [h0_1, h0_2, h0_3],
-    const char *bin_file_rho,
-    const char *bin_file_vp,
-    const char *bin_file_vs, const char *bin_file_epsilon, const char *bin_file_delta)
+    const char *bin_file_Qp,
+    const char *bin_file_Qs)
 {
   
     // get the dim order and set error reporting
@@ -369,44 +365,27 @@ int media_bin2model_el_vti_thomsen(
     size_t bin_line = bin_nx;
     size_t bin_slice = bin_nx * bin_ny;
     size_t bin_volume = bin_slice * bin_nz;
-    float *bin_rho = new float[bin_volume];
-    float *bin_vp  = new float[bin_volume];
-    float *bin_vs  = new float[bin_volume];
-    float *bin_epsilon  = new float[bin_volume];
-    float *bin_delta  = new float[bin_volume];
+    float *bin_Qp  = new float[bin_volume];
+    float *bin_Qs  = new float[bin_volume];
 
-    fprintf(stdout, "- reading model file: %s, \n", bin_file_rho);
-    read_bin_file(bin_file_rho, bin_rho, dimx, dimy, dimz, bin_start, bin_end, bin_size, bin_line, bin_slice);
+    fprintf(stdout, "                      %s, \n", bin_file_Qp);
+    read_bin_file(bin_file_Qp,  bin_Qp,  dimx, dimy, dimz, bin_start, bin_end, bin_size, bin_line, bin_slice);
 
-    fprintf(stdout, "                      %s, \n", bin_file_vp);
-    read_bin_file(bin_file_vp,  bin_vp,  dimx, dimy, dimz, bin_start, bin_end, bin_size, bin_line, bin_slice);
-
-    fprintf(stdout, "                      %s, \n", bin_file_vs);
-    read_bin_file(bin_file_vs,  bin_vs,  dimx, dimy, dimz, bin_start, bin_end, bin_size, bin_line, bin_slice);
-
-    fprintf(stdout, "                      %s, \n", bin_file_epsilon);
-    read_bin_file(bin_file_epsilon,  bin_epsilon,  dimx, dimy, dimz, bin_start, bin_end, bin_size, bin_line, bin_slice);
- 
-    fprintf(stdout, "                      %s, \n", bin_file_delta);
-    read_bin_file(bin_file_delta,  bin_delta,  dimx, dimy, dimz, bin_start, bin_end, bin_size, bin_line, bin_slice);
+    fprintf(stdout, "                      %s, \n", bin_file_Qs);
+    read_bin_file(bin_file_Qs,  bin_Qs,  dimx, dimy, dimz, bin_start, bin_end, bin_size, bin_line, bin_slice);
 
     // media parameterization
-    parameterization_bin_el_vti_loc(rho3d, c11_3d, c33_3d,c55_3d,c66_3d,c13_3d, x3d, y3d, z3d, nx, ny, nz, grid_type, 
-        xvec, yvec, zvec, bin_rho, bin_vp, bin_vs,bin_epsilon,bin_delta);
+    parameterization_bin_vis_iso_loc(Qp3d, Qs3d, x3d, y3d, z3d, nx, ny, nz, grid_type, 
+        xvec, yvec, zvec, bin_Qp, bin_Qs);
 
-    delete [] bin_rho;
-    delete [] bin_vp;
-    delete [] bin_vs; delete [] bin_epsilon; delete [] bin_delta;
+    delete [] bin_Qp;
+    delete [] bin_Qs;
     return 0;
 }
 
-void parameterization_bin_el_vti_loc(
-    float *rho3d,
-    float *c11_3d,
-    float *c33_3d, 
-    float *c55_3d, 
-    float *c66_3d, 
-    float *c13_3d, 
+void parameterization_bin_vis_iso_loc(
+    float *Qp3d,
+    float *Qs3d, 
     const float *x3d,
     const float *y3d,
     const float *z3d,
@@ -415,11 +394,8 @@ void parameterization_bin_el_vti_loc(
     std::vector<float> &xvec, 
     std::vector<float> &yvec, 
     std::vector<float> &zvec,
-    float *bin_rho,
-    float *bin_vp,
-    float *bin_vs,
-    float *bin_epsilon,
-    float *bin_delta ) 
+    float *bin_Qp,
+    float *bin_Qs) 
 {
 
   size_t siz_line   = nx;
@@ -441,23 +417,14 @@ void parameterization_bin_el_vti_loc(
           indx_x = indx;
           indx_y = indx;             // for curv: x, y
         }
-        float rho, vp, vs,epsilon,delta;
-        rho = TrilinearInterpolation(xvec, yvec, zvec, bin_rho, x3d[indx_x], y3d[indx_y], z3d[indx_z]);    
-        vp  = TrilinearInterpolation(xvec, yvec, zvec, bin_vp , x3d[indx_x], y3d[indx_y], z3d[indx_z]);    
-        vs  = TrilinearInterpolation(xvec, yvec, zvec, bin_vs , x3d[indx_x], y3d[indx_y], z3d[indx_z]); 
-        epsilon  = TrilinearInterpolation(xvec, yvec, zvec, bin_epsilon , x3d[indx_x], y3d[indx_y], z3d[indx_z]);    
-        delta  = TrilinearInterpolation(xvec, yvec, zvec, bin_delta , x3d[indx_x], y3d[indx_y], z3d[indx_z]);
+        float Qp, Qs;
+        Qp  = TrilinearInterpolation(xvec, yvec, zvec, bin_Qp , x3d[indx_x], y3d[indx_y], z3d[indx_z]);    
+        Qs  = TrilinearInterpolation(xvec, yvec, zvec, bin_Qs , x3d[indx_x], y3d[indx_y], z3d[indx_z]); 
 
-        c33_3d[indx]  = vp*vp*rho;
-        c55_3d[indx]  = vs*vs*rho;
-        c66_3d[indx]  = vs*vs*rho;
-        c11_3d[indx] = (1.0+2.0*epsilon)*vp*vp*rho;
-        c13_3d[indx] = sqrt(2.0*delta*vp*vp*rho*(vp*vp*rho-vs*vs*rho)+(vp*vp*rho-vs*vs*rho)*(vp*vp*rho-vs*vs*rho))-vp*vp*rho;
-        rho3d[indx] = rho;
+        Qp3d[indx] = Qp;
+        Qs3d[indx] = Qs;
       }
     }
   }
-
 }
-
 

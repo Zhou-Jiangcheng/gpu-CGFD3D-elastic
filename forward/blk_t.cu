@@ -588,7 +588,7 @@ blk_macdrp_unpack_mesg_x1(
       iptr_b = iz*nj*nx2_g + iy*nx2_g + ix;
       for(int i=0; i<num_of_vars; i++)
       {
-        w_cur[iptr + i*siz_icmp] = rbuff_x1[iptr_b+ i*nx2_g*nj*nk];
+        w_cur[iptr + i*siz_icmp] = rbuff_x1[iptr_b + i*nx2_g*nj*nk];
       }
     }
   }
@@ -612,7 +612,7 @@ blk_macdrp_unpack_mesg_x2(
       iptr_b = iz*nj*nx1_g + iy*nx1_g + ix;
       for(int i=0; i<num_of_vars; i++)
       {
-        w_cur[iptr + i*siz_icmp] = rbuff_x2[iptr_b+ i*nx1_g*nj*nk];
+        w_cur[iptr + i*siz_icmp] = rbuff_x2[iptr_b + i*nx1_g*nj*nk];
       }
     }
   }
@@ -636,7 +636,7 @@ blk_macdrp_unpack_mesg_y1(
       iptr_b = iz*ni*ny2_g + iy*ni + ix;
       for(int i=0; i<num_of_vars; i++)
       {
-        w_cur[iptr + i*siz_icmp] = rbuff_y1[iptr_b+ i*ny2_g*ni*nk];
+        w_cur[iptr + i*siz_icmp] = rbuff_y1[iptr_b + i*ny2_g*ni*nk];
       }
     }
   }
@@ -660,7 +660,7 @@ blk_macdrp_unpack_mesg_y2(
       iptr_b = iz*ni*ny1_g + iy*ni + ix;
       for(int i=0; i<num_of_vars; i++)
       {
-        w_cur[iptr + i*siz_icmp] = rbuff_y2[iptr_b+ i*ny1_g*ni*nk];
+        w_cur[iptr + i*siz_icmp] = rbuff_y2[iptr_b + i*ny1_g*ni*nk];
       }
     }
   }
@@ -704,6 +704,16 @@ blk_dt_esti_curv(gd_t *gd, md_t *md,
           Vp = sqrt( md->c11[iptr] / md->rho[iptr] );
         } else if (md->medium_type == CONST_MEDIUM_ACOUSTIC_ISO) {
           Vp = sqrt( md->kappa[iptr] / md->rho[iptr] );
+        } else if (md->medium_type == CONST_MEDIUM_VISCOELASTIC_ISO) {
+          Vp = sqrt( (md->lambda[iptr] + 2.0 * md->mu[iptr]) / md->rho[iptr] );
+          float Ymax = md->Ylam[0][iptr];
+          for (int n = 0; n < md->nmaxwell; n++)
+          {
+            Ymax = Ymax > md->Ylam[n][iptr] ? Ymax : md->Ylam[n][iptr];
+            Ymax = Ymax > md->Ymu[n][iptr] ? Ymax : md->Ymu[n][iptr];
+          }
+          float V_vis = Vp*(1.0+sqrt( md->nmaxwell*Ymax));
+          Vp = V_vis > Vp ? V_vis : Vp;
         }
 
         float dtLe = 1.0e20;

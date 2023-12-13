@@ -163,26 +163,26 @@ int main(int argc, char** argv)
   {
     case PAR_GRID_CARTESIAN : {
 
-        if (myid==0) fprintf(stdout,"generate cartesian grid in code ...\n"); 
+      if (myid==0) fprintf(stdout,"generate cartesian grid in code ...\n"); 
 
-        float dx = par->cartesian_grid_stepsize[0];
-        float dy = par->cartesian_grid_stepsize[1];
-        float dz = par->cartesian_grid_stepsize[2];
+      float dx = par->cartesian_grid_stepsize[0];
+      float dy = par->cartesian_grid_stepsize[1];
+      float dz = par->cartesian_grid_stepsize[2];
 
-        float x0 = par->cartesian_grid_origin[0];
-        float y0 = par->cartesian_grid_origin[1];
-        float z0 = par->cartesian_grid_origin[2];
+      float x0 = par->cartesian_grid_origin[0];
+      float y0 = par->cartesian_grid_origin[1];
+      float z0 = par->cartesian_grid_origin[2];
 
-        gd_curv_gen_cart(gd,dx,x0,dy,y0,dz,z0);
+      gd_curv_gen_cart(gd,dx,x0,dy,y0,dz,z0);
 
-        break;
+      break;
     }
     case PAR_GRID_IMPORT : {
 
-        if (myid==0) fprintf(stdout,"import grid vars ...\n"); 
-        gd_curv_coord_import(gd, blk->output_fname_part, par->grid_import_dir);
+      if (myid==0) fprintf(stdout,"import grid vars ...\n"); 
+      gd_curv_coord_import(gd, blk->output_fname_part, par->grid_import_dir);
 
-        break;
+      break;
     }
   }
 
@@ -213,24 +213,24 @@ int main(int argc, char** argv)
   {
     case PAR_METRIC_CALCULATE : {
 
-        if (myid==0 && verbose>0) fprintf(stdout,"calculate metrics ...\n"); 
-        gd_curv_metric_cal(gd,
-                           gd_metric,
-                           fd->fdc_len,
-                           fd->fdc_indx,
-                           fd->fdc_coef);
+      if (myid==0 && verbose>0) fprintf(stdout,"calculate metrics ...\n"); 
+      gd_curv_metric_cal(gd,
+                         gd_metric,
+                         fd->fdc_len,
+                         fd->fdc_indx,
+                         fd->fdc_coef);
 
-        if (myid==0 && verbose>0) fprintf(stdout,"exchange metrics ...\n"); 
-        gd_exchange(gd,gd_metric->v4d,gd_metric->ncmp,mympi->neighid,mympi->topocomm);
+      if (myid==0 && verbose>0) fprintf(stdout,"exchange metrics ...\n"); 
+      gd_exchange(gd,gd_metric->v4d,gd_metric->ncmp,mympi->neighid,mympi->topocomm);
 
-        break;
+      break;
     }
     case PAR_METRIC_IMPORT : {
 
-        if (myid==0) fprintf(stdout,"import metric file ...\n"); 
-        gd_curv_metric_import(gd, gd_metric, blk->output_fname_part, par->grid_import_dir);
+      if (myid==0) fprintf(stdout,"import metric file ...\n"); 
+      gd_curv_metric_import(gd, gd_metric, blk->output_fname_part, par->grid_import_dir);
 
-        break;
+      break;
     }
   }
   if (myid==0 && verbose>0) { fprintf(stdout, " --> done\n"); fflush(stdout); }
@@ -255,7 +255,8 @@ int main(int argc, char** argv)
 
   // allocate media vars
   if (myid==0 && verbose>0) {fprintf(stdout,"allocate media vars ...\n"); fflush(stdout);}
-  md_init(gd, md, par->media_itype, par->visco_itype);
+
+  md_init(gd, md, par->media_itype, par->visco_itype, par->nmaxwell);
 
   time_t t_start_md = time(NULL);
   // read or discrete velocity model
@@ -263,229 +264,302 @@ int main(int argc, char** argv)
   {
     case PAR_MEDIA_CODE : {
 
-        if (myid==0) fprintf(stdout,"generate simple medium in code ...\n"); 
+      if (myid==0) fprintf(stdout,"generate simple medium in code ...\n"); 
 
-        if (md->medium_type == CONST_MEDIUM_ACOUSTIC_ISO) {
-          md_gen_test_ac_iso(md);
-        }
+      if (md->medium_type == CONST_MEDIUM_ELASTIC_ISO) {
+        md_gen_test_el_iso(md);
+      }
 
-        if (md->medium_type == CONST_MEDIUM_ELASTIC_ISO) {
-          md_gen_test_el_iso(md);
-        }
+      if (md->medium_type == CONST_MEDIUM_ACOUSTIC_ISO) {
+        md_gen_test_ac_iso(md);
+      }
 
-        if (md->medium_type == CONST_MEDIUM_ELASTIC_VTI) {
-          md_gen_test_el_vti(md);
-        }
 
-        if (md->medium_type == CONST_MEDIUM_ELASTIC_ANISO) {
-          md_gen_test_el_aniso(md);
-        }
+      if (md->medium_type == CONST_MEDIUM_ELASTIC_VTI) {
+        md_gen_test_el_vti(md);
+      }
 
-        if (md->visco_type == CONST_VISCO_GRAVES_QS) {
-          md_gen_test_Qs(md, par->visco_Qs_freq);
-        }
+      if (md->medium_type == CONST_MEDIUM_ELASTIC_ANISO) {
+        md_gen_test_el_aniso(md);
+      }
 
-        break;
+      if (md->medium_type == CONST_MEDIUM_VISCOELASTIC_ISO && 
+      md->visco_type == CONST_VISCO_GMB) {
+        md_gen_test_vis_iso(md);
+      }
+
+      if (md->visco_type == CONST_VISCO_GRAVES_QS) {
+        md_gen_test_Qs(md, par->visco_Qs_freq);
+      }
+
+      break;
     }
 
     case PAR_MEDIA_IMPORT : {
 
-        if (myid==0) fprintf(stdout,"import discrete medium file ...\n"); 
-        md_import(gd, md, blk->output_fname_part, par->media_import_dir);
+      if (myid==0) fprintf(stdout,"import discrete medium file ...\n"); 
+      md_import(gd, md, blk->output_fname_part, par->media_import_dir);
 
-        break;
+      break;
     }
 
     case PAR_MEDIA_3LAY : {
 
-        if (myid==0) fprintf(stdout,"read and discretize 3D layer medium file ...\n"); 
+      if (myid==0) fprintf(stdout,"read and discretize 3D layer medium file ...\n"); 
 
-        if (md->medium_type == CONST_MEDIUM_ELASTIC_ISO)
-        {
-            media_layer2model_el_iso(md->lambda, md->mu, md->rho,
-                                     gd->x3d, gd->y3d, gd->z3d,
-                                     gd->nx,  gd->ny,  gd->nz,
-                                     MEDIA_USE_CURV,
-                                     par->media_input_file,
-                                     par->equivalent_medium_method);
-        }
-        else if (md->medium_type == CONST_MEDIUM_ELASTIC_VTI)
-        {
-            media_layer2model_el_vti(md->rho, md->c11, md->c33,
-                                     md->c55,md->c66,md->c13,
-                                     gd->x3d, gd->y3d, gd->z3d,
-                                     gd->nx,  gd->ny,  gd->nz,
-                                     MEDIA_USE_CURV,
-                                     par->media_input_file,
-                                     par->equivalent_medium_method);
-        } else if (md->medium_type == CONST_MEDIUM_ELASTIC_ANISO)
-        {
-            media_layer2model_el_aniso(md->rho,
-                                     md->c11,md->c12,md->c13,md->c14,md->c15,md->c16,
-                                             md->c22,md->c23,md->c24,md->c25,md->c26,
-                                                     md->c33,md->c34,md->c35,md->c36,
-                                                             md->c44,md->c45,md->c46,
-                                                                     md->c55,md->c56,
-                                                                             md->c66,
-                                     gd->x3d, gd->y3d, gd->z3d,
-                                     gd->nx,  gd->ny,  gd->nz,
-                                     MEDIA_USE_CURV,
-                                     par->media_input_file,
-                                     par->equivalent_medium_method);
-        }
+      if (md->medium_type == CONST_MEDIUM_ELASTIC_ISO)
+      {
+        media_layer2model_el_iso(md->lambda, md->mu, md->rho,
+                                 gd->x3d, gd->y3d, gd->z3d,
+                                 gd->nx,  gd->ny,  gd->nz,
+                                 MEDIA_USE_CURV,
+                                 par->media_input_file,
+                                 par->equivalent_medium_method,
+                                 myid);
+      } else if (md->medium_type == CONST_MEDIUM_ELASTIC_VTI) {
+        media_layer2model_el_vti(md->rho, md->c11, md->c33,
+                                 md->c55,md->c66,md->c13,
+                                 gd->x3d, gd->y3d, gd->z3d,
+                                 gd->nx,  gd->ny,  gd->nz,
+                                 MEDIA_USE_CURV,
+                                 par->media_input_file,
+                                 par->equivalent_medium_method,
+                                 myid);
+      } else if (md->medium_type == CONST_MEDIUM_ELASTIC_ANISO) {
+        media_layer2model_el_aniso(md->rho,
+                                   md->c11,md->c12,md->c13,md->c14,md->c15,md->c16,
+                                           md->c22,md->c23,md->c24,md->c25,md->c26,
+                                                   md->c33,md->c34,md->c35,md->c36,
+                                                           md->c44,md->c45,md->c46,
+                                                                   md->c55,md->c56,
+                                                                           md->c66,
+                                   gd->x3d, gd->y3d, gd->z3d,
+                                   gd->nx,  gd->ny,  gd->nz,
+                                   MEDIA_USE_CURV,
+                                   par->media_input_file,
+                                   par->equivalent_medium_method,
+                                   myid);
+      } else if (md->medium_type == CONST_MEDIUM_VISCOELASTIC_ISO) {
+        media_layer2model_el_iso(md->lambda, md->mu, md->rho,
+                                 gd->x3d, gd->y3d, gd->z3d,
+                                 gd->nx,  gd->ny,  gd->nz,
+                                 MEDIA_USE_CURV,
+                                 par->media_input_file,
+                                 par->equivalent_medium_method,
+                                 myid);
+      	media_layer2model_onecmp(md->Qp, 
+      	                         gd->x3d, gd->y3d, gd->z3d,
+      		                       gd->nx,  gd->ny,  gd->nz,
+      		                       MEDIA_USE_CURV,
+      		                       par->Qp_input_file,
+      		                       par->equivalent_medium_method,
+      		                       myid);
+      	media_layer2model_onecmp(md->Qs, 
+      	                         gd->x3d, gd->y3d, gd->z3d,
+      		                       gd->nx,  gd->ny,  gd->nz,
+      		                       MEDIA_USE_CURV,
+      		                       par->Qs_input_file,
+      		                       par->equivalent_medium_method,
+      		                       myid);
 
-        break;
+	    }
+
+      break;
     }
 
     case PAR_MEDIA_3GRD : {
 
-        if (myid==0) fprintf(stdout,"read and descretize 3D grid medium file ...\n"); 
+      if (myid==0) fprintf(stdout,"read and descretize 3D grid medium file ...\n"); 
 
-        if (md->medium_type == CONST_MEDIUM_ELASTIC_ISO)
-        {
-            media_grid2model_el_iso(md->rho,md->lambda, md->mu, 
-                                     gd->x3d, gd->y3d, gd->z3d,
-                                     gd->nx,  gd->ny,  gd->nz,
-                                     gd->xmin,gd->xmax,
-                                     gd->ymin,gd->ymax,
-                                     MEDIA_USE_CURV,
-                                     par->media_input_file,
-                                     par->equivalent_medium_method);
-        }
-        else if (md->medium_type == CONST_MEDIUM_ELASTIC_VTI)
-        {
-            media_grid2model_el_vti(md->rho, md->c11, md->c33,
-                                     md->c55,md->c66,md->c13,
-                                     gd->x3d, gd->y3d, gd->z3d,
-                                     gd->nx,  gd->ny,  gd->nz,
-                                     gd->xmin,gd->xmax,
-                                     gd->ymin,gd->ymax,
-                                     MEDIA_USE_CURV,
-                                     par->media_input_file,
-                                     par->equivalent_medium_method);
-        } else if (md->medium_type == CONST_MEDIUM_ELASTIC_ANISO)
-        {
-            media_grid2model_el_aniso(md->rho,
-                                     md->c11,md->c12,md->c13,md->c14,md->c15,md->c16,
-                                             md->c22,md->c23,md->c24,md->c25,md->c26,
-                                                     md->c33,md->c34,md->c35,md->c36,
-                                                             md->c44,md->c45,md->c46,
-                                                                     md->c55,md->c56,
-                                                                             md->c66,
-                                     gd->x3d, gd->y3d, gd->z3d,
-                                     gd->nx,  gd->ny,  gd->nz,
-                                     gd->xmin,gd->xmax,
-                                     gd->ymin,gd->ymax,
-                                     MEDIA_USE_CURV,
-                                     par->media_input_file,
-                                     par->equivalent_medium_method);
-        }
+      if (md->medium_type == CONST_MEDIUM_ELASTIC_ISO)
+      {
+        media_grid2model_el_iso(md->rho,md->lambda, md->mu, 
+                                gd->x3d, gd->y3d, gd->z3d,
+                                gd->nx,  gd->ny,  gd->nz,
+                                gd->xmin,gd->xmax,
+                                gd->ymin,gd->ymax,
+                                MEDIA_USE_CURV,
+                                par->media_input_file,
+                                par->equivalent_medium_method,
+                                myid);
+      } else if (md->medium_type == CONST_MEDIUM_ELASTIC_VTI) {
+        media_grid2model_el_vti(md->rho, md->c11, md->c33,
+                                md->c55,md->c66,md->c13,
+                                gd->x3d, gd->y3d, gd->z3d,
+                                gd->nx,  gd->ny,  gd->nz,
+                                gd->xmin,gd->xmax,
+                                gd->ymin,gd->ymax,
+                                MEDIA_USE_CURV,
+                                par->media_input_file,
+                                par->equivalent_medium_method,
+                                myid);
+      } else if (md->medium_type == CONST_MEDIUM_ELASTIC_ANISO) {
+        media_grid2model_el_aniso(md->rho,
+                                  md->c11,md->c12,md->c13,md->c14,md->c15,md->c16,
+                                          md->c22,md->c23,md->c24,md->c25,md->c26,
+                                                  md->c33,md->c34,md->c35,md->c36,
+                                                          md->c44,md->c45,md->c46,
+                                                                  md->c55,md->c56,
+                                                                          md->c66,
+                                  gd->x3d, gd->y3d, gd->z3d,
+                                  gd->nx,  gd->ny,  gd->nz,
+                                  gd->xmin,gd->xmax,
+                                  gd->ymin,gd->ymax,
+                                  MEDIA_USE_CURV,
+                                  par->media_input_file,
+                                  par->equivalent_medium_method,
+                                  myid);
+      } else if (md->medium_type == CONST_MEDIUM_VISCOELASTIC_ISO && 
+                 md->visco_type == CONST_VISCO_GMB) {
+        media_grid2model_el_iso(md->rho,md->lambda, md->mu, 
+                                gd->x3d, gd->y3d, gd->z3d,
+                                gd->nx,  gd->ny,  gd->nz,
+                                gd->xmin,gd->xmax,
+                                gd->ymin,gd->ymax,
+                                MEDIA_USE_CURV,
+                                par->media_input_file,
+                                par->equivalent_medium_method,
+                                myid);
+        media_grid2model_onecmp(md->Qp, gd->x3d, gd->y3d, gd->z3d,
+                                gd->nx,  gd->ny, gd->nz,                          
+                                gd->xmin,gd->xmax,                                 
+                                gd->ymin,gd->ymax,
+                                MEDIA_USE_CURV,
+                                par->Qp_input_file,
+                                par->equivalent_medium_method,
+                                myid);
+        media_grid2model_onecmp(md->Qs, gd->x3d, gd->y3d, gd->z3d,
+                                gd->nx,  gd->ny, gd->nz,
+                                gd->xmin,gd->xmax,                                 
+                                gd->ymin,gd->ymax,
+                                MEDIA_USE_CURV,
+                                par->Qs_input_file,
+                                par->equivalent_medium_method,
+                                myid);
+      }
 
-        break;
+      break;
     }
 
     case PAR_MEDIA_3BIN : {
 
-        if (myid==0) fprintf(stdout,"read and descretize 3D bin medium file ...\n"); 
+      if (myid==0) fprintf(stdout,"read and descretize 3D bin medium file ...\n"); 
 
-        if (md->medium_type == CONST_MEDIUM_ELASTIC_ISO)
-        {
-          media_bin2model_el_iso(md->rho,md->lambda, md->mu, 
-                                   gd->x3d, gd->y3d, gd->z3d,
-                                   gd->nx,  gd->ny,  gd->nz,
-                                   gd->xmin,gd->xmax,
-                                   gd->ymin,gd->ymax,
-                                   MEDIA_USE_CURV,
-                                   par->bin_order,
-                                   par->bin_size,
-                                   par->bin_spacing,
-                                   par->bin_origin,
-                                   par->bin_file_rho,
-                                   par->bin_file_vp,
-                                   par->bin_file_vs);//*/
-        }
-        else if (md->medium_type == CONST_MEDIUM_ELASTIC_VTI)
-        {
-          fprintf(stdout," implement reading bin file for MEDIUM_ELASTIC_VTI\n");
-         // fflush(stdout);
-         // exit(1);
-            
-            media_bin2model_el_vti_thomsen(md->rho, md->c11, md->c33,
-                                     md->c55,md->c66,md->c13,
-                                     gd->x3d, gd->y3d, gd->z3d,
-                                     gd->nx,  gd->ny,  gd->nz,
-                                     gd->xmin,gd->xmax,
-                                     gd->ymin,gd->ymax,
-                                     MEDIA_USE_CURV,
-                                     par->bin_order,
-                                     par->bin_size,
-                                     par->bin_spacing,
-                                     par->bin_origin,
-                                     par->bin_file_rho,
-                                     par->bin_file_vp,
-				                             par->bin_file_vs,
-                                     par->bin_file_epsilon,
-                                     par->bin_file_delta);
-                                    // par->bin_file_gamma);//*/
-          
-        }
-        else if (md->medium_type == CONST_MEDIUM_ELASTIC_ANISO)
-        {
-          fprintf(stdout,"error: not implement reading bin file for MEDIUM_ELASTIC_ANISO\n");
-          fflush(stdout);
-          exit(1);
-            /*
-            media_bin2model_el_aniso(md->rho,
-                                     md->c11,md->c12,md->c13,md->c14,md->c15,md->c16,
-                                             md->c22,md->c23,md->c24,md->c25,md->c26,
-                                                     md->c33,md->c34,md->c35,md->c36,
-                                                             md->c44,md->c45,md->c46,
-                                                                     md->c55,md->c56,
-                                                                             md->c66,
-                                     gd->x3d, gd->y3d, gd->z3d,
-                                     gd->nx,  gd->ny,  gd->nz,
-                                     gd->xmin,gd->xmax,
-                                     gd->ymin,gd->ymax,
-                                     MEDIA_USE_CURV,
-                                     par->bin_order,
-                                     par->bin_size,
-                                     par->bin_spacing,
-                                     par->bin_origin,
-                                     par->bin_file_rho,
-                                     par->bin_file_c11,
-                                     par->bin_file_c12,
-                                     par->bin_file_c13,
-                                     par->bin_file_c14,
-                                     par->bin_file_c15,
-                                     par->bin_file_c16,
-                                     par->bin_file_c22,
-                                     par->bin_file_c23,
-                                     par->bin_file_c24,
-                                     par->bin_file_c25,
-                                     par->bin_file_c26,
-                                     par->bin_file_c33,
-                                     par->bin_file_c34,
-                                     par->bin_file_c35,
-                                     par->bin_file_c36,
-                                     par->bin_file_c44,
-                                     par->bin_file_c45,
-                                     par->bin_file_c46,
-                                     par->bin_file_c55,
-                                     par->bin_file_c56,
-                                     par->bin_file_c66);
-          */
-        }
+      if (md->medium_type == CONST_MEDIUM_ELASTIC_ISO)
+      {
+        media_bin2model_el_iso(md->rho,md->lambda, md->mu, 
+                               gd->x3d, gd->y3d, gd->z3d,
+                               gd->nx,  gd->ny,  gd->nz,
+                               gd->xmin,gd->xmax,
+                               gd->ymin,gd->ymax,
+                               MEDIA_USE_CURV,
+                               par->bin_order,
+                               par->bin_size,
+                               par->bin_spacing,
+                               par->bin_origin,
+                               par->bin_file_rho,
+                               par->bin_file_vp,
+                               par->bin_file_vs);//*/
+      } else if (md->medium_type == CONST_MEDIUM_VISCOELASTIC_ISO) {
+        media_bin2model_el_iso(md->rho,md->lambda, md->mu, 
+                               gd->x3d, gd->y3d, gd->z3d,
+                               gd->nx,  gd->ny,  gd->nz,
+                               gd->xmin,gd->xmax,
+                               gd->ymin,gd->ymax,
+                               MEDIA_USE_CURV,
+                               par->bin_order,
+                               par->bin_size,
+                               par->bin_spacing,
+                               par->bin_origin,
+                               par->bin_file_rho,
+                               par->bin_file_vp,
+                               par->bin_file_vs);
+        media_bin2model_vis_iso(md->Qp,md->Qs,
+                                gd->x3d, gd->y3d, gd->z3d,
+                                gd->nx,  gd->ny,  gd->nz,
+                                gd->xmin,gd->xmax,
+                                gd->ymin,gd->ymax,
+                                MEDIA_USE_CURV,
+                                par->bin_order,
+                                par->bin_size,
+                                par->bin_spacing,
+                                par->bin_origin,
+                                par->Qp_input_file,
+                                par->Qs_input_file);
+                                
+      } else if (md->medium_type == CONST_MEDIUM_ELASTIC_VTI) {
+        fprintf(stdout,"error: not implement reading bin file for MEDIUM_ELASTIC_VTI\n");
+        fflush(stdout);
+        exit(1);
+        /* 
+        media_bin2model_el_vti_thomsen(md->rho, md->c11, md->c33,
+                                       md->c55,md->c66,md->c13,
+                                       gd->x3d, gd->y3d, gd->z3d,
+                                       gd->nx,  gd->ny,  gd->nz,
+                                       gd->xmin,gd->xmax,
+                                       gd->ymin,gd->ymax,
+                                       MEDIA_USE_CURV,
+                                       par->bin_order,
+                                       par->bin_size,
+                                       par->bin_spacing,
+                                       par->bin_origin,
+                                       par->bin_file_rho,
+                                       par->bin_file_vp,
+			                                 par->bin_file_vs,
+                                       par->bin_file_epsilon,
+                                       par->bin_file_delta);
+                                       par->bin_file_gamma);
+        */
+      } else if (md->medium_type == CONST_MEDIUM_ELASTIC_ANISO) {
+        fprintf(stdout,"error: not implement reading bin file for MEDIUM_ELASTIC_ANISO\n");
+        fflush(stdout);
+        exit(1);
+        /*
+        media_bin2model_el_aniso(md->rho,
+                                 md->c11,md->c12,md->c13,md->c14,md->c15,md->c16,
+                                         md->c22,md->c23,md->c24,md->c25,md->c26,
+                                                 md->c33,md->c34,md->c35,md->c36,
+                                                         md->c44,md->c45,md->c46,
+                                                                 md->c55,md->c56,
+                                                                         md->c66,
+                                 gd->x3d, gd->y3d, gd->z3d,
+                                 gd->nx,  gd->ny,  gd->nz,
+                                 gd->xmin,gd->xmax,
+                                 gd->ymin,gd->ymax,
+                                 MEDIA_USE_CURV,
+                                 par->bin_order,
+                                 par->bin_size,
+                                 par->bin_spacing,
+                                 par->bin_origin,
+                                 par->bin_file_rho,
+                                 par->bin_file_c11,
+                                 par->bin_file_c12,
+                                 par->bin_file_c13,
+                                 par->bin_file_c14,
+                                 par->bin_file_c15,
+                                 par->bin_file_c16,
+                                 par->bin_file_c22,
+                                 par->bin_file_c23,
+                                 par->bin_file_c24,
+                                 par->bin_file_c25,
+                                 par->bin_file_c26,
+                                 par->bin_file_c33,
+                                 par->bin_file_c34,
+                                 par->bin_file_c35,
+                                 par->bin_file_c36,
+                                 par->bin_file_c44,
+                                 par->bin_file_c45,
+                                 par->bin_file_c46,
+                                 par->bin_file_c55,
+                                 par->bin_file_c56,
+                                 par->bin_file_c66);
+        */
+      }
 
-        break;
+      break;
     } 
   }
 
-  MPI_Barrier(comm);
-  time_t t_end_md = time(NULL);
-  
-  if (myid==0 && verbose>0) {
-    fprintf(stdout,"media Time of time :%f s \n", difftime(t_end_md,t_start_md));
-  }
   // export grid media
   if (par->is_export_media==1)
   {
@@ -496,6 +570,18 @@ int main(int argc, char** argv)
               blk->media_export_dir);
   } else {
     if (myid==0) fprintf(stdout,"do not export medium\n"); 
+  }
+
+  if (md->medium_type == CONST_MEDIUM_VISCOELASTIC_ISO && 
+      md->visco_type == CONST_VISCO_GMB){
+    md_vis_GMB_cal_Y(md, par->fr, par->fmin, par->fmax);
+  }
+
+  MPI_Barrier(comm);
+  time_t t_end_md = time(NULL);
+  
+  if (myid==0 && verbose>0) {
+    fprintf(stdout,"media Time of time :%f s \n", difftime(t_end_md,t_start_md));
   }
 
 //-------------------------------------------------------------------------------
@@ -607,7 +693,7 @@ int main(int argc, char** argv)
   {
     wav_ac_init(gd, wav, fd->num_rk_stages);
   } else {
-    wav_init(gd, wav, fd->num_rk_stages);
+    wav_init(gd, wav, fd->num_rk_stages, par->visco_itype, par->nmaxwell);
   }
 
 //-------------------------------------------------------------------------------

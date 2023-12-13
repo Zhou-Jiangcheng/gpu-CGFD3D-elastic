@@ -68,8 +68,14 @@ bdry_free_set(gd_t        *gd,
                                       0.0,
                                       "bdry_free_set");
 
+  float *matD = (float *)fdlib_mem_calloc_1d_float(
+                                      siz_iz * CONST_NDIM * CONST_NDIM,
+                                      0.0,
+                                      "bdry_free_set");
+
   bdryfree->matVx2Vz2 = matVx2Vz;
   bdryfree->matVy2Vz2 = matVy2Vz;
+  bdryfree->matD = matD;
 
   return ierr;
 }
@@ -338,7 +344,7 @@ bdry_cal_abl_len_dh(gd_t *gd,
 {
   int ierr = 0;
 
-  int siz_iy  = gd->siz_iy;
+  int siz_iy = gd->siz_iy;
   int siz_iz = gd->siz_iz;
 
   // cartesian grid is simple

@@ -98,6 +98,34 @@ int init_md_device(md_t *md, md_t *md_d)
     CUDACHECK(cudaMemcpy(md_d->lambda, md->lambda, sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
     CUDACHECK(cudaMemcpy(md_d->mu,     md->mu,     sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
   }
+  if (md->medium_type == CONST_MEDIUM_VISCOELASTIC_ISO)
+  {
+    md_d->rho    = (float *) cuda_malloc(sizeof(float)*siz_icmp);
+    md_d->lambda = (float *) cuda_malloc(sizeof(float)*siz_icmp);
+    md_d->mu     = (float *) cuda_malloc(sizeof(float)*siz_icmp);
+    CUDACHECK(cudaMemcpy(md_d->rho,    md->rho,    sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
+    CUDACHECK(cudaMemcpy(md_d->lambda, md->lambda, sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
+    CUDACHECK(cudaMemcpy(md_d->mu,     md->mu,     sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
+    if (md->visco_type == CONST_VISCO_GRAVES_QS) {
+      md_d->Qs = (float *) cuda_malloc(sizeof(float)*siz_icmp);
+      CUDACHECK(cudaMemcpy(md_d->Qs, md->Qs, sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
+    } else if(md->visco_type == CONST_VISCO_GMB) {
+      md_d->Qp = (float *) cuda_malloc(sizeof(float)*siz_icmp);
+      md_d->Qs = (float *) cuda_malloc(sizeof(float)*siz_icmp);
+      CUDACHECK(cudaMemcpy(md_d->Qp, md->Qp, sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
+      CUDACHECK(cudaMemcpy(md_d->Qs, md->Qs, sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
+      for(int i=0; i<md->nmaxwell; i++)
+      {
+        md_d->Ylam[i] = (float *) cuda_malloc(sizeof(float)*siz_icmp);
+        md_d->Ymu [i] = (float *) cuda_malloc(sizeof(float)*siz_icmp);
+        CUDACHECK(cudaMemcpy(md_d->Ylam[i], md->Ylam[i], sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
+        CUDACHECK(cudaMemcpy(md_d->Ymu [i], md->Ymu [i], sizeof(float)*siz_icmp, cudaMemcpyHostToDevice));
+      }
+
+        md_d->wl = (float *) cuda_malloc(sizeof(float)*md->nmaxwell);
+        CUDACHECK(cudaMemcpy(md_d->wl, md->wl, sizeof(float)*md->nmaxwell, cudaMemcpyHostToDevice));
+    }
+  }
   if (md->medium_type == CONST_MEDIUM_ELASTIC_VTI)
   {
     md_d->rho    = (float *) cuda_malloc(sizeof(float)*siz_icmp);
@@ -164,25 +192,26 @@ int init_md_device(md_t *md, md_t *md_d)
   return 0;
 }
 
-int init_fd_device(fd_t *fd, fd_wav_t *fd_wav_d)
+int init_fd_device(fd_t *fd, fd_wav_t *fd_wav_d, gd_t *gd)
 {
   int max_len = fd->fdz_max_len; //=5 
   int max_lay = fd->num_of_fdz_op;
-  fd_wav_d->fdz_len_d     = (int *) cuda_malloc(sizeof(int)*max_lay);
-  fd_wav_d->fdx_coef_d    = (float *) cuda_malloc(sizeof(float)*max_len);
-  fd_wav_d->fdy_coef_d    = (float *) cuda_malloc(sizeof(float)*max_len);
-  fd_wav_d->fdz_coef_d    = (float *) cuda_malloc(sizeof(float)*max_len);
-  fd_wav_d->fdz_coef_all_d    = (float *) cuda_malloc(sizeof(float)*max_len*max_lay);
+  fd_wav_d->fdz_len_d  = (int *) cuda_malloc(sizeof(int)*max_lay);
+  fd_wav_d->fdx_coef_d = (float *) cuda_malloc(sizeof(float)*max_len);
+  fd_wav_d->fdy_coef_d = (float *) cuda_malloc(sizeof(float)*max_len);
+  fd_wav_d->fdz_coef_d = (float *) cuda_malloc(sizeof(float)*max_len);
+  fd_wav_d->fdz_coef_all_d = (float *) cuda_malloc(sizeof(float)*max_len*max_lay);
 
-  fd_wav_d->fdx_indx_d    = (int *) cuda_malloc(sizeof(int)*max_len);
-  fd_wav_d->fdy_indx_d    = (int *) cuda_malloc(sizeof(int)*max_len);
-  fd_wav_d->fdz_indx_d    = (int *) cuda_malloc(sizeof(int)*max_len);
-  fd_wav_d->fdz_indx_all_d    = (int *) cuda_malloc(sizeof(int)*max_len*max_lay);
+  fd_wav_d->fdx_indx_d = (int *) cuda_malloc(sizeof(int)*max_len);
+  fd_wav_d->fdy_indx_d = (int *) cuda_malloc(sizeof(int)*max_len);
+  fd_wav_d->fdz_indx_d = (int *) cuda_malloc(sizeof(int)*max_len);
+  fd_wav_d->fdz_indx_all_d  = (int *) cuda_malloc(sizeof(int)*max_len*max_lay);
 
-  fd_wav_d->fdx_shift_d    = (size_t *) cuda_malloc(sizeof(size_t)*max_len);
-  fd_wav_d->fdy_shift_d    = (size_t *) cuda_malloc(sizeof(size_t)*max_len);
-  fd_wav_d->fdz_shift_d    = (size_t *) cuda_malloc(sizeof(size_t)*max_len);
-  fd_wav_d->fdz_shift_all_d    = (size_t *) cuda_malloc(sizeof(size_t)*max_len*max_lay);
+  fd_wav_d->fdx_shift_d = (size_t *) cuda_malloc(sizeof(size_t)*max_len);
+  fd_wav_d->fdy_shift_d = (size_t *) cuda_malloc(sizeof(size_t)*max_len);
+  fd_wav_d->fdz_shift_d = (size_t *) cuda_malloc(sizeof(size_t)*max_len);
+  fd_wav_d->fdz_shift_all_d = (size_t *) cuda_malloc(sizeof(size_t)*max_len*max_lay);
+
   return 0;
 }
 
@@ -271,11 +300,13 @@ int init_bdryfree_device(gd_t *gd, bdryfree_t *bdryfree, bdryfree_t *bdryfree_d)
   // copy bdryfree
   if (bdryfree_d->is_sides_free[CONST_NDIM-1][1] == 1)
   {
-    bdryfree_d->matVx2Vz2   = (float *) cuda_malloc(sizeof(float)*nx*ny*CONST_NDIM*CONST_NDIM);
-    bdryfree_d->matVy2Vz2   = (float *) cuda_malloc(sizeof(float)*nx*ny*CONST_NDIM*CONST_NDIM);
+    bdryfree_d->matVx2Vz2 = (float *) cuda_malloc(sizeof(float)*nx*ny*CONST_NDIM*CONST_NDIM);
+    bdryfree_d->matVy2Vz2 = (float *) cuda_malloc(sizeof(float)*nx*ny*CONST_NDIM*CONST_NDIM);
+    bdryfree_d->matD      = (float *) cuda_malloc(sizeof(float)*nx*ny*CONST_NDIM*CONST_NDIM);
 
     CUDACHECK(cudaMemcpy(bdryfree_d->matVx2Vz2, bdryfree->matVx2Vz2, sizeof(float)*nx*ny*CONST_NDIM*CONST_NDIM, cudaMemcpyHostToDevice));
     CUDACHECK(cudaMemcpy(bdryfree_d->matVy2Vz2, bdryfree->matVy2Vz2, sizeof(float)*nx*ny*CONST_NDIM*CONST_NDIM, cudaMemcpyHostToDevice));
+    CUDACHECK(cudaMemcpy(bdryfree_d->matD, bdryfree->matD, sizeof(float)*nx*ny*CONST_NDIM*CONST_NDIM, cudaMemcpyHostToDevice));
   }
 
   return 0;
@@ -350,9 +381,39 @@ int init_wave_device(wav_t *wav, wav_t *wav_d)
 {
   size_t siz_ilevel = wav->siz_ilevel;
   int nlevel = wav->nlevel;
+  int nmaxwell = wav->nmaxwell;
   memcpy(wav_d,wav,sizeof(wav_t));
   wav_d->v5d   = (float *) cuda_malloc(sizeof(float)*siz_ilevel*nlevel);
   CUDACHECK(cudaMemset(wav_d->v5d,0,sizeof(float)*siz_ilevel*nlevel));
+
+  if(wav->visco_type == CONST_VISCO_GMB)
+  {
+    wav_d->Jxx_pos = (size_t *) cuda_malloc(sizeof(size_t)*nmaxwell);
+    wav_d->Jyy_pos = (size_t *) cuda_malloc(sizeof(size_t)*nmaxwell);
+    wav_d->Jzz_pos = (size_t *) cuda_malloc(sizeof(size_t)*nmaxwell);
+    wav_d->Jxy_pos = (size_t *) cuda_malloc(sizeof(size_t)*nmaxwell);
+    wav_d->Jxz_pos = (size_t *) cuda_malloc(sizeof(size_t)*nmaxwell);
+    wav_d->Jyz_pos = (size_t *) cuda_malloc(sizeof(size_t)*nmaxwell);
+    CUDACHECK(cudaMemcpy(wav_d->Jxx_pos,wav->Jxx_pos,sizeof(size_t)*nmaxwell,cudaMemcpyHostToDevice));
+    CUDACHECK(cudaMemcpy(wav_d->Jyy_pos,wav->Jyy_pos,sizeof(size_t)*nmaxwell,cudaMemcpyHostToDevice));
+    CUDACHECK(cudaMemcpy(wav_d->Jzz_pos,wav->Jzz_pos,sizeof(size_t)*nmaxwell,cudaMemcpyHostToDevice));
+    CUDACHECK(cudaMemcpy(wav_d->Jxy_pos,wav->Jxy_pos,sizeof(size_t)*nmaxwell,cudaMemcpyHostToDevice));
+    CUDACHECK(cudaMemcpy(wav_d->Jxz_pos,wav->Jxz_pos,sizeof(size_t)*nmaxwell,cudaMemcpyHostToDevice));
+    CUDACHECK(cudaMemcpy(wav_d->Jyz_pos,wav->Jyz_pos,sizeof(size_t)*nmaxwell,cudaMemcpyHostToDevice));
+
+    wav_d->Jxx_seq = (size_t *) cuda_malloc(sizeof(size_t)*nmaxwell);
+    wav_d->Jyy_seq = (size_t *) cuda_malloc(sizeof(size_t)*nmaxwell);
+    wav_d->Jzz_seq = (size_t *) cuda_malloc(sizeof(size_t)*nmaxwell);
+    wav_d->Jxy_seq = (size_t *) cuda_malloc(sizeof(size_t)*nmaxwell);
+    wav_d->Jxz_seq = (size_t *) cuda_malloc(sizeof(size_t)*nmaxwell);
+    wav_d->Jyz_seq = (size_t *) cuda_malloc(sizeof(size_t)*nmaxwell);
+    CUDACHECK(cudaMemcpy(wav_d->Jxx_seq,wav->Jxx_seq,sizeof(size_t)*nmaxwell,cudaMemcpyHostToDevice));
+    CUDACHECK(cudaMemcpy(wav_d->Jyy_seq,wav->Jyy_seq,sizeof(size_t)*nmaxwell,cudaMemcpyHostToDevice));
+    CUDACHECK(cudaMemcpy(wav_d->Jzz_seq,wav->Jzz_seq,sizeof(size_t)*nmaxwell,cudaMemcpyHostToDevice));
+    CUDACHECK(cudaMemcpy(wav_d->Jxy_seq,wav->Jxy_seq,sizeof(size_t)*nmaxwell,cudaMemcpyHostToDevice));
+    CUDACHECK(cudaMemcpy(wav_d->Jxz_seq,wav->Jxz_seq,sizeof(size_t)*nmaxwell,cudaMemcpyHostToDevice));
+    CUDACHECK(cudaMemcpy(wav_d->Jyz_seq,wav->Jyz_seq,sizeof(size_t)*nmaxwell,cudaMemcpyHostToDevice));
+  }
 
   return 0;
 }
@@ -421,11 +482,33 @@ int dealloc_gd_device(gd_t gd_d)
 
 int dealloc_md_device(md_t md_d)
 {
+  if (md_d.medium_type == CONST_MEDIUM_ACOUSTIC_ISO)
+  {
+    CUDACHECK(cudaFree(md_d.rho  )); 
+    CUDACHECK(cudaFree(md_d.kappa)); 
+  }
   if (md_d.medium_type == CONST_MEDIUM_ELASTIC_ISO)
   {
     CUDACHECK(cudaFree(md_d.rho   )); 
     CUDACHECK(cudaFree(md_d.lambda)); 
     CUDACHECK(cudaFree(md_d.mu    )); 
+  }
+  if (md_d.medium_type == CONST_MEDIUM_VISCOELASTIC_ISO)
+  {
+    CUDACHECK(cudaFree(md_d.rho   )); 
+    CUDACHECK(cudaFree(md_d.lambda)); 
+    CUDACHECK(cudaFree(md_d.mu    )); 
+    if (md_d.visco_type == CONST_VISCO_GRAVES_QS) {
+      CUDACHECK(cudaFree(md_d.Qs    )); 
+    } else if(md_d.visco_type == CONST_VISCO_GMB) {
+      CUDACHECK(cudaFree(md_d.Qp    )); 
+      CUDACHECK(cudaFree(md_d.Qs    )); 
+      for(int i=0; i<md_d.nmaxwell; i++)
+      {
+        CUDACHECK(cudaFree(md_d.Ylam[i])); 
+        CUDACHECK(cudaFree(md_d.Ymu [i])); 
+      }
+    }
   }
   if (md_d.medium_type == CONST_MEDIUM_ELASTIC_VTI)
   {
@@ -535,6 +618,7 @@ int dealloc_bdryfree_device(bdryfree_t bdryfree_d)
   {
     CUDACHECK(cudaFree(bdryfree_d.matVx2Vz2)); 
     CUDACHECK(cudaFree(bdryfree_d.matVy2Vz2)); 
+    CUDACHECK(cudaFree(bdryfree_d.matD)); 
   }
   return 0;
 }
@@ -580,5 +664,20 @@ int dealloc_bdryexp_device(bdryexp_t bdryexp_d)
 int dealloc_wave_device(wav_t wav_d)
 {
   CUDACHECK(cudaFree(wav_d.v5d)); 
+  if(wav_d.visco_type == CONST_VISCO_GMB)
+  {
+    CUDACHECK(cudaFree(wav_d.Jxx_pos)); 
+    CUDACHECK(cudaFree(wav_d.Jyy_pos)); 
+    CUDACHECK(cudaFree(wav_d.Jzz_pos)); 
+    CUDACHECK(cudaFree(wav_d.Jxy_pos)); 
+    CUDACHECK(cudaFree(wav_d.Jxz_pos)); 
+    CUDACHECK(cudaFree(wav_d.Jyz_pos)); 
+    CUDACHECK(cudaFree(wav_d.Jxx_seq)); 
+    CUDACHECK(cudaFree(wav_d.Jyy_seq)); 
+    CUDACHECK(cudaFree(wav_d.Jzz_seq)); 
+    CUDACHECK(cudaFree(wav_d.Jxy_seq)); 
+    CUDACHECK(cudaFree(wav_d.Jxz_seq)); 
+    CUDACHECK(cudaFree(wav_d.Jyz_seq)); 
+  }
   return 0;
 }

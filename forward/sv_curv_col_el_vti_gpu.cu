@@ -1136,45 +1136,44 @@ sv_curv_col_el_vti_rhs_cfspml_gpu(int idim, int iside,
  *  only implement z2 (top) right now
  ******************************************************************************/
 
-__global__ void
-sv_curv_col_el_vti_dvh2dvz_gpu(gd_t            gd_d,
-                               gd_metric_t metric_d,
-                               md_t            md_d,
-                               bdryfree_t      bdryfree_d,
-                               const int verbose)
+int
+sv_curv_col_el_vti_dvh2dvz(gd_t            *gd,
+                           gd_metric_t     *metric,
+                           md_t            *md,
+                           bdryfree_t      *bdryfree,
+                           const int verbose)
 {
-  int ni1 = gd_d.ni1;
-  int ni2 = gd_d.ni2;
-  int nj1 = gd_d.nj1;
-  int nj2 = gd_d.nj2;
-  int nk1 = gd_d.nk1;
-  int nk2 = gd_d.nk2;
-  int nx  = gd_d.nx;
-  int ny  = gd_d.ny;
-  int nz  = gd_d.nz;
-  size_t siz_iy   = gd_d.siz_iy;
-  size_t siz_iz   = gd_d.siz_iz;
-  size_t siz_icmp = gd_d.siz_icmp;
+  int ni1 = gd->ni1;
+  int ni2 = gd->ni2;
+  int nj1 = gd->nj1;
+  int nj2 = gd->nj2;
+  int nk1 = gd->nk1;
+  int nk2 = gd->nk2;
+  int nx  = gd->nx;
+  int ny  = gd->ny;
+  int nz  = gd->nz;
+  size_t siz_iy = gd->siz_iy;
+  size_t siz_iz = gd->siz_iz;
 
   // point to each var
-  float * xi_x = metric_d.xi_x;
-  float * xi_y = metric_d.xi_y;
-  float * xi_z = metric_d.xi_z;
-  float * et_x = metric_d.eta_x;
-  float * et_y = metric_d.eta_y;
-  float * et_z = metric_d.eta_z;
-  float * zt_x = metric_d.zeta_x;
-  float * zt_y = metric_d.zeta_y;
-  float * zt_z = metric_d.zeta_z;
+  float *xi_x = metric->xi_x;
+  float *xi_y = metric->xi_y;
+  float *xi_z = metric->xi_z;
+  float *et_x = metric->eta_x;
+  float *et_y = metric->eta_y;
+  float *et_z = metric->eta_z;
+  float *zt_x = metric->zeta_x;
+  float *zt_y = metric->zeta_y;
+  float *zt_z = metric->zeta_z;
 
-  float * c11d = md_d.c11;
-  float * c13d = md_d.c13;
-  float * c33d = md_d.c33;
-  float * c55d = md_d.c55;
-  float * c66d = md_d.c66;
+  float *c11d = md->c11;
+  float *c13d = md->c13;
+  float *c33d = md->c33;
+  float *c55d = md->c55;
+  float *c66d = md->c66;
 
-  float *matVx2Vz = bdryfree_d.matVx2Vz2;
-  float *matVy2Vz = bdryfree_d.matVy2Vz2;
+  float *matVx2Vz = bdryfree->matVx2Vz2;
+  float *matVy2Vz = bdryfree->matVy2Vz2;
 
   float A[3][3], B[3][3], C[3][3];
   float AB[3][3], AC[3][3];
@@ -1184,74 +1183,75 @@ sv_curv_col_el_vti_dvh2dvz_gpu(gd_t            gd_d,
  
   int k = nk2;
 
-  size_t ix = blockIdx.x * blockDim.x + threadIdx.x;
-  size_t iy = blockIdx.y * blockDim.y + threadIdx.y;
-  if(ix<(ni2-ni1+1) && iy<(nj2-nj1+1))
+  for (int j = nj1; j <= nj2; j++)
   {
-    size_t iptr = (ix+ni1) + (iy+nj1) * siz_iy + k * siz_iz;
+    for (int i = ni1; i <= ni2; i++)
+    {
+      size_t iptr = i + j * siz_iy + k * siz_iz;
 
-    xix = xi_x[iptr];
-    xiy = xi_y[iptr];
-    xiz = xi_z[iptr];
-    etx = et_x[iptr];
-    ety = et_y[iptr];
-    etz = et_z[iptr];
-    ztx = zt_x[iptr];
-    zty = zt_y[iptr];
-    ztz = zt_z[iptr];
-    
-    c11 = c11d[iptr];
-    c13 = c13d[iptr];
-    c33 = c33d[iptr];
-    c55 = c55d[iptr];
-    c66 = c66d[iptr];
-    c12 = c11 - 2.0 * c66;
+      xix = xi_x[iptr];
+      xiy = xi_y[iptr];
+      xiz = xi_z[iptr];
+      etx = et_x[iptr];
+      ety = et_y[iptr];
+      etz = et_z[iptr];
+      ztx = zt_x[iptr];
+      zty = zt_y[iptr];
+      ztz = zt_z[iptr];
+      
+      c11 = c11d[iptr];
+      c13 = c13d[iptr];
+      c33 = c33d[iptr];
+      c55 = c55d[iptr];
+      c66 = c66d[iptr];
+      c12 = c11 - 2.0 * c66;
 
-    // first dim: irow; sec dim: jcol, as Fortran code
-    A[0][0] = (c11*ztx)*ztx + (c66*zty)*zty + (c55*ztz)*ztz;
-    A[0][1] = (c12*zty)*ztx + (c66*ztx)*zty;
-    A[0][2] = (c13*ztz)*ztx + (c55*ztx)*ztz; 
-    A[1][0] = (c66*zty)*ztx + (c12*ztx)*zty; 
-    A[1][1] = (c66*ztx)*ztx + (c11*zty)*zty + (c55*ztz)*ztz; 
-    A[1][2] = (c13*ztz)*zty + (c55*zty)*ztz;
-    A[2][0] = (c55*ztz)*ztx + (c13*ztx)*ztz;
-    A[2][1] = (c55*ztz)*zty + (c13*zty)*ztz;
-    A[2][2] = (c55*ztx)*ztx + (c55*zty)*zty + (c33*ztz)*ztz; 
-    fdlib_math_invert3x3(A);
-                                                     
-    B[0][0] = (c11*xix)*ztx + (c66*xiy)*zty + (c55*xiz)*ztz;
-    B[0][1] = (c12*xiy)*ztx + (c66*xix)*zty;
-    B[0][2] = (c13*xiz)*ztx + (c55*xix)*ztz; 
-    B[1][0] = (c66*xiy)*ztx + (c12*xix)*zty; 
-    B[1][1] = (c66*xix)*ztx + (c11*xiy)*zty + (c55*xiz)*ztz; 
-    B[1][2] = (c13*xiz)*zty + (c55*xiy)*ztz;
-    B[2][0] = (c55*xiz)*ztx + (c13*xix)*ztz;
-    B[2][1] = (c55*xiz)*zty + (c13*xiy)*ztz;
-    B[2][2] = (c55*xix)*ztx + (c55*xiy)*zty + (c33*xiz)*ztz; 
-     
-    C[0][0] = (c11*etx)*ztx + (c66*ety)*zty + (c55*etz)*ztz;
-    C[0][1] = (c12*ety)*ztx + (c66*etx)*zty;
-    C[0][2] = (c13*etz)*ztx + (c55*etx)*ztz; 
-    C[1][0] = (c66*ety)*ztx + (c12*etx)*zty; 
-    C[1][1] = (c66*etx)*ztx + (c11*ety)*zty + (c55*etz)*ztz; 
-    C[1][2] = (c13*etz)*zty + (c55*ety)*ztz;
-    C[2][0] = (c55*etz)*ztx + (c13*etx)*ztz;
-    C[2][1] = (c55*etz)*zty + (c13*ety)*ztz;
-    C[2][2] = (c55*etx)*ztx + (c55*ety)*zty + (c33*etz)*ztz; 
-    fdlib_math_matmul3x3(A, B, AB);
-    fdlib_math_matmul3x3(A, C, AC);
+      // first dim: irow; sec dim: jcol, as Fortran code
+      A[0][0] = (c11*ztx)*ztx + (c66*zty)*zty + (c55*ztz)*ztz;
+      A[0][1] = (c12*zty)*ztx + (c66*ztx)*zty;
+      A[0][2] = (c13*ztz)*ztx + (c55*ztx)*ztz; 
+      A[1][0] = (c66*zty)*ztx + (c12*ztx)*zty; 
+      A[1][1] = (c66*ztx)*ztx + (c11*zty)*zty + (c55*ztz)*ztz; 
+      A[1][2] = (c13*ztz)*zty + (c55*zty)*ztz;
+      A[2][0] = (c55*ztz)*ztx + (c13*ztx)*ztz;
+      A[2][1] = (c55*ztz)*zty + (c13*zty)*ztz;
+      A[2][2] = (c55*ztx)*ztx + (c55*zty)*zty + (c33*ztz)*ztz; 
+      fdlib_math_invert3x3(A);
+                                                       
+      B[0][0] = (c11*xix)*ztx + (c66*xiy)*zty + (c55*xiz)*ztz;
+      B[0][1] = (c12*xiy)*ztx + (c66*xix)*zty;
+      B[0][2] = (c13*xiz)*ztx + (c55*xix)*ztz; 
+      B[1][0] = (c66*xiy)*ztx + (c12*xix)*zty; 
+      B[1][1] = (c66*xix)*ztx + (c11*xiy)*zty + (c55*xiz)*ztz; 
+      B[1][2] = (c13*xiz)*zty + (c55*xiy)*ztz;
+      B[2][0] = (c55*xiz)*ztx + (c13*xix)*ztz;
+      B[2][1] = (c55*xiz)*zty + (c13*xiy)*ztz;
+      B[2][2] = (c55*xix)*ztx + (c55*xiy)*zty + (c33*xiz)*ztz; 
+       
+      C[0][0] = (c11*etx)*ztx + (c66*ety)*zty + (c55*etz)*ztz;
+      C[0][1] = (c12*ety)*ztx + (c66*etx)*zty;
+      C[0][2] = (c13*etz)*ztx + (c55*etx)*ztz; 
+      C[1][0] = (c66*ety)*ztx + (c12*etx)*zty; 
+      C[1][1] = (c66*etx)*ztx + (c11*ety)*zty + (c55*etz)*ztz; 
+      C[1][2] = (c13*etz)*zty + (c55*ety)*ztz;
+      C[2][0] = (c55*etz)*ztx + (c13*etx)*ztz;
+      C[2][1] = (c55*etz)*zty + (c13*ety)*ztz;
+      C[2][2] = (c55*etx)*ztx + (c55*ety)*zty + (c33*etz)*ztz; 
+      fdlib_math_matmul3x3(A, B, AB);
+      fdlib_math_matmul3x3(A, C, AC);
 
-    size_t ij = ((iy+nj1) * siz_iy + (ix+ni1)) * 9;
+      size_t ij = (j * siz_iy + i) * 9;
 
-    // save into mat
-    for(int irow = 0; irow < 3; irow++){
-      for(int jcol = 0; jcol < 3; jcol++){
-        matVx2Vz[ij + irow*3 + jcol] = -1.0f * AB[irow][jcol];
-        matVy2Vz[ij + irow*3 + jcol] = -1.0f * AC[irow][jcol];
+      // save into mat
+      for(int irow = 0; irow < 3; irow++){
+        for(int jcol = 0; jcol < 3; jcol++){
+          matVx2Vz[ij + irow*3 + jcol] = -1.0f * AB[irow][jcol];
+          matVy2Vz[ij + irow*3 + jcol] = -1.0f * AC[irow][jcol];
+        }
       }
     }
   }
 
-  return;
+  return 0;
 }
 

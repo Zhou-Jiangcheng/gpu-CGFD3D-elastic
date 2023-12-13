@@ -21,9 +21,13 @@
 #define CONST_MEDIUM_ELASTIC_ISO   2
 #define CONST_MEDIUM_ELASTIC_VTI   3
 #define CONST_MEDIUM_ELASTIC_ANISO 4
+#define CONST_MEDIUM_VISCOELASTIC_ISO 5
+
+#define VISCO_LS_MAXSIZE 20
 
 // visco type
 #define CONST_VISCO_GRAVES_QS  1
+#define CONST_VISCO_GMB 2
 
 #define handle_nc_err(err)                       \
 {                                                \

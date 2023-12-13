@@ -164,7 +164,7 @@ par_read_from_str(const char *str, par_t *par)
   if (item = cJSON_GetObjectItem(root, "time_start")) {
     par->time_start = item->valuedouble;
   }
-  if (item = cJSON_GetObjectItem(root, "time_check_stability")) {
+  if (item = cJSON_GetObjectItem(root, "check_stability")) {
     par->time_check_stability = item->valueint;
   }
 
@@ -206,6 +206,10 @@ par_read_from_str(const char *str, par_t *par)
 
     par->time_window_length = par->size_of_time_step * par->number_of_time_steps;
   }
+
+  //par->time_end   = par->time_start + 
+  //        par->number_of_time_steps * par->size_of_time_step;
+  //int     nt_total = (int) ((par->time_end - par->time_start) / dt+0.5);
 
   //
   // boundary default values
@@ -434,6 +438,8 @@ par_read_from_str(const char *str, par_t *par)
           par->media_itype = CONST_MEDIUM_ELASTIC_ANISO;
         } else if (strcmp(par->media_type, "acoustic_iso")==0) {
           par->media_itype = CONST_MEDIUM_ACOUSTIC_ISO;
+        } else if (strcmp(par->media_type, "viscoelastic_iso")==0) {
+          par->media_itype = CONST_MEDIUM_VISCOELASTIC_ISO;
         } else {
           fprintf(stderr,"ERROR: media_type=%s is unknown\n",par->media_type);
           MPI_Abort(MPI_COMM_WORLD,9);
@@ -682,10 +688,31 @@ par_read_from_str(const char *str, par_t *par)
         {
           sprintf(par->bin_file_c66, "%s", thirditem->valuestring);
         }
+        // Qp file
+        if (thirditem = cJSON_GetObjectItem(subitem, "Qp"))
+        {
+          sprintf(par->bin_file_Qp, "%s", thirditem->valuestring);
+        }
+        // Qs file
+        if (thirditem = cJSON_GetObjectItem(subitem, "Qs"))
+        {
+          sprintf(par->bin_file_Qs, "%s", thirditem->valuestring);
+        }
         // need to add other model parameters
 
       } // find binfile
     } // if binfile
+    if (strcmp(par->media_type, "viscoelastic_iso")==0) 
+    {
+      if (par->media_input_itype == PAR_MEDIA_3LAY || par->media_input_itype == PAR_MEDIA_3GRD || par->media_input_itype == PAR_MEDIA_3BIN){
+        if (subitem = cJSON_GetObjectItem(item, "Qp")){
+          sprintf(par->Qp_input_file, "%s", subitem->valuestring);
+        }
+        if (subitem = cJSON_GetObjectItem(item, "Qs")){
+          sprintf(par->Qs_input_file, "%s", subitem->valuestring);
+        }
+      }
+    }
 
     if (subitem = cJSON_GetObjectItem(item, "equivalent_medium_method")) {
         sprintf(par->equivalent_medium_method, "%s", subitem->valuestring);
@@ -711,6 +738,8 @@ par_read_from_str(const char *str, par_t *par)
         sprintf(par->visco_type, "%s", subitem->valuestring);
         if (strcmp(par->visco_type, "graves_Qs")==0) {
           par->visco_itype = CONST_VISCO_GRAVES_QS;
+        } else if (strcmp(par->visco_type, "gmb")==0) {
+          par->visco_itype = CONST_VISCO_GMB;
         } else {
           fprintf(stderr,"ERROR: visco_type is unknown\n");
           MPI_Abort(MPI_COMM_WORLD,9);
@@ -718,6 +747,18 @@ par_read_from_str(const char *str, par_t *par)
     }
     if (subitem = cJSON_GetObjectItem(item, "Qs_freq")) {
         par->visco_Qs_freq = subitem->valuedouble;
+    }
+    if (subitem = cJSON_GetObjectItem(item, "number_of_maxwell")) {
+        par->nmaxwell = subitem->valueint;
+    }
+    if (subitem = cJSON_GetObjectItem(item, "max_freq")) {
+        par->fmax = subitem->valuedouble;
+    }
+    if (subitem = cJSON_GetObjectItem(item, "min_freq")) {
+        par->fmin = subitem->valuedouble;
+    }
+    if (subitem = cJSON_GetObjectItem(item, "refer_freq")) {
+        par->fr = subitem->valuedouble;
     }
   }
 
@@ -739,6 +780,22 @@ par_read_from_str(const char *str, par_t *par)
       sprintf(par->source_export_dir,"%s",item->valuestring);
   }
 
+  // input source file
+  par->source_dd_input_file[0] = '\0';
+  if (item = cJSON_GetObjectItem(root, "in_ddsource_file"))
+  {
+      sprintf(par->source_dd_input_file, "%s", item->valuestring);
+  }
+  // default value
+  par->source_dd_add_at_point = 1;
+  if (item = cJSON_GetObjectItem(root, "ddsource_add_at_point")) {
+    par->source_dd_add_at_point = item->valueint;
+  }
+  par->source_dd_nt_per_read = 100;
+  if (item = cJSON_GetObjectItem(root, "ddsource_nt_per_read")) {
+    par->source_dd_nt_per_read = item->valueint;
+  }
+
   //-- output dir
   if (item = cJSON_GetObjectItem(root, "output_dir")) {
       sprintf(par->output_dir,"%s",item->valuestring);
@@ -750,6 +807,7 @@ par_read_from_str(const char *str, par_t *par)
   }
 
   //-- receiver line
+  par->number_of_receiver_line = 0;
   if (item = cJSON_GetObjectItem(root, "receiver_line"))
   {
     par->number_of_receiver_line = cJSON_GetArraySize(item);
@@ -798,6 +856,10 @@ par_read_from_str(const char *str, par_t *par)
   }
 
   // slice
+  // default
+  par->number_of_slice_x = 0;
+  par->number_of_slice_y = 0;
+  par->number_of_slice_z = 0;
   if (item = cJSON_GetObjectItem(root, "slice"))
   {
     if (subitem = cJSON_GetObjectItem(item, "x_index"))
@@ -830,6 +892,7 @@ par_read_from_str(const char *str, par_t *par)
   }
 
   // snapshot
+  par->number_of_snapshot = 0;
   if (item = cJSON_GetObjectItem(root, "snapshot"))
   {
     par->number_of_snapshot = cJSON_GetArraySize(item);
@@ -910,6 +973,11 @@ par_read_from_str(const char *str, par_t *par)
       par->output_all = item->valueint;
   }
 
+  // tmp dir
+  if (item = cJSON_GetObjectItem(root, "tmp_dir"))
+  {
+      sprintf(par->tmp_dir, "%s", item->valuestring);
+  }
   //if (item = cJSON_GetObjectItem(root, "grid_name")) {
   //    sprintf(par->grid_name,"%s",item->valuestring);
   //}
@@ -1089,10 +1157,22 @@ par_print(par_t *par)
     fprintf(stdout, "-------------------------------------------------------\n");
     fprintf(stdout, " visco_type = %s\n", par->visco_type);
     fprintf(stdout, " visco_Qs_freq = %f\n", par->visco_Qs_freq);
+  } else if (par->visco_itype == CONST_VISCO_GMB) {
+    fprintf(stdout, "-------------------------------------------------------\n");
+    fprintf(stdout, "--> visco info.\n");
+    fprintf(stdout, "-------------------------------------------------------\n");
+    fprintf(stdout, " visco_type = %s\n", par->visco_type);
+    fprintf(stdout, " number_of_maxwell = %d\n", par->nmaxwell);
+    fprintf(stdout, " min_freq = %f\n", par->fmin);
+    fprintf(stdout, " max_freq = %f\n", par->fmax);
+    fprintf(stdout, " refer_freq = %f\n", par->fr);
   } else {
     fprintf(stdout, "--> no visco\n");
   }
 
+  fprintf(stdout, "-------------------------------------------------------\n");
+  fprintf(stdout, "--> source info.\n");
+  fprintf(stdout, "-------------------------------------------------------\n");
   fprintf(stdout, " in_source_file = %s\n", par->source_input_file);
 
   fprintf(stdout, "\n");

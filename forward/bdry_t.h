@@ -68,6 +68,8 @@ typedef struct
   int is_sides_free[CONST_NDIM][2];
   int is_enable_free;
 
+  float *matD;  // for atten
+
   // top
   float *matVx2Vz2; // [j,i, dzVi, dxVi]
   float *matVy2Vz2;

@@ -8,7 +8,6 @@
  *************************************************/
 
 typedef struct {
-  int n1, n2, n3, n4;
   int nx, ny, nz, ncmp;
   float *v4d; // allocated var
 
@@ -33,7 +32,18 @@ typedef struct {
   float *mu;
 
   // for visco attenuation
+  int nmaxwell;
+  float visco_GMB_freq;
+  float visco_GMB_fmin;
+  float visco_GMB_fmax;
   float *Qs;
+  float *Qp;
+  // use pointer array,
+  // easy gpu code implement
+  // default maxwell number <= 10 
+  float *Ylam[10];
+  float *Ymu[10];
+  float *wl;
 
   // for anisotropic media
   float *c11;
@@ -68,7 +78,7 @@ typedef struct {
  *************************************************/
 
 int
-md_init(gd_t *gd, md_t *md, int media_type, int visco_type);
+md_init(gd_t *gd, md_t *md, int media_type, int visco_type, int nmaxwell);
 
 int
 md_import(gd_t *gd, md_t *md, char *fname_coords, char *in_dir);
@@ -95,9 +105,21 @@ int
 md_gen_test_el_aniso(md_t *md);
 
 int
+md_gen_test_vis_iso(md_t *md);
+
+int
 md_rho_to_slow(float *rho, size_t siz_icmp);
 
 int
 md_ac_Vp_to_kappa(float *rho, float *kappa, size_t siz_icmp);
+
+int
+md_vis_GMB_cal_Y(md_t *md, float freq, float fmin, float fmax);
+
+int 
+md_visco_LS(float ** input, float * output, float d, int m, int n);
+
+int 
+md_visco_LS_mat_inv(float matrix[][VISCO_LS_MAXSIZE], float inverse[][VISCO_LS_MAXSIZE], int n);
 
 #endif

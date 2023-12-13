@@ -1302,61 +1302,60 @@ sv_curv_col_el_aniso_rhs_cfspml_gpu(int idim, int iside,
  *  only implement z2 (top) right now
  ******************************************************************************/
 
-__global__ void
-sv_curv_col_el_aniso_dvh2dvz_gpu(gd_t        gd_d,
-                                 gd_metric_t metric_d,
-                                 md_t        md_d,
-                                 bdryfree_t  bdryfree_d,
-                                 const int verbose)
+int
+sv_curv_col_el_aniso_dvh2dvz(gd_t        *gd,
+                             gd_metric_t *metric,
+                             md_t        *md,
+                             bdryfree_t  *bdryfree,
+                             const int verbose)
 {
-  int ni1 = gd_d.ni1;
-  int ni2 = gd_d.ni2;
-  int nj1 = gd_d.nj1;
-  int nj2 = gd_d.nj2;
-  int nk1 = gd_d.nk1;
-  int nk2 = gd_d.nk2;
-  int nx  = gd_d.nx;
-  int ny  = gd_d.ny;
-  int nz  = gd_d.nz;
-  size_t siz_iy   = gd_d.siz_iy;
-  size_t siz_iz   = gd_d.siz_iz;
-  size_t siz_icmp = gd_d.siz_icmp;
+  int ni1 = gd->ni1;
+  int ni2 = gd->ni2;
+  int nj1 = gd->nj1;
+  int nj2 = gd->nj2;
+  int nk1 = gd->nk1;
+  int nk2 = gd->nk2;
+  int nx  = gd->nx;
+  int ny  = gd->ny;
+  int nz  = gd->nz;
+  size_t siz_iy   = gd->siz_iy;
+  size_t siz_iz   = gd->siz_iz;
 
   // point to each var
-  float * xi_x = metric_d.xi_x;
-  float * xi_y = metric_d.xi_y;
-  float * xi_z = metric_d.xi_z;
-  float * et_x = metric_d.eta_x;
-  float * et_y = metric_d.eta_y;
-  float * et_z = metric_d.eta_z;
-  float * zt_x = metric_d.zeta_x;
-  float * zt_y = metric_d.zeta_y;
-  float * zt_z = metric_d.zeta_z;
+  float *xi_x = metric->xi_x;
+  float *xi_y = metric->xi_y;
+  float *xi_z = metric->xi_z;
+  float *et_x = metric->eta_x;
+  float *et_y = metric->eta_y;
+  float *et_z = metric->eta_z;
+  float *zt_x = metric->zeta_x;
+  float *zt_y = metric->zeta_y;
+  float *zt_z = metric->zeta_z;
 
-  float * c11d = md_d.c11;
-  float * c12d = md_d.c12;
-  float * c13d = md_d.c13;
-  float * c14d = md_d.c14;
-  float * c15d = md_d.c15;
-  float * c16d = md_d.c16;
-  float * c22d = md_d.c22;
-  float * c23d = md_d.c23;
-  float * c24d = md_d.c24;
-  float * c25d = md_d.c25;
-  float * c26d = md_d.c26;
-  float * c33d = md_d.c33;
-  float * c34d = md_d.c34;
-  float * c35d = md_d.c35;
-  float * c36d = md_d.c36;
-  float * c44d = md_d.c44;
-  float * c45d = md_d.c45;
-  float * c46d = md_d.c46;
-  float * c55d = md_d.c55;
-  float * c56d = md_d.c56;
-  float * c66d = md_d.c66;
+  float *c11d = md->c11;
+  float *c12d = md->c12;
+  float *c13d = md->c13;
+  float *c14d = md->c14;
+  float *c15d = md->c15;
+  float *c16d = md->c16;
+  float *c22d = md->c22;
+  float *c23d = md->c23;
+  float *c24d = md->c24;
+  float *c25d = md->c25;
+  float *c26d = md->c26;
+  float *c33d = md->c33;
+  float *c34d = md->c34;
+  float *c35d = md->c35;
+  float *c36d = md->c36;
+  float *c44d = md->c44;
+  float *c45d = md->c45;
+  float *c46d = md->c46;
+  float *c55d = md->c55;
+  float *c56d = md->c56;
+  float *c66d = md->c66;
 
-  float *matVx2Vz = bdryfree_d.matVx2Vz2;
-  float *matVy2Vz = bdryfree_d.matVy2Vz2;
+  float *matVx2Vz = bdryfree->matVx2Vz2;
+  float *matVy2Vz = bdryfree->matVy2Vz2;
 
   float A[3][3], B[3][3], C[3][3];
   float AB[3][3], AC[3][3];
@@ -1371,88 +1370,88 @@ sv_curv_col_el_aniso_dvh2dvz_gpu(gd_t        gd_d,
  
   int k = nk2;
 
-  size_t ix = blockIdx.x * blockDim.x + threadIdx.x;
-  size_t iy = blockIdx.y * blockDim.y + threadIdx.y;
-  if(ix<(ni2-ni1+1) && iy<(nj2-nj1+1))
+  for (int j = nj1; j <= nj2; j++)
   {
-    size_t iptr = (ix+ni1) + (iy+nj1) * siz_iy + k * siz_iz;
+    for (int i = ni1; i <= ni2; i++)
+    {
+      size_t iptr = i + j * siz_iy + k * siz_iz;
+      xix = xi_x[iptr];
+      xiy = xi_y[iptr];
+      xiz = xi_z[iptr];
+      etx = et_x[iptr];
+      ety = et_y[iptr];
+      etz = et_z[iptr];
+      ztx = zt_x[iptr];
+      zty = zt_y[iptr];
+      ztz = zt_z[iptr];
+      
+      c11 = c11d[iptr];
+      c12 = c12d[iptr];
+      c13 = c13d[iptr];
+      c14 = c14d[iptr];
+      c15 = c15d[iptr];
+      c16 = c16d[iptr];
+      c22 = c22d[iptr];
+      c23 = c23d[iptr];
+      c24 = c24d[iptr];
+      c25 = c25d[iptr];
+      c26 = c26d[iptr];
+      c33 = c33d[iptr];
+      c34 = c34d[iptr];
+      c35 = c35d[iptr];
+      c36 = c36d[iptr];
+      c44 = c44d[iptr];
+      c45 = c45d[iptr];
+      c46 = c46d[iptr];
+      c55 = c55d[iptr];
+      c56 = c56d[iptr];
+      c66 = c66d[iptr];
 
-    xix = xi_x[iptr];
-    xiy = xi_y[iptr];
-    xiz = xi_z[iptr];
-    etx = et_x[iptr];
-    ety = et_y[iptr];
-    etz = et_z[iptr];
-    ztx = zt_x[iptr];
-    zty = zt_y[iptr];
-    ztz = zt_z[iptr];
-    
-    c11 = c11d[iptr];
-    c12 = c12d[iptr];
-    c13 = c13d[iptr];
-    c14 = c14d[iptr];
-    c15 = c15d[iptr];
-    c16 = c16d[iptr];
-    c22 = c22d[iptr];
-    c23 = c23d[iptr];
-    c24 = c24d[iptr];
-    c25 = c25d[iptr];
-    c26 = c26d[iptr];
-    c33 = c33d[iptr];
-    c34 = c34d[iptr];
-    c35 = c35d[iptr];
-    c36 = c36d[iptr];
-    c44 = c44d[iptr];
-    c45 = c45d[iptr];
-    c46 = c46d[iptr];
-    c55 = c55d[iptr];
-    c56 = c56d[iptr];
-    c66 = c66d[iptr];
+      // first dim: irow; sec dim: jcol, as Fortran code
+      A[0][0] = (c11*ztx+c16*zty+c15*ztz)*ztx + (c16*ztx+c66*zty+c56*ztz)*zty + (c15*ztx+c56*zty+c55*ztz)*ztz;
+      A[0][1] = (c16*ztx+c12*zty+c14*ztz)*ztx + (c66*ztx+c26*zty+c46*ztz)*zty + (c56*ztx+c25*zty+c45*ztz)*ztz;
+      A[0][2] = (c15*ztx+c14*zty+c13*ztz)*ztx + (c56*ztx+c46*zty+c36*ztz)*zty + (c55*ztx+c45*zty+c35*ztz)*ztz; 
+      A[1][0] = (c16*ztx+c66*zty+c56*ztz)*ztx + (c12*ztx+c26*zty+c25*ztz)*zty + (c14*ztx+c46*zty+c45*ztz)*ztz; 
+      A[1][1] = (c66*ztx+c26*zty+c46*ztz)*ztx + (c26*ztx+c22*zty+c24*ztz)*zty + (c46*ztx+c24*zty+c44*ztz)*ztz; 
+      A[1][2] = (c56*ztx+c46*zty+c36*ztz)*ztx + (c25*ztx+c24*zty+c23*ztz)*zty + (c45*ztx+c44*zty+c34*ztz)*ztz;
+      A[2][0] = (c15*ztx+c56*zty+c55*ztz)*ztx + (c14*ztx+c46*zty+c45*ztz)*zty + (c13*ztx+c36*zty+c35*ztz)*ztz;
+      A[2][1] = (c56*ztx+c25*zty+c45*ztz)*ztx + (c46*ztx+c24*zty+c44*ztz)*zty + (c36*ztx+c23*zty+c34*ztz)*ztz;
+      A[2][2] = (c55*ztx+c45*zty+c35*ztz)*ztx + (c45*ztx+c44*zty+c34*ztz)*zty + (c35*ztx+c34*zty+c33*ztz)*ztz; 
+      fdlib_math_invert3x3(A);
+                                                       
+      B[0][0] = (c11*xix+c16*xiy+c15*xiz)*ztx + (c16*xix+c66*xiy+c56*xiz)*zty + (c15*xix+c56*xiy+c55*xiz)*ztz;
+      B[0][1] = (c16*xix+c12*xiy+c14*xiz)*ztx + (c66*xix+c26*xiy+c46*xiz)*zty + (c56*xix+c25*xiy+c45*xiz)*ztz;
+      B[0][2] = (c15*xix+c14*xiy+c13*xiz)*ztx + (c56*xix+c46*xiy+c36*xiz)*zty + (c55*xix+c45*xiy+c35*xiz)*ztz; 
+      B[1][0] = (c16*xix+c66*xiy+c56*xiz)*ztx + (c12*xix+c26*xiy+c25*xiz)*zty + (c14*xix+c46*xiy+c45*xiz)*ztz; 
+      B[1][1] = (c66*xix+c26*xiy+c46*xiz)*ztx + (c26*xix+c22*xiy+c24*xiz)*zty + (c46*xix+c24*xiy+c44*xiz)*ztz; 
+      B[1][2] = (c56*xix+c46*xiy+c36*xiz)*ztx + (c25*xix+c24*xiy+c23*xiz)*zty + (c45*xix+c44*xiy+c34*xiz)*ztz;
+      B[2][0] = (c15*xix+c56*xiy+c55*xiz)*ztx + (c14*xix+c46*xiy+c45*xiz)*zty + (c13*xix+c36*xiy+c35*xiz)*ztz;
+      B[2][1] = (c56*xix+c25*xiy+c45*xiz)*ztx + (c46*xix+c24*xiy+c44*xiz)*zty + (c36*xix+c23*xiy+c34*xiz)*ztz;
+      B[2][2] = (c55*xix+c45*xiy+c35*xiz)*ztx + (c45*xix+c44*xiy+c34*xiz)*zty + (c35*xix+c34*xiy+c33*xiz)*ztz; 
+       
+      C[0][0] = (c11*etx+c16*ety+c15*etz)*ztx + (c16*etx+c66*ety+c56*etz)*zty + (c15*etx+c56*ety+c55*etz)*ztz;
+      C[0][1] = (c16*etx+c12*ety+c14*etz)*ztx + (c66*etx+c26*ety+c46*etz)*zty + (c56*etx+c25*ety+c45*etz)*ztz;
+      C[0][2] = (c15*etx+c14*ety+c13*etz)*ztx + (c56*etx+c46*ety+c36*etz)*zty + (c55*etx+c45*ety+c35*etz)*ztz; 
+      C[1][0] = (c16*etx+c66*ety+c56*etz)*ztx + (c12*etx+c26*ety+c25*etz)*zty + (c14*etx+c46*ety+c45*etz)*ztz; 
+      C[1][1] = (c66*etx+c26*ety+c46*etz)*ztx + (c26*etx+c22*ety+c24*etz)*zty + (c46*etx+c24*ety+c44*etz)*ztz; 
+      C[1][2] = (c56*etx+c46*ety+c36*etz)*ztx + (c25*etx+c24*ety+c23*etz)*zty + (c45*etx+c44*ety+c34*etz)*ztz;
+      C[2][0] = (c15*etx+c56*ety+c55*etz)*ztx + (c14*etx+c46*ety+c45*etz)*zty + (c13*etx+c36*ety+c35*etz)*ztz;
+      C[2][1] = (c56*etx+c25*ety+c45*etz)*ztx + (c46*etx+c24*ety+c44*etz)*zty + (c36*etx+c23*ety+c34*etz)*ztz;
+      C[2][2] = (c55*etx+c45*ety+c35*etz)*ztx + (c45*etx+c44*ety+c34*etz)*zty + (c35*etx+c34*ety+c33*etz)*ztz; 
+      fdlib_math_matmul3x3(A, B, AB);
+      fdlib_math_matmul3x3(A, C, AC);
 
-    // first dim: irow; sec dim: jcol, as Fortran code
-    A[0][0] = (c11*ztx+c16*zty+c15*ztz)*ztx + (c16*ztx+c66*zty+c56*ztz)*zty + (c15*ztx+c56*zty+c55*ztz)*ztz;
-    A[0][1] = (c16*ztx+c12*zty+c14*ztz)*ztx + (c66*ztx+c26*zty+c46*ztz)*zty + (c56*ztx+c25*zty+c45*ztz)*ztz;
-    A[0][2] = (c15*ztx+c14*zty+c13*ztz)*ztx + (c56*ztx+c46*zty+c36*ztz)*zty + (c55*ztx+c45*zty+c35*ztz)*ztz; 
-    A[1][0] = (c16*ztx+c66*zty+c56*ztz)*ztx + (c12*ztx+c26*zty+c25*ztz)*zty + (c14*ztx+c46*zty+c45*ztz)*ztz; 
-    A[1][1] = (c66*ztx+c26*zty+c46*ztz)*ztx + (c26*ztx+c22*zty+c24*ztz)*zty + (c46*ztx+c24*zty+c44*ztz)*ztz; 
-    A[1][2] = (c56*ztx+c46*zty+c36*ztz)*ztx + (c25*ztx+c24*zty+c23*ztz)*zty + (c45*ztx+c44*zty+c34*ztz)*ztz;
-    A[2][0] = (c15*ztx+c56*zty+c55*ztz)*ztx + (c14*ztx+c46*zty+c45*ztz)*zty + (c13*ztx+c36*zty+c35*ztz)*ztz;
-    A[2][1] = (c56*ztx+c25*zty+c45*ztz)*ztx + (c46*ztx+c24*zty+c44*ztz)*zty + (c36*ztx+c23*zty+c34*ztz)*ztz;
-    A[2][2] = (c55*ztx+c45*zty+c35*ztz)*ztx + (c45*ztx+c44*zty+c34*ztz)*zty + (c35*ztx+c34*zty+c33*ztz)*ztz; 
-    fdlib_math_invert3x3(A);
-                                                     
-    B[0][0] = (c11*xix+c16*xiy+c15*xiz)*ztx + (c16*xix+c66*xiy+c56*xiz)*zty + (c15*xix+c56*xiy+c55*xiz)*ztz;
-    B[0][1] = (c16*xix+c12*xiy+c14*xiz)*ztx + (c66*xix+c26*xiy+c46*xiz)*zty + (c56*xix+c25*xiy+c45*xiz)*ztz;
-    B[0][2] = (c15*xix+c14*xiy+c13*xiz)*ztx + (c56*xix+c46*xiy+c36*xiz)*zty + (c55*xix+c45*xiy+c35*xiz)*ztz; 
-    B[1][0] = (c16*xix+c66*xiy+c56*xiz)*ztx + (c12*xix+c26*xiy+c25*xiz)*zty + (c14*xix+c46*xiy+c45*xiz)*ztz; 
-    B[1][1] = (c66*xix+c26*xiy+c46*xiz)*ztx + (c26*xix+c22*xiy+c24*xiz)*zty + (c46*xix+c24*xiy+c44*xiz)*ztz; 
-    B[1][2] = (c56*xix+c46*xiy+c36*xiz)*ztx + (c25*xix+c24*xiy+c23*xiz)*zty + (c45*xix+c44*xiy+c34*xiz)*ztz;
-    B[2][0] = (c15*xix+c56*xiy+c55*xiz)*ztx + (c14*xix+c46*xiy+c45*xiz)*zty + (c13*xix+c36*xiy+c35*xiz)*ztz;
-    B[2][1] = (c56*xix+c25*xiy+c45*xiz)*ztx + (c46*xix+c24*xiy+c44*xiz)*zty + (c36*xix+c23*xiy+c34*xiz)*ztz;
-    B[2][2] = (c55*xix+c45*xiy+c35*xiz)*ztx + (c45*xix+c44*xiy+c34*xiz)*zty + (c35*xix+c34*xiy+c33*xiz)*ztz; 
-     
-    C[0][0] = (c11*etx+c16*ety+c15*etz)*ztx + (c16*etx+c66*ety+c56*etz)*zty + (c15*etx+c56*ety+c55*etz)*ztz;
-    C[0][1] = (c16*etx+c12*ety+c14*etz)*ztx + (c66*etx+c26*ety+c46*etz)*zty + (c56*etx+c25*ety+c45*etz)*ztz;
-    C[0][2] = (c15*etx+c14*ety+c13*etz)*ztx + (c56*etx+c46*ety+c36*etz)*zty + (c55*etx+c45*ety+c35*etz)*ztz; 
-    C[1][0] = (c16*etx+c66*ety+c56*etz)*ztx + (c12*etx+c26*ety+c25*etz)*zty + (c14*etx+c46*ety+c45*etz)*ztz; 
-    C[1][1] = (c66*etx+c26*ety+c46*etz)*ztx + (c26*etx+c22*ety+c24*etz)*zty + (c46*etx+c24*ety+c44*etz)*ztz; 
-    C[1][2] = (c56*etx+c46*ety+c36*etz)*ztx + (c25*etx+c24*ety+c23*etz)*zty + (c45*etx+c44*ety+c34*etz)*ztz;
-    C[2][0] = (c15*etx+c56*ety+c55*etz)*ztx + (c14*etx+c46*ety+c45*etz)*zty + (c13*etx+c36*ety+c35*etz)*ztz;
-    C[2][1] = (c56*etx+c25*ety+c45*etz)*ztx + (c46*etx+c24*ety+c44*etz)*zty + (c36*etx+c23*ety+c34*etz)*ztz;
-    C[2][2] = (c55*etx+c45*ety+c35*etz)*ztx + (c45*etx+c44*ety+c34*etz)*zty + (c35*etx+c34*ety+c33*etz)*ztz; 
-    fdlib_math_matmul3x3(A, B, AB);
-    fdlib_math_matmul3x3(A, C, AC);
+      size_t ij = (j * siz_iy + i) * 9;
 
-    size_t ij = ((iy+nj1) * siz_iy + (ix+ni1)) * 9;
-
-    // save into mat
-    for(int irow = 0; irow < 3; irow++){
-      for(int jcol = 0; jcol < 3; jcol++){
-        matVx2Vz[ij + irow*3 + jcol] = -1.0f * AB[irow][jcol];
-        matVy2Vz[ij + irow*3 + jcol] = -1.0f * AC[irow][jcol];
+      // save into mat
+      for(int irow = 0; irow < 3; irow++){
+        for(int jcol = 0; jcol < 3; jcol++){
+          matVx2Vz[ij + irow*3 + jcol] = -1.0f * AB[irow][jcol];
+          matVy2Vz[ij + irow*3 + jcol] = -1.0f * AC[irow][jcol];
+        }
       }
     }
   }
 
-  return;
+  return 0;
 }

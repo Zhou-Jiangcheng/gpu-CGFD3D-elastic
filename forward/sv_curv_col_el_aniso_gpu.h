@@ -146,14 +146,11 @@ sv_curv_col_el_aniso_rhs_cfspml_gpu(
     bdrypml_t bdrypml_d, bdryfree_t bdryfree_d,
     const int myid, const int verbose);
 
-
-__global__ void
-sv_curv_col_el_aniso_dvh2dvz_gpu(
-    gd_t      gd_d,
-    gd_metric_t metric_d,
-    md_t          md_d,
-    bdryfree_t    bdryfree_d,
-    const int verbose);
-
+int
+sv_curv_col_el_aniso_dvh2dvz(gd_t        *gd,
+                             gd_metric_t *metric,
+                             md_t        *md,
+                             bdryfree_t  *bdryfree,
+                             const int verbose);
 
 #endif

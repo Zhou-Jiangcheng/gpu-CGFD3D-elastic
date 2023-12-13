@@ -141,6 +141,7 @@ typedef struct
   size_t *fdy_shift_d;
   size_t *fdz_shift_d;
   size_t *fdz_shift_all_d;
+
 } fd_wav_t;
 
 /*******************************************************************************

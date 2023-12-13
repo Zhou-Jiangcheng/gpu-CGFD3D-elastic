@@ -851,7 +851,7 @@ io_snapshot_locate(gd_t *gd,
 
 int
 io_slice_nc_create(ioslice_t *ioslice, 
-                  int num_of_vars, char **w3d_name,
+                  int num_of_vars, int visco_type, char **w3d_name,
                   int ni, int nj, int nk,
                   int *topoid, ioslice_nc_t *ioslice_nc)
 {
@@ -865,6 +865,10 @@ io_slice_nc_create(ioslice_t *ioslice,
   ioslice_nc->num_of_slice_y = num_of_slice_y;
   ioslice_nc->num_of_slice_z = num_of_slice_z;
   ioslice_nc->num_of_vars    = num_of_vars   ;
+  if (visco_type == CONST_VISCO_GMB){
+    num_of_vars = 9;
+    ioslice_nc->num_of_vars = 9;
+  }
 
   // malloc vars
   ioslice_nc->ncid_slx = (int *)malloc(num_of_slice_x*sizeof(int));
@@ -1105,9 +1109,7 @@ io_slice_nc_put(ioslice_t    *ioslice,
                 float *w_end_d,
                 float *buff,
                 int   it,
-                float time,
-                int   i1_cmp,
-                int   i2_cmp)
+                float time)
 {
   int ierr = 0;
 
@@ -1125,7 +1127,6 @@ io_slice_nc_put(ioslice_t    *ioslice,
   size_t   siz_icmp = gd->siz_icmp;
 
   int  num_of_vars = ioslice_nc->num_of_vars;
-
   //-- slice x, 
   for (int n=0; n < ioslice_nc->num_of_slice_x; n++)
   {
@@ -1144,7 +1145,7 @@ io_slice_nc_put(ioslice_t    *ioslice,
     dim3 grid;
     grid.x = (nj+block.x-1)/block.x;
     grid.y = (nk+block.y-1)/block.y;
-    for (int ivar=i1_cmp; ivar <= i2_cmp; ivar++)
+    for (int ivar=0; ivar<num_of_vars ; ivar++)
     {
       float *var = w_end_d + ivar * siz_icmp;
       io_slice_pack_buff_x<<<grid, block>>>(i,nj,nk,siz_iy,siz_iz,var,buff_d);
@@ -1174,7 +1175,7 @@ io_slice_nc_put(ioslice_t    *ioslice,
     dim3 grid;
     grid.x = (ni+block.x-1)/block.x;
     grid.y = (nk+block.y-1)/block.y;
-    for (int ivar=i1_cmp; ivar <= i2_cmp; ivar++)
+    for (int ivar=0; ivar<num_of_vars; ivar++)
     {
       float *var = w_end_d + ivar * siz_icmp;
       io_slice_pack_buff_y<<<grid, block>>>(j,ni,nk,siz_iy,siz_iz,var,buff_d);
@@ -1205,7 +1206,7 @@ io_slice_nc_put(ioslice_t    *ioslice,
     dim3 grid;
     grid.x = (ni+block.x-1)/block.x;
     grid.y = (nj+block.y-1)/block.y;
-    for (int ivar=i1_cmp; ivar <= i2_cmp; ivar++)
+    for (int ivar=0; ivar<num_of_vars; ivar++)
     {
       float *var = w_end_d + ivar * siz_icmp;
       io_slice_pack_buff_z<<<grid, block>>>(k,ni,nj,siz_iy,siz_iz,var,buff_d);

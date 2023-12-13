@@ -232,7 +232,7 @@ io_snapshot_locate(gd_t *gd,
 
 int
 io_slice_nc_create(ioslice_t *ioslice, 
-                  int num_of_vars, char **w3d_name,
+                  int num_of_vars, int visco_type, char **w3d_name,
                   int ni, int nj, int nk,
                   int *topoid, ioslice_nc_t *ioslice_nc);
 
@@ -246,9 +246,7 @@ io_slice_nc_put(ioslice_t    *ioslice,
                 float *w4d,
                 float *buff,
                 int   it,
-                float time,
-                int   i1_cmp,
-                int   i2_cmp);
+                float time);
 
 int
 io_snap_nc_put(iosnap_t *iosnap,

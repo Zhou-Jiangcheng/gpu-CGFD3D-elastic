@@ -1149,42 +1149,41 @@ sv_curv_col_el_iso_rhs_cfspml_gpu(int idim, int iside,
 /*******************************************************************************
  * free surface coef
  ******************************************************************************/
-__global__ void
-sv_curv_col_el_iso_dvh2dvz_gpu(gd_t            gd_d,
-                               gd_metric_t     metric_d,
-                               md_t            md_d,
-                               bdryfree_t      bdryfree_d,
-                               const int verbose)
+int
+sv_curv_col_el_iso_dvh2dvz(gd_t            *gd,
+                           gd_metric_t     *metric,
+                           md_t            *md,
+                           bdryfree_t      *bdryfree,
+                           const int verbose)
 {
-  int ni1 = gd_d.ni1;
-  int ni2 = gd_d.ni2;
-  int nj1 = gd_d.nj1;
-  int nj2 = gd_d.nj2;
-  int nk1 = gd_d.nk1;
-  int nk2 = gd_d.nk2;
-  int nx  = gd_d.nx;
-  int ny  = gd_d.ny;
-  int nz  = gd_d.nz;
-  size_t siz_iy   = gd_d.siz_iy;
-  size_t siz_iz   = gd_d.siz_iz;
-  size_t siz_icmp = gd_d.siz_icmp;
+  int ni1 = gd->ni1;
+  int ni2 = gd->ni2;
+  int nj1 = gd->nj1;
+  int nj2 = gd->nj2;
+  int nk1 = gd->nk1;
+  int nk2 = gd->nk2;
+  int nx  = gd->nx;
+  int ny  = gd->ny;
+  int nz  = gd->nz;
+  size_t siz_iy   = gd->siz_iy;
+  size_t siz_iz   = gd->siz_iz;
 
   // point to each var
-  float * xi_x = metric_d.xi_x;
-  float * xi_y = metric_d.xi_y;
-  float * xi_z = metric_d.xi_z;
-  float * et_x = metric_d.eta_x;
-  float * et_y = metric_d.eta_y;
-  float * et_z = metric_d.eta_z;
-  float * zt_x = metric_d.zeta_x;
-  float * zt_y = metric_d.zeta_y;
-  float * zt_z = metric_d.zeta_z;
+  float *xi_x = metric->xi_x;
+  float *xi_y = metric->xi_y;
+  float *xi_z = metric->xi_z;
+  float *et_x = metric->eta_x;
+  float *et_y = metric->eta_y;
+  float *et_z = metric->eta_z;
+  float *zt_x = metric->zeta_x;
+  float *zt_y = metric->zeta_y;
+  float *zt_z = metric->zeta_z;
 
-  float * lam3d = md_d.lambda;
-  float *  mu3d = md_d.mu;
+  float *lam3d = md->lambda;
+  float * mu3d = md->mu;
 
-  float *matVx2Vz = bdryfree_d.matVx2Vz2;
-  float *matVy2Vz = bdryfree_d.matVy2Vz2;
+  float *matVx2Vz = bdryfree->matVx2Vz2;
+  float *matVy2Vz = bdryfree->matVy2Vz2;
   
   float A[3][3], B[3][3], C[3][3];
   float AB[3][3], AC[3][3];
@@ -1193,70 +1192,71 @@ sv_curv_col_el_iso_dvh2dvz_gpu(gd_t            gd_d,
   float lam2mu, lam, mu;
  
   int k = nk2;
-  size_t ix = blockIdx.x * blockDim.x + threadIdx.x;
-  size_t iy = blockIdx.y * blockDim.y + threadIdx.y;
-  if(ix<(ni2-ni1+1) && iy<(nj2-nj1+1))
+  for (int j = nj1; j <= nj2; j++)
   {
-    size_t iptr = (ix+ni1) + (iy+nj1) * siz_iy + k * siz_iz;
-    e11 = xi_x[iptr];
-    e12 = xi_y[iptr];
-    e13 = xi_z[iptr];
-    e21 = et_x[iptr];
-    e22 = et_y[iptr];
-    e23 = et_z[iptr];
-    e31 = zt_x[iptr];
-    e32 = zt_y[iptr];
-    e33 = zt_z[iptr];
+    for (int i = ni1; i <= ni2; i++)
+    {
+      size_t iptr = i + j * siz_iy + k * siz_iz;
+      e11 = xi_x[iptr];
+      e12 = xi_y[iptr];
+      e13 = xi_z[iptr];
+      e21 = et_x[iptr];
+      e22 = et_y[iptr];
+      e23 = et_z[iptr];
+      e31 = zt_x[iptr];
+      e32 = zt_y[iptr];
+      e33 = zt_z[iptr];
 
-    lam    = lam3d[iptr];
-    mu     =  mu3d[iptr];
-    lam2mu = lam + 2.0f * mu;
+      lam    = lam3d[iptr];
+      mu     =  mu3d[iptr];
+      lam2mu = lam + 2.0f * mu;
 
-    // first dim: irow; sec dim: jcol, as Fortran code
-    A[0][0] = lam2mu*e31*e31 + mu*(e32*e32+e33*e33);
-    A[0][1] = lam*e31*e32 + mu*e32*e31;
-    A[0][2] = lam*e31*e33 + mu*e33*e31;
-    A[1][0] = lam*e32*e31 + mu*e31*e32;
-    A[1][1] = lam2mu*e32*e32 + mu*(e31*e31+e33*e33);
-    A[1][2] = lam*e32*e33 + mu*e33*e32;
-    A[2][0] = lam*e33*e31 + mu*e31*e33;
-    A[2][1] = lam*e33*e32 + mu*e32*e33;
-    A[2][2] = lam2mu*e33*e33 + mu*(e31*e31+e32*e32);
-    fdlib_math_invert3x3(A);
+      // first dim: irow; sec dim: jcol, as Fortran code
+      A[0][0] = lam2mu*e31*e31 + mu*(e32*e32+e33*e33);
+      A[0][1] = lam*e31*e32 + mu*e32*e31;
+      A[0][2] = lam*e31*e33 + mu*e33*e31;
+      A[1][0] = lam*e32*e31 + mu*e31*e32;
+      A[1][1] = lam2mu*e32*e32 + mu*(e31*e31+e33*e33);
+      A[1][2] = lam*e32*e33 + mu*e33*e32;
+      A[2][0] = lam*e33*e31 + mu*e31*e33;
+      A[2][1] = lam*e33*e32 + mu*e32*e33;
+      A[2][2] = lam2mu*e33*e33 + mu*(e31*e31+e32*e32);
+      fdlib_math_invert3x3(A);
 
-    B[0][0] = -lam2mu*e31*e11 - mu*(e32*e12+e33*e13);
-    B[0][1] = -lam*e31*e12 - mu*e32*e11;
-    B[0][2] = -lam*e31*e13 - mu*e33*e11;
-    B[1][0] = -lam*e32*e11 - mu*e31*e12;
-    B[1][1] = -lam2mu*e32*e12 - mu*(e31*e11+e33*e13);
-    B[1][2] = -lam*e32*e13 - mu*e33*e12;
-    B[2][0] = -lam*e33*e11 - mu*e31*e13;
-    B[2][1] = -lam*e33*e12 - mu*e32*e13;
-    B[2][2] = -lam2mu*e33*e13 - mu*(e31*e11+e32*e12);
+      B[0][0] = -lam2mu*e31*e11 - mu*(e32*e12+e33*e13);
+      B[0][1] = -lam*e31*e12 - mu*e32*e11;
+      B[0][2] = -lam*e31*e13 - mu*e33*e11;
+      B[1][0] = -lam*e32*e11 - mu*e31*e12;
+      B[1][1] = -lam2mu*e32*e12 - mu*(e31*e11+e33*e13);
+      B[1][2] = -lam*e32*e13 - mu*e33*e12;
+      B[2][0] = -lam*e33*e11 - mu*e31*e13;
+      B[2][1] = -lam*e33*e12 - mu*e32*e13;
+      B[2][2] = -lam2mu*e33*e13 - mu*(e31*e11+e32*e12);
 
-    C[0][0] = -lam2mu*e31*e21 - mu*(e32*e22+e33*e23);
-    C[0][1] = -lam*e31*e22 - mu*e32*e21;
-    C[0][2] = -lam*e31*e23 - mu*e33*e21;
-    C[1][0] = -lam*e32*e21 - mu*e31*e22;
-    C[1][1] = -lam2mu*e32*e22 - mu*(e31*e21+e33*e23);
-    C[1][2] = -lam*e32*e23 - mu*e33*e22;
-    C[2][0] = -lam*e33*e21 - mu*e31*e23;
-    C[2][1] = -lam*e33*e22 - mu*e32*e23;
-    C[2][2] = -lam2mu*e33*e23 - mu*(e31*e21+e32*e22);
+      C[0][0] = -lam2mu*e31*e21 - mu*(e32*e22+e33*e23);
+      C[0][1] = -lam*e31*e22 - mu*e32*e21;
+      C[0][2] = -lam*e31*e23 - mu*e33*e21;
+      C[1][0] = -lam*e32*e21 - mu*e31*e22;
+      C[1][1] = -lam2mu*e32*e22 - mu*(e31*e21+e33*e23);
+      C[1][2] = -lam*e32*e23 - mu*e33*e22;
+      C[2][0] = -lam*e33*e21 - mu*e31*e23;
+      C[2][1] = -lam*e33*e22 - mu*e32*e23;
+      C[2][2] = -lam2mu*e33*e23 - mu*(e31*e21+e32*e22);
 
-    fdlib_math_matmul3x3(A, B, AB);
-    fdlib_math_matmul3x3(A, C, AC);
+      fdlib_math_matmul3x3(A, B, AB);
+      fdlib_math_matmul3x3(A, C, AC);
 
-    size_t ij = ((iy+nj1) * siz_iy + (ix+ni1)) * 9;
+      size_t ij = (j * siz_iy + i) * 9;
 
-    // save into mat
-    for(int irow = 0; irow < 3; irow++){
-      for(int jcol = 0; jcol < 3; jcol++){
-        matVx2Vz[ij + irow*3 + jcol] = AB[irow][jcol];
-        matVy2Vz[ij + irow*3 + jcol] = AC[irow][jcol];
+      // save into mat
+      for(int irow = 0; irow < 3; irow++){
+        for(int jcol = 0; jcol < 3; jcol++){
+          matVx2Vz[ij + irow*3 + jcol] = AB[irow][jcol];
+          matVy2Vz[ij + irow*3 + jcol] = AC[irow][jcol];
+        }
       }
     }
   }
 
-  return;
+  return 0;
 }

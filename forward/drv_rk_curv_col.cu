@@ -16,6 +16,7 @@
 #include "sv_curv_col_el_iso_gpu.h"
 #include "sv_curv_col_el_vti_gpu.h"
 #include "sv_curv_col_el_aniso_gpu.h"
+#include "sv_curv_col_vis_iso_gpu.h"
 #include "alloc.h"
 #include "cuda_common.h"
 
@@ -24,7 +25,7 @@
  *  simple MPI exchange without computing-communication overlapping
  ******************************************************************************/
 
-void
+int
 drv_rk_curv_col_allstep(
   fd_t        *fd,
   gd_t        *gd,
@@ -69,6 +70,32 @@ drv_rk_curv_col_allstep(
   int *neighid_d = init_neighid_device(mympi->neighid);
   // local allocated array
   char ou_file[CONST_MAX_STRLEN];
+
+  // calculate conversion matrix for free surface
+  // use CPU calculate, then copy to gpu
+  if (bdryfree->is_sides_free[CONST_NDIM-1][1] == 1)
+  {
+    if (md->medium_type == CONST_MEDIUM_ELASTIC_ISO)
+    {
+      sv_curv_col_el_iso_dvh2dvz(gd,metric,md,bdryfree,verbose);
+    } else if (md->medium_type == CONST_MEDIUM_ELASTIC_VTI) {
+      sv_curv_col_el_vti_dvh2dvz(gd,metric,md,bdryfree,verbose);
+    } else if (md->medium_type == CONST_MEDIUM_ELASTIC_ANISO) {
+      sv_curv_col_el_aniso_dvh2dvz(gd,metric,md,bdryfree,verbose);
+    } else if (md->medium_type == CONST_MEDIUM_VISCOELASTIC_ISO) {
+      if(md->visco_type == CONST_VISCO_GMB)
+      {
+        sv_curv_col_vis_iso_dvh2dvz(gd,metric,md,bdryfree,fd->fdc_len,fd->fdc_indx,fd->fdc_coef,verbose);
+      }
+    } else if (md->medium_type == CONST_MEDIUM_ACOUSTIC_ISO) {
+      // not need
+    } else {
+      fprintf(stderr,"ERROR: conversion matrix for medium_type=%d is not implemented\n",
+                    md->medium_type);
+      MPI_Abort(MPI_COMM_WORLD,1);
+    }
+  }
+
   gd_t   gd_d;
   md_t   md_d;
   src_t  src_d;
@@ -82,22 +109,23 @@ drv_rk_curv_col_allstep(
   // init device struct, and copy data from host to device
   init_gdinfo_device(gd, &gd_d);
   init_md_device(md, &md_d);
-  init_fd_device(fd, &fd_wav_d);
+  init_fd_device(fd, &fd_wav_d, gd);
   init_src_device(src, &src_d);
   init_metric_device(metric, &metric_d);
   init_wave_device(wav, &wav_d);
   init_bdryfree_device(gd, bdryfree, &bdryfree_d);
   init_bdrypml_device(gd, bdrypml, &bdrypml_d);
   init_bdryexp_device(gd, bdryexp, &bdryexp_d);
+
   //---------------------------------------
   // get device wavefield 
   float *w_buff = wav->v5d; // size number is V->siz_icmp * (V->ncmp+6)
   // GPU local pointer
-  float * w_cur_d;
-  float * w_pre_d;
-  float * w_rhs_d;
-  float * w_end_d;
-  float * w_tmp_d;
+  float *w_cur_d;
+  float *w_pre_d;
+  float *w_rhs_d;
+  float *w_end_d;
+  float *w_tmp_d;
 
   // get wavefield
   w_pre_d = wav_d.v5d + wav_d.siz_ilevel * 0; // previous level at n
@@ -112,7 +140,7 @@ drv_rk_curv_col_allstep(
   // create slice nc output files
   if (myid==0 && verbose>0) fprintf(stdout,"prepare slice nc output ...\n"); 
   ioslice_nc_t ioslice_nc;
-  io_slice_nc_create(ioslice, wav_d.ncmp, wav_d.cmp_name,
+  io_slice_nc_create(ioslice, wav_d.ncmp, md_d.visco_type, wav_d.cmp_name,
                      gd_d.ni, gd_d.nj, gd_d.nk, topoid,
                      &ioslice_nc);
   // create snapshot nc output files
@@ -149,58 +177,19 @@ drv_rk_curv_col_allstep(
   float *PG   = NULL;
   // Dis_accu is Displacemen accumulation, be uesd for PGD calculaton.
   float *Dis_accu_d   = NULL;
-  if (bdryfree_d.is_sides_free[CONST_NDIM-1][1] == 1)
+  if (bdryfree->is_sides_free[CONST_NDIM-1][1] == 1)
   {
     PG_d = init_PGVAD_device(gd);
     Dis_accu_d = init_Dis_accu_device(gd);
     PG = (float *) fdlib_mem_calloc_1d_float(CONST_NDIM_5*gd->ny*gd->nx,0.0,"PGV,A,D malloc");
   }
-  // calculate conversion matrix for free surface
-  if (bdryfree_d.is_sides_free[CONST_NDIM-1][1] == 1)
-  {
-    if (md_d.medium_type == CONST_MEDIUM_ELASTIC_ISO)
-    {
-      dim3 block(32,16);
-      dim3 grid;
-      grid.x = (ni+block.x-1)/block.x;
-      grid.y = (nj+block.y-1)/block.y;
-      sv_curv_col_el_iso_dvh2dvz_gpu <<<grid, block>>> (gd_d,metric_d,md_d,bdryfree_d,verbose);
-      CUDACHECK(cudaDeviceSynchronize());
-    }
-    else if (md_d.medium_type == CONST_MEDIUM_ELASTIC_VTI)
-    {
-      dim3 block(32,16);
-      dim3 grid;
-      grid.x = (ni+block.x-1)/block.x;
-      grid.y = (nj+block.y-1)/block.y;
-      sv_curv_col_el_vti_dvh2dvz_gpu <<<grid, block>>> (gd_d,metric_d,md_d,bdryfree_d,verbose);
-      CUDACHECK(cudaDeviceSynchronize());
-    }
-    else if (md_d.medium_type == CONST_MEDIUM_ELASTIC_ANISO)
-    {
-      dim3 block(32,16);
-      dim3 grid;
-      grid.x = (ni+block.x-1)/block.x;
-      grid.y = (nj+block.y-1)/block.y;
-      sv_curv_col_el_aniso_dvh2dvz_gpu <<<grid, block>>> (gd_d,metric_d,md_d,bdryfree_d,verbose);
-      CUDACHECK(cudaDeviceSynchronize());
-    }
-    else if (md_d.medium_type == CONST_MEDIUM_ACOUSTIC_ISO)
-    {
-      // not need
-    }
-    else
-    {
-      fprintf(stderr,"ERROR: conversion matrix for medium_type=%d is not implemented\n",
-                    md->medium_type);
-      MPI_Abort(MPI_COMM_WORLD,1);
-    }
-  }
+
   //--------------------------------------------------------
   // time loop
   //--------------------------------------------------------
 
   if (myid==0 && verbose>0) fprintf(stdout,"start time loop ...\n"); 
+
   //---------
   for (int it=0; it<nt_total; it++)
   {
@@ -238,9 +227,7 @@ drv_rk_curv_col_allstep(
             }
           }
         }
-      }
-      else
-      {
+      } else {
         w_cur_d = w_tmp_d;
         if(bdrypml_d.is_enable_pml == 1)
         {
@@ -309,12 +296,27 @@ drv_rk_curv_col_allstep(
               myid, verbose);
           break;
         }
+
+        case CONST_MEDIUM_VISCOELASTIC_ISO : {
+
+          if(md_d.visco_type == CONST_VISCO_GMB)
+          {
+            sv_curv_col_vis_iso_onestage(
+                w_cur_d,w_rhs_d,wav_d,fd_wav_d,
+                gd_d, metric_d, md_d, bdrypml_d, bdryfree_d, src_d,
+                fd->num_of_fdx_op, fd->pair_fdx_op[ipair][istage],
+                fd->num_of_fdy_op, fd->pair_fdy_op[ipair][istage],
+                fd->num_of_fdz_op, fd->pair_fdz_op[ipair][istage],
+                fd->fdz_max_len,
+                myid, verbose);
+          }
+          break;
+        }
       //  synchronize onestage device func.
       CUDACHECK(cudaDeviceSynchronize());
       }
       // recv mesg
       MPI_Startall(num_of_r_reqs, mympi->pair_r_reqs[ipair_mpi][istage_mpi]);
-
 
       // rk start
       if (istage==0)
@@ -374,9 +376,7 @@ drv_rk_curv_col_allstep(
             }
           }
         }
-      }
-      else if (istage<num_rk_stages-1)
-      {
+      } else if (istage<num_rk_stages-1) {
         float coef_a = rk_a[istage] * dt;
         float coef_b = rk_b[istage] * dt;
         {
@@ -428,9 +428,7 @@ drv_rk_curv_col_allstep(
             }
           }
         }
-      }
-      else // last stage
-      {
+      } else { // last stage 
         float coef_b = rk_b[istage] * dt;
 
         // wavefield
@@ -459,6 +457,18 @@ drv_rk_curv_col_allstep(
                            auxvar_d->siz_ilevel, coef_b, auxvar_d->end, auxvar_d->rhs);
               }
             }
+          }
+        }
+        if (md->medium_type == CONST_MEDIUM_VISCOELASTIC_ISO) 
+        {
+          if (bdryfree->is_sides_free[2][1] == 1) 
+          {
+            dim3 block(32,16);
+            dim3 grid;
+            grid.x = (ni+block.x-1)/block.x;
+            grid.y = (nj+block.y-1)/block.y;
+            sv_curv_col_vis_iso_free_gpu <<<grid, block>>> (
+                w_end_d,wav_d,gd_d,metric_d,md_d,bdryfree_d,myid,verbose);
           }
         }
       }
@@ -490,7 +500,7 @@ drv_rk_curv_col_allstep(
     // save results
     //--------------------------------------------
     // calculate PGV, PGA and PGD for each surface at each stage
-    if (bdryfree_d.is_sides_free[CONST_NDIM-1][1] == 1)
+    if (bdryfree->is_sides_free[CONST_NDIM-1][1] == 1)
     {
         dim3 block(8,8);
         dim3 grid;
@@ -506,7 +516,7 @@ drv_rk_curv_col_allstep(
     io_line_keep(ioline, w_end_d, w_buff, it, wav->ncmp, wav->siz_icmp);
 
     // write slice, use w_rhs as buff
-    io_slice_nc_put(ioslice,&ioslice_nc,gd,w_end_d,w_buff,it,t_end,0,wav->ncmp-1);
+    io_slice_nc_put(ioslice,&ioslice_nc,gd,w_end_d,w_buff,it,t_end);
 
     // snapshot
     io_snap_nc_put(iosnap, &iosnap_nc, gd, md, wav, 
@@ -542,7 +552,7 @@ drv_rk_curv_col_allstep(
   dealloc_bdrypml_device(bdrypml_d);
   dealloc_bdryexp_device(bdryexp_d);
   // postproc
-  if (bdryfree_d.is_sides_free[CONST_NDIM-1][1] == 1)
+  if (bdryfree->is_sides_free[CONST_NDIM-1][1] == 1)
   {
     PG_slice_output(PG,gd,output_dir,output_fname_part,topoid);
   }
@@ -550,5 +560,5 @@ drv_rk_curv_col_allstep(
   io_slice_nc_close(&ioslice_nc);
   io_snap_nc_close(&iosnap_nc);
 
-  return;
+  return 0;
 }
