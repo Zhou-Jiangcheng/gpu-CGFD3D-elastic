@@ -734,7 +734,7 @@ par_read_from_str(const char *str, par_t *par)
   par->visco_Qs_freq = 0.0;
   par->visco_itype = 0;
   if (item = cJSON_GetObjectItem(root, "visco_config")) {
-    if (subitem = cJSON_GetObjectItem(item, "type")) {
+    if (subitem = cJSON_GetObjectItem(item, "visco_type")) {
         sprintf(par->visco_type, "%s", subitem->valuestring);
         if (strcmp(par->visco_type, "graves_Qs")==0) {
           par->visco_itype = CONST_VISCO_GRAVES_QS;

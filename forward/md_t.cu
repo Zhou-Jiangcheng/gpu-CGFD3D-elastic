@@ -661,7 +661,7 @@ md_vis_GMB_cal_Y(md_t *md, float freq, float fmin, float fmax)
   md->visco_GMB_fmin = fmin;
   md->visco_GMB_fmax = fmax;
 
-  int kmax = 2*md->nmaxwell;
+  int kmax = 2*md->nmaxwell-1;
   float wr = 2*PI*md->visco_GMB_freq;
   float wmin = 2*PI*md->visco_GMB_fmin;
   float wmax = 2*PI*md->visco_GMB_fmax;

@@ -315,6 +315,7 @@ sv_curv_col_vis_iso_atten_gpu(
   size_t ix = blockIdx.x * blockDim.x + threadIdx.x;
   size_t iy = blockIdx.y * blockDim.y + threadIdx.y;
   size_t iz = blockIdx.z * blockDim.z + threadIdx.z;
+  size_t iptr;
 
   int nmaxwell = md_d.nmaxwell;
 
@@ -342,7 +343,7 @@ sv_curv_col_vis_iso_atten_gpu(
 
   float *Ylam[10];
   float *Ymu [10];
-  float wl[10];
+  float *wl = md_d.wl;
 
   for(int i=0; i < nmaxwell; i++)
   {
@@ -360,7 +361,6 @@ sv_curv_col_vis_iso_atten_gpu(
     hJxz[i] = rhs   + wav_d.Jxz_pos[i];
     Ylam[i] = md_d.Ylam[i];
     Ymu[i]  = md_d.Ymu[i];
-    wl [i]  = md_d.wl[i];
   }
 
   float *lam3d = md_d.lambda;
@@ -376,7 +376,7 @@ sv_curv_col_vis_iso_atten_gpu(
   // caclu all points
   if(ix<ni && iy<nj && iz<nk)
   {
-    size_t iptr = (ix+ni1) + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz;
+    iptr = (ix+ni1) + (iy+nj1) * siz_iy + (iz+nk1) * siz_iz;
 
     // medium
     lam = lam3d[iptr];

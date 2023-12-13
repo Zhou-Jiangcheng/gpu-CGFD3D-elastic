@@ -20,7 +20,7 @@ INPUTDIR=`pwd`
 PROJDIR=`pwd`/../project
 PAR_FILE=${PROJDIR}/test.json
 GRID_DIR=${PROJDIR}/output
-MEDIA_DIR=${PROJDIR}/../project/output
+MEDIA_DIR=${PROJDIR}/output
 SOURCE_DIR=${PROJDIR}/output
 OUTPUT_DIR=${PROJDIR}/output
 
@@ -104,13 +104,7 @@ cat << ieof > ${PAR_FILE}
           }
       },
   "boundary_z_top" : {
-      "#free" : "timg",
-      "cfspml" : {
-          "number_of_layers" : 20,
-          "alpha_max" : 3.0,
-          "beta_max" : 2.5,
-          "ref_vel"  : 5000.0
-          }
+      "free" : "timg"
       },
 
   "grid_generation_method" : {
@@ -159,7 +153,7 @@ cat << ieof > ${PAR_FILE}
   "media_export_dir"  : "$MEDIA_DIR",
 
   "visco_config" : {
-      "type" : "gmb",
+      "visco_type" : "gmb",
       "Qs_freq" : 1.0,
       "number_of_maxwell" : 3,
       "max_freq" : 10.0,

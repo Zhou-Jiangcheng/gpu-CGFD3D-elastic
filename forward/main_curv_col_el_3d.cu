@@ -560,6 +560,11 @@ int main(int argc, char** argv)
     } 
   }
 
+  if (md->medium_type == CONST_MEDIUM_VISCOELASTIC_ISO && 
+      md->visco_type == CONST_VISCO_GMB){
+    md_vis_GMB_cal_Y(md, par->fr, par->fmin, par->fmax);
+  }
+
   // export grid media
   if (par->is_export_media==1)
   {
@@ -572,10 +577,6 @@ int main(int argc, char** argv)
     if (myid==0) fprintf(stdout,"do not export medium\n"); 
   }
 
-  if (md->medium_type == CONST_MEDIUM_VISCOELASTIC_ISO && 
-      md->visco_type == CONST_VISCO_GMB){
-    md_vis_GMB_cal_Y(md, par->fr, par->fmin, par->fmax);
-  }
 
   MPI_Barrier(comm);
   time_t t_end_md = time(NULL);
