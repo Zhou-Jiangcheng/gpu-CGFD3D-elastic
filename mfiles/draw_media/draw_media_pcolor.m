@@ -1,4 +1,5 @@
 clear all;
+close all;
 addmypath;
 % -------------------------- parameters input -------------------------- %
 % file and path name
@@ -16,7 +17,7 @@ subt=[1,1,1];
 
 % variable to plot
 % 'Vp', 'Vs', 'rho', 'lambda', 'mu'
-varnm='Vs';
+varnm='Vp';
 
 % figure control parameters
 flag_km     = 1;

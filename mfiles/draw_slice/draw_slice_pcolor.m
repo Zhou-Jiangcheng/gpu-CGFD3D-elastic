@@ -9,12 +9,12 @@ output_dir='../../project/output';
 
 % which slice to plot
 slicedir='y';
-sliceid=100;
+sliceid=110;
 
 % which variable and time to plot
 varnm='Vx';
-ns=100;
-ne=1000;
+ns=500;
+ne=500;
 nt=100;
 
 % figure control parameters

@@ -29,16 +29,16 @@ md_init(gd_t *gd, md_t *md, int media_type, int visco_type, int nmaxwell)
   // media type
   md->medium_type = media_type;
   if (media_type == CONST_MEDIUM_ACOUSTIC_ISO) {
-    md->ncmp = 2;
+    md->ncmp = 2;  // rho + kappa
   } else if (media_type == CONST_MEDIUM_ELASTIC_ISO) {
-    md->ncmp = 3;
+    md->ncmp = 3;  // rho + lambda + mu
   } else if (media_type == CONST_MEDIUM_ELASTIC_VTI) {
     md->ncmp = 6; // 5 + rho
   } else if (media_type == CONST_MEDIUM_VISCOELASTIC_ISO) {
     // visco
     md->visco_type = visco_type;
     if (visco_type == CONST_VISCO_GRAVES_QS) {
-     md->ncmp += 1;
+     md->ncmp = 3 + 1;
     } else if(visco_type == CONST_VISCO_GMB) {
       md->nmaxwell = nmaxwell;
       md->ncmp = 3 + 2*md->nmaxwell+2;
