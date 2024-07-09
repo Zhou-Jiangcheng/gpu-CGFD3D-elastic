@@ -180,6 +180,21 @@ io_slice_locate(gd_t  *gd,
                 char *output_dir);
 
 int
+io_slice_nc_create(ioslice_t *ioslice, 
+                  int num_of_vars, int visco_type, char **w3d_name,
+                  int ni, int nj, int nk,
+                  int *topoid, ioslice_nc_t *ioslice_nc);
+
+int
+io_slice_nc_put(ioslice_t    *ioslice,
+                ioslice_nc_t *ioslice_nc,
+                gd_t     *gd,
+                float *w4d,
+                float *buff,
+                int   it,
+                float time);
+
+int
 io_snapshot_locate(gd_t *gd,
                    iosnap_t *iosnap,
                     int  number_of_snapshot,
@@ -196,22 +211,7 @@ io_snapshot_locate(gd_t *gd,
                     char *output_dir);
 
 int
-io_slice_nc_create(ioslice_t *ioslice, 
-                  int num_of_vars, int visco_type, char **w3d_name,
-                  int ni, int nj, int nk,
-                  int *topoid, ioslice_nc_t *ioslice_nc);
-
-int
 io_snap_nc_create(iosnap_t *iosnap, iosnap_nc_t *iosnap_nc, int *topoid);
-
-int
-io_slice_nc_put(ioslice_t    *ioslice,
-                ioslice_nc_t *ioslice_nc,
-                gd_t     *gd,
-                float *w4d,
-                float *buff,
-                int   it,
-                float time);
 
 int
 io_snap_nc_put(iosnap_t *iosnap,
@@ -219,14 +219,11 @@ io_snap_nc_put(iosnap_t *iosnap,
                gd_t    *gd,
                md_t    *md,
                wav_t   *wav,
-               float *w4d,
+               float *w_pre_d,
                float *buff,
                int   nt_total,
                int   it,
-               float time,
-               int is_run_out_vel,     // for stg, out vel and stress at sep call
-               int is_run_out_stress,  // 
-               int is_incr_cur_it);     // for stg, should output cur_it once
+               float time);
 
 int
 io_snap_nc_create_ac(iosnap_t *iosnap, iosnap_nc_t *iosnap_nc, int *topoid);
@@ -237,14 +234,11 @@ io_snap_nc_put_ac(iosnap_t *iosnap,
                gd_t    *gd,
                md_t    *md,
                wav_t   *wav,
-               float *w4d,
+               float *w_pre_d,
                float *buff,
                int   nt_total,
                int   it,
-               float time,
-               int is_run_out_vel,     // for stg, out vel and stress at sep call
-               int is_run_out_stress,  // 
-               int is_incr_cur_it);     // for stg, should output cur_it once
+               float time);
 
 int
 io_snap_stress_to_strain_eliso(float *lam3d,
@@ -304,11 +298,11 @@ int
 io_snap_nc_close(iosnap_nc_t *iosnap_nc);
 
 int
-io_recv_keep(iorecv_t *iorecv, float *w_end_d,
+io_recv_keep(iorecv_t *iorecv, float *w_pre_d,
              float* buff, int it, int ncmp, size_t siz_icmp);
 
 int
-io_line_keep(ioline_t *ioline, float *w_end_d,
+io_line_keep(ioline_t *ioline, float *w_pre_d,
              float *buff, int it, int ncmp, size_t siz_icmp);
 
 __global__ void
