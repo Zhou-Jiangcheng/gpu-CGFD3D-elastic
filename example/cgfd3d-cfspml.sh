@@ -7,11 +7,10 @@ date
 
 #-- system related dir
 MPIDIR=/data3/lihl/software/openmpi-gnu-4.1.2
-#MPIDIR=/data/apps/openmpi/4.1.5-cuda-aware
 
 #-- program related dir
 EXEC_WAVE=`pwd`/../main_curv_col_el_3d
-echo "EXEC_WAVE=${EXEC_WAVE}"
+echo "EXEC_WAVE=$EXEC_WAVE"
 
 #-- input dir
 INPUTDIR=`pwd`
@@ -24,22 +23,18 @@ MEDIA_DIR=${PROJDIR}/output
 SOURCE_DIR=${PROJDIR}/output
 OUTPUT_DIR=${PROJDIR}/output
 
-rm -rf ${PROJDIR}
+rm -rf $PROJDIR
 
 #-- create dir
-mkdir -p ${PROJDIR}
-mkdir -p ${OUTPUT_DIR}
-mkdir -p ${GRID_DIR}
-mkdir -p ${MEDIA_DIR}
-
-#----------------------------------------------------------------------
-#-- grid and mpi configurations
-#----------------------------------------------------------------------
+mkdir -p $PROJDIR
+mkdir -p $OUTPUT_DIR
+mkdir -p $GRID_DIR
+mkdir -p $MEDIA_DIR
 
 #-- total x grid points
-NX=200
+NX=300
 #-- total y grid points
-NY=220
+NY=200
 #-- total z grid points
 NZ=200
 #-- total x mpi procs
@@ -49,7 +44,7 @@ NPROCS_Y=2
 #----------------------------------------------------------------------
 #-- create main conf
 #----------------------------------------------------------------------
-cat << ieof > ${PAR_FILE}
+cat << ieof > $PAR_FILE
 {
   "number_of_total_grid_points_x" : ${NX},
   "number_of_total_grid_points_y" : ${NY},
@@ -59,7 +54,7 @@ cat << ieof > ${PAR_FILE}
   "number_of_mpiprocs_y" : $NPROCS_Y,
 
   "size_of_time_step" : 0.01,
-  "number_of_time_steps" : 500,
+  "number_of_time_steps" : 1000,
   "#time_window_length" : 8,
   "check_stability" : 1,
 
@@ -108,10 +103,16 @@ cat << ieof > ${PAR_FILE}
       },
 
   "grid_generation_method" : {
-      "#import" : "$INPUTDIR/grid_model1",
+      "#import" : "$GRID_DIR",
       "cartesian" : {
         "origin"  : [0.0, 0.0, -29900.0 ],
         "inteval" : [ 100.0, 100.0, 100.0 ]
+      },
+      "#layer_interp" : {
+        "in_grid_layer_file" : "$INPUTDIR/prep_grid/seam_smo_ablex.gdlay",
+        "refine_factor" : [ 1, 1, 1],
+        "horizontal_start_index" : [ 3, 3 ],
+        "vertical_last_to_top" : 0
       }
   },
   "is_export_grid" : 1,
@@ -124,12 +125,11 @@ cat << ieof > ${PAR_FILE}
   "is_export_metric" : 1,
 
   "medium" : {
-      "type" : "viscoelastic_iso",
+      "type" : "elastic_iso",
       "#type" : "elastic_iso",
       "#input_way" : "infile_layer",
       "#input_way" : "binfile",
       "input_way" : "code",
-      "#input_way" : "import",
       "#binfile" : {
         "size"    : [1001, 1447, 1252],
         "spacing" : [-10, 10, 10],
@@ -152,8 +152,8 @@ cat << ieof > ${PAR_FILE}
   "is_export_media" : 1,
   "media_export_dir"  : "$MEDIA_DIR",
 
-  "visco_config" : {
-      "visco_type" : "gmb",
+  "#visco_config" : {
+      "type" : "gmb",
       "Qs_freq" : 1.0,
       "number_of_maxwell" : 3,
       "max_freq" : 10.0,
@@ -161,13 +161,13 @@ cat << ieof > ${PAR_FILE}
       "refer_freq" : 1.0
   },
 
-  "in_source_file" : "$INPUTDIR/prep_source/test_source.src",
+  "in_source_file" : "$INPUTDIR/test_source.src",
   "is_export_source" : 1,
   "source_export_dir"  : "$SOURCE_DIR",
 
   "output_dir" : "$OUTPUT_DIR",
 
-  "in_station_file" : "$INPUTDIR/prep_station/station.list",
+  "in_station_file" : "$INPUTDIR/station.list",
 
   "#receiver_line" : [
     {
@@ -184,7 +184,7 @@ cat << ieof > ${PAR_FILE}
     } 
   ],
 
-  "slice" : {
+  "#slice" : {
       "x_index" : [ 100 ],
       "y_index" : [ 110 ],
       "z_index" : [ 100 ]
@@ -193,8 +193,8 @@ cat << ieof > ${PAR_FILE}
   "snapshot" : [
     {
       "name" : "volume_vel",
-      "grid_index_start" : [ 0, 100, 0 ],
-      "grid_index_count" : [ $NX, 1, $NZ ],
+      "grid_index_start" : [ 0, 0, $((NZ-1)) ],
+      "grid_index_count" : [ $NX,$NY, 1 ],
       "grid_index_incre" : [  1, 1, 1 ],
       "time_index_start" : 0,
       "time_index_incre" : 1,
@@ -230,7 +230,7 @@ set -e
 printf "\nUse $NUMPROCS CPUs on following nodes:\n"
 
 printf "\nStart simualtion ...\n";
-time $MPIDIR/bin/mpiexec -np $NUMPROCS $EXEC_WAVE $PAR_FILE 100 0 2>&1 |tee log
+time $MPIDIR/bin/mpiexec -np $NUMPROCS $EXEC_WAVE $PAR_FILE 100 0 2>&1 |tee log1
 if [ $? -ne 0 ]; then
     printf "\nSimulation fail! stop!\n"
     exit 1

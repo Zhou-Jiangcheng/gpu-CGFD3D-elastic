@@ -11,9 +11,6 @@ snap_subs=par.snapshot{id}.grid_index_start;
 snap_subc=par.snapshot{id}.grid_index_count;
 snap_subt=par.snapshot{id}.grid_index_incre;
 snap_tinv=par.snapshot{id}.time_index_incre;
-ngijk=[par.number_of_total_grid_points_x,...
-       par.number_of_total_grid_points_y,...
-       par.number_of_total_grid_points_z];
 
 gsubs = subs;
 gsubt = subt;
@@ -21,7 +18,7 @@ gsubc = subc;
 
 % reset count=-1 to total number
 indx=find(subc==-1);
-gsubc(indx)=ceil((snap_subc(indx)-snap_subs(indx)));
+gsubc(indx)=ceil((snap_subc(indx)-gsubs(indx)+1)./gsubt(indx));
 gsube=gsubs+(gsubc-1).*gsubt;
 
 % search the nc file headers to locate the threads/processors
@@ -44,17 +41,17 @@ for i=1:length(snaplist)
     xarray=[xs:xs+xc-1];
     yarray=[ys:ys+yc-1];
     zarray=[zs:zs+zc-1];
-   if (length(find(xarray>=gsubs(1)-1 & xarray<=gsube(1)-1)) ~= 0 && ...
-       length(find(yarray>=gsubs(2)-1 & yarray<=gsube(2)-1)) ~= 0 && ...
-       length(find(zarray>=gsubs(3)-1 & zarray<=gsube(3)-1)) ~= 0)
-       n=n+1;
+    if (length(find(xarray>=gsubs(1)-1 & xarray<=gsube(1)-1)) ~= 0 && ...
+        length(find(yarray>=gsubs(2)-1 & yarray<=gsube(2)-1)) ~= 0 && ...
+        length(find(zarray>=gsubs(3)-1 & zarray<=gsube(3)-1)) ~= 0)
+        n=n+1;
 
-       px(n)=str2num(snaplist(i).name( strfind(snaplist(i).name,'px' )+2 : ...
-                                        strfind(snaplist(i).name,'_py')-1));
-       py(n)=str2num(snaplist(i).name( strfind(snaplist(i).name,'py' )+2 : ...
-                                        strfind(snaplist(i).name,'_pz')-1));
-       pz(n)=str2num(snaplist(i).name( strfind(snaplist(i).name,'pz' )+2 : ...
-                                        strfind(snaplist(i).name,'.nc')-1));
+        px(n)=str2num(snaplist(i).name( strfind(snaplist(i).name,'px' )+2 : ...
+                                         strfind(snaplist(i).name,'_py')-1));
+        py(n)=str2num(snaplist(i).name( strfind(snaplist(i).name,'py' )+2 : ...
+                                         strfind(snaplist(i).name,'_pz')-1));
+        pz(n)=str2num(snaplist(i).name( strfind(snaplist(i).name,'pz' )+2 : ...
+                                         strfind(snaplist(i).name,'.nc')-1));
     end
     
 end

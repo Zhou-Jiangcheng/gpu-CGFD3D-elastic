@@ -4,21 +4,32 @@ clc;
 addmypath;
 % -------------------------- parameters input -------------------------- %
 % file and path name
-parfnm='../../project1/params.json';
-output_dir='../../project1/output';
+parfnm='../../project/test.json';
+output_dir='../../project/output';
 
 % which variable to plot
 varnm='Vx';
 % which station to plot (start from index '1')
 startid=1;
-endid = 2;
+endid = 3;
 
 % figure control parameters
-flag_print=0;
+flag_print=1;
 
 % ---------------------------------------------------------------------- %
+
 % read parameter file
 par=loadjson(parfnm);
+
+fileID = fopen(par.in_source_file);
+recvprefix = fgetl(fileID);
+while(recvprefix(1) == "#")
+    recvprefix = fgetl(fileID);
+    if(recvprefix(1) ~= "#")
+        break;
+    end
+end
+fclose(fileID);
 
 fileID = fopen(par.in_station_file);
 %first line is number recv or station
@@ -37,15 +48,15 @@ for irec=startid:1:endid
     end
     recvinfo = strsplit(recvinfo);
     recvnm = char(recvinfo(1));
-    sacnm=[output_dir,'/',recvnm,'.',varnm,'.sac'];
+    sacnm=[output_dir,'/',recvprefix,'.',recvnm,'.',varnm,'.sac'];
     sacdata=rsac(sacnm);
-    seismodata(irec-startid+1,:)=sacdata(:,2);
-    seismot(irec-startid+1,:)=sacdata(:,1);
+    seismodata(:,irec-startid+1)=sacdata(:,2);
+    seismot(:,irec-startid+1)=sacdata(:,1);
 end
 % plot receiver
 for irec=startid:1:endid
     figure(irec-startid+1)
-    plot(seismot(irec-startid+1,:),seismodata(irec-startid+1,:),'b','linewidth',1.0);
+    plot(seismot(:,irec-startid+1),seismodata(:,irec-startid+1),'b','linewidth',1.0);
     xlabel('Time (s)');
     ylabel('Amplitude');
     title([varnm, ' recv No.',num2str(irec),' interpreter ','yes']);

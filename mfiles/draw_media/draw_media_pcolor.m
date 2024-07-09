@@ -11,7 +11,7 @@ output_dir='../../project/output'
 %media_type = 'el_vti';
 
 % which media profile to plot
-subs=[50,1,1];   % start from index '1'
+subs=[200,1,1];   % start from index '1'
 subc=[1,-1,-1];   % '-1' to plot all points in this dimension
 subt=[1,1,1];
 

@@ -1,5 +1,5 @@
 clear all;
-% close all;
+close all;
 clc;
 addmypath
 % -------------------------- parameters input -------------------------- %
@@ -12,28 +12,28 @@ id=1;
 
 %-- z slice
 subs=[1,1,1];      % start from index '1'
-subc=[-1,1,-1];     % '-1' to plot all points in this dimension
+subc=[-1,-1,1];     % '-1' to plot all points in this dimension
 subt=[1,1,1];
 
 %-- y slice
-%subs=[1,41,1];      % start from index '1'
-%subc=[-1,1,-1];     % '-1' to plot all points in this dimension
-%subt=[1,1,1];
+% subs=[1,11,1];      % start from index '1'
+% subc=[-1,1,-1];     % '-1' to plot all points in this dimension
+% subt=[1,1,1];
 
 %-- x slice
-%subs=[41,1,1];      % start from index '1'
-%subc=[1,-1,-1];     % '-1' to plot all points in this dimension
-%subt=[1,1,1];
+% subs=[41,1,1];      % start from index '1'
+% subc=[1,-1,-1];     % '-1' to plot all points in this dimension
+% subt=[1,1,1];
 
 % variable and time to plot
 varnm='Vx';
-ns=1000;
+ns=300;
 ne=1000;
 nt=100;
 
 
 % figure control parameters
-flag_km     = 1;
+flag_km     = 0;
 flag_print  = 0;
 savegif = 0;
 % scl_caxis=[-1.0 1.0];
@@ -46,7 +46,8 @@ taut=0.5;
 % load snapshot data
 snapinfo=locate_snap(parfnm,output_dir,id,subs,subc,subt);
 % get coordinate data
-[x,y,z]=gather_coord(snapinfo,output_dir);
+coordinfo=locate_snap_coord(parfnm,output_dir,id,subs,subc,subt);
+[x,y,z]=gather_coord(coordinfo,output_dir);
 
 %- set coord unit
 if flag_km
