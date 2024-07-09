@@ -19,203 +19,6 @@
 #include "alloc.h"
 
 /*
- * export to a single file
- */
-
-void
-io_build_fname(char *out_dir,
-               char *prefix,
-               char *sufix,
-               int *topoid,
-               char *ou_fname)
-{
-  sprintf(ou_fname,"%s/%s_%d_%d%s",out_dir,prefix,topoid[0],topoid[1],sufix);
-
-  //fprintf(stdout,"out_dir=%s\n",out_dir);
-  //fprintf(stdout,"prefix=%s\n",prefix);
-  //fprintf(stdout,"sufix=%s\n",sufix);
-  //fprintf(stdout,"ou_fname=%s\n",ou_fname);
-  //fflush(stdout);
-}
-
-void
-io_build_fname_time(char *out_dir,
-                    char *prefix,
-                    char *sufix,
-                    int *topoid,
-                    int  it,
-                    char *ou_fname)
-{
-  sprintf(ou_fname,"%s/%s_%d_%d_it%d%s",out_dir,prefix,topoid[0],topoid[1],it,sufix);
-}
-
-void
-io_snapshot_export_binary(char *fname,
-                   float *var,
-                   int nx,
-                   int ny,
-                   int nz,
-                   int *snap_indx,
-                   int verbose)
-{
-  FILE *fp=fopen(fname,"wb");
-  if (fp == NULL) {
-    fprintf(stderr,"Error: can't create : %s\n", fname);
-    exit(1);
-  }
-
-  // index triple
-  int i1 = snap_indx[0];
-  int j1 = snap_indx[1];
-  int k1 = snap_indx[2];
-  int ic = snap_indx[3];
-  int jc = snap_indx[4];
-  int kc = snap_indx[5];
-  int di = snap_indx[6];
-  int dj = snap_indx[7];
-  int dk = snap_indx[8];
-
-  for (int n3=0; n3<kc; n3++)
-  {
-    int k = k1 + n3 * dk;
-    for (int n2=0; n2<jc; n2++)
-    {
-      int j = j1 + n2 * dj;
-      for (int n1=0; n1<ic; n1++)
-      {
-        int i = i1 + n1 * di;
-        int iptr = i + j * nx + k * nx * ny;
-        fwrite(var+iptr, 1, sizeof(float), fp);
-      }
-    }
-  }
-
-  fclose(fp);
-}
-
-/*
- * append to a single file
- */
-
-/*
-void
-io_snapshot_append(FILE *fp,
-                   float *var,
-                   size_t ni,
-                   size_t nj,
-                   size_t nk,
-                   int verbose)
-{
-
-}
-*/
-
-/*
- *  export all var3ds to netcdf file
- */
-void
-io_var3d_export_nc(char   *ou_file,
-                   float  *v3d,
-                   size_t *v3d_pos,
-                   char  **v3d_name,
-                   int   number_of_vars,
-                   char  **coord_name,
-                   int  nx,
-                   int  ny,
-                   int  nz)
-{
-  int ncid;
-  int varid[number_of_vars];
-  int dimid[CONST_NDIM];
-
-  int ierr = nc_create(ou_file, NC_CLOBBER, &ncid);  handle_nc_err(ierr);
-
-  // define dimension: last dim varis fastest for c nc file
-  ierr = nc_def_dim(ncid, coord_name[0], nx, &dimid[2]);  handle_nc_err(ierr);
-  ierr = nc_def_dim(ncid, coord_name[1], ny, &dimid[1]);  handle_nc_err(ierr);
-  ierr = nc_def_dim(ncid, coord_name[2], nz, &dimid[0]);  handle_nc_err(ierr);
-
-  // define vars
-  for (int ivar=0; ivar<number_of_vars; ivar++) {
-    ierr = nc_def_var(ncid, v3d_name[ivar], NC_FLOAT, CONST_NDIM, dimid, &varid[ivar]);
-    handle_nc_err(ierr);
-  }
-
-  // end def
-  ierr = nc_enddef(ncid);  handle_nc_err(ierr);
-
-  // add vars
-  for (int ivar=0; ivar<number_of_vars; ivar++) {
-    float *ptr = v3d + v3d_pos[ivar];
-    ierr = nc_put_var_float(ncid, varid[ivar],ptr);
-    handle_nc_err(ierr);
-  }
-  
-  // close file
-  ierr = nc_close(ncid);  handle_nc_err(ierr);
-}
-
-/*
- * read in station list file, prototype, not finished
- */
-
-//int
-//io_read_station_list(char *in_filenm, int *sta_num, char ***p_sta_name, float **p_sta_xyz)
-//{
-//  FILE *fp;
-//  char line[500];
-//
-//  if (!(fp = fopen (in_filenm, "rt")))
-//	{
-//	    fprintf (stdout, "Cannot open input file %s\n", in_filenm);
-//	    fflush (stdout);
-//	    return(1);
-//	}
-//
-//  // first round: get valid num
-//  int sta_num = 0;
-//  // scan line
-//  while ( fgets(line,500,fp) )
-//  {
-//    // skip comment
-//    if (line[0]=='#') continue;
-//    sta_num += 1;
-//  }
-//
-//  // alloc
-//  char **sta_name;
-//  float *sta_xyz;
-//
-//  sta_name = (char **) fdlib_mem_malloc_2l_char(sta_num,CONST_MAX_STRLEN,"io_read_station_list");
-//  sta_xyz  = (float *) fdlib_mem_malloc_1d(sta_num*CONST_NDIM*sizeof(float),"io_read_station_list");
-//
-//  // second round: read values
-//
-//  fseek(fp, 0, SEEK_SET);
-//
-//  int ir=0;
-//  while ( fgets(line,500,fp) )
-//  {
-//    // skip comment
-//    if (line[0]=='#') continue;
-//
-//    sscanf(line, "%s %f %f %f", sta_name[ir],
-//                      sta_xzy+ir*CONST_NDIM,
-//                      sta_xzy+ir*CONST_NDIM+1,
-//                      sta_xzy+ir*CONST_NDIM+2);
-//    ir += 1;
-//  }
-//
-//  fclose(fp);
-//
-//  *p_sta_num  = sta_num;
-//  *p_sta_xyz  = sta_xyz;
-//  *p_sta_name = sta_name;
-//
-//  return(0);
-//}
-
-/*
  * read in station list file and locate station
  */
 int
@@ -231,11 +34,14 @@ io_recv_read_locate(gd_t      *gd,
   FILE *fp;
   char line[500];
 
+  // init
+  iorecv->total_number = 0;
+
   if (!(fp = fopen (in_filenm, "rt")))
 	{
-	    fprintf (stdout, "Cannot open input file %s\n", in_filenm);
+	    fprintf (stdout, "Cannot open input station file %s\n", in_filenm);
 	    fflush (stdout);
-	    return(1);
+	    return 0;
 	}
 
   int total_point_x = gd->total_point_x;
@@ -706,7 +512,7 @@ io_slice_locate(gd_t  *gd,
   return ierr;
 }
 
-void
+int
 io_snapshot_locate(gd_t *gd,
                    iosnap_t *iosnap,
                    int  number_of_snapshot,
@@ -843,6 +649,8 @@ io_snapshot_locate(gd_t *gd,
   } // loop all snap
 
   iosnap->num_of_snap = isnap;
+
+  return 0;
 }
 
 /*
@@ -909,7 +717,7 @@ io_slice_nc_create(ioslice_t *ioslice,
     nc_put_att_int(ioslice_nc->ncid_slx[n],NC_GLOBAL,"i_index_with_ghosts_in_this_thread",
                    NC_INT,1,ioslice->slice_x_indx+n);
     nc_put_att_int(ioslice_nc->ncid_slx[n],NC_GLOBAL,"coords_of_mpi_topo",
-                   NC_INT,2,topoid);
+                   NC_INT,3,topoid);
     // end def
     ierr = nc_enddef(ioslice_nc->ncid_slx[n]);
     handle_nc_err(ierr);
@@ -942,7 +750,7 @@ io_slice_nc_create(ioslice_t *ioslice,
     nc_put_att_int(ioslice_nc->ncid_sly[n],NC_GLOBAL,"j_index_with_ghosts_in_this_thread",
                    NC_INT,1,ioslice->slice_y_indx+n);
     nc_put_att_int(ioslice_nc->ncid_sly[n],NC_GLOBAL,"coords_of_mpi_topo",
-                   NC_INT,2,topoid);
+                   NC_INT,3,topoid);
     // end def
     ierr = nc_enddef(ioslice_nc->ncid_sly[n]);
     handle_nc_err(ierr);
@@ -975,7 +783,7 @@ io_slice_nc_create(ioslice_t *ioslice,
     nc_put_att_int(ioslice_nc->ncid_slz[n],NC_GLOBAL,"k_index_with_ghosts_in_this_thread",
                    NC_INT,1,ioslice->slice_z_indx+n);
     nc_put_att_int(ioslice_nc->ncid_slz[n],NC_GLOBAL,"coords_of_mpi_topo",
-                   NC_INT,2,topoid);
+                   NC_INT,3,topoid);
     // end def
     ierr = nc_enddef(ioslice_nc->ncid_slz[n]);
     handle_nc_err(ierr);
@@ -1094,7 +902,7 @@ io_snap_nc_create(iosnap_t *iosnap, iosnap_nc_t *iosnap_nc, int *topoid)
     nc_put_att_int(ncid[n],NC_GLOBAL,"index_stride_in_this_thread",
                    NC_INT,CONST_NDIM,l_count);
     nc_put_att_int(ncid[n],NC_GLOBAL,"coords_of_mpi_topo",
-                   NC_INT,2,topoid);
+                   NC_INT,3,topoid);
 
     ierr = nc_enddef(ncid[n]);  handle_nc_err(ierr);
   } // loop snap
@@ -1525,7 +1333,7 @@ io_snap_nc_create_ac(iosnap_t *iosnap, iosnap_nc_t *iosnap_nc, int *topoid)
     nc_put_att_int(ncid[n],NC_GLOBAL,"index_stride_in_this_thread",
                    NC_INT,CONST_NDIM,l_count);
     nc_put_att_int(ncid[n],NC_GLOBAL,"coords_of_mpi_topo",
-                   NC_INT,2,topoid);
+                   NC_INT,3,topoid);
 
     ierr = nc_enddef(ncid[n]);
     handle_nc_err(ierr);
@@ -2314,7 +2122,7 @@ PG_slice_output(float *PG, gd_t *gd, char *output_dir, char *frame_coords, int *
   nc_put_att_int(ncid,NC_GLOBAL,"count_index_of_physical_points",
                     NC_INT,2,phy_size);
   nc_put_att_int(ncid,NC_GLOBAL,"coords_of_mpi_topo",
-                    NC_INT,2,topoid);
+                    NC_INT,3,topoid);
 
   ierr = nc_enddef(ncid) ;
   handle_nc_err(ierr);

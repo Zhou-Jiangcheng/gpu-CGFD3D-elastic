@@ -6,8 +6,8 @@ set -e
 date
 
 #-- system related dir
-#MPIDIR=/data3/lihl/software/openmpi-gnu-4.1.2
-MPIDIR=/data/apps/openmpi/4.1.5-cuda-aware
+MPIDIR=/data3/lihl/software/openmpi-gnu-4.1.2
+#MPIDIR=/data/apps/openmpi/4.1.5-cuda-aware
 
 #-- program related dir
 EXEC_WAVE=`pwd`/../main_curv_col_el_3d
@@ -164,19 +164,13 @@ cat << ieof > $PAR_FILE
 
   "in_station_file" : "$INPUTDIR/station.list",
 
-  "#receiver_line" : [
+  "receiver_line" : [
     {
       "name" : "line_x_1",
       "grid_index_start"    : [  50, 149, 59 ],
       "grid_index_incre"    : [  5,  0,  0 ],
       "grid_index_count"    : 10
-    },
-    {
-      "name" : "line_y_1",
-      "grid_index_start"    : [ 200, 100, 59 ],
-      "grid_index_incre"    : [  0,  5,  0 ],
-      "grid_index_count"    : 10
-    } 
+    }
   ],
 
   "#slice" : {

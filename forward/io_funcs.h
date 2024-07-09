@@ -146,41 +146,6 @@ iosnap_nc_t;
  * function prototype
  *************************************************/
 
-void
-io_build_fname(char *out_dir,
-               char *prefix,
-               char *subfix,
-               int *myid2,
-               char *ou_fname);
-
-void
-io_build_fname_time(char *out_dir,
-                    char *prefix,
-                    char *subfix,
-                    int *myid2,
-                    int  it,
-                    char *ou_fname);
-
-void
-io_snapshot_export_binary(char *fname,
-                   float *var,
-                   int nx,
-                   int ny,
-                   int nz,
-                   int *snap_indx,
-                   int verbose);
-
-void
-io_var3d_export_nc(char   *ou_file,
-                   float  *v3d,
-                   size_t *v3d_pos,
-                   char  **v3d_name,
-                   int   number_of_vars,
-                   char  **coord_name,
-                   int  nx,
-                   int  ny,
-                   int  nz);
-
 int
 io_recv_read_locate(gd_t *gd,
                     iorecv_t  *iorecv,
@@ -214,7 +179,7 @@ io_slice_locate(gd_t  *gd,
                 char *output_fname_part,
                 char *output_dir);
 
-void
+int
 io_snapshot_locate(gd_t *gd,
                    iosnap_t *iosnap,
                     int  number_of_snapshot,

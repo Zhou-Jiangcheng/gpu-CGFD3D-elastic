@@ -196,6 +196,21 @@ drv_rk_curv_col_allstep(
     t_cur  = it * dt + t0;
     t_end = t_cur +dt;
 
+    // output t=0 wavefiled
+    //-- recv by interp
+    io_recv_keep(iorecv, w_pre_d, w_buff, it, wav->ncmp, wav->siz_icmp);
+
+    //-- line values
+    io_line_keep(ioline, w_pre_d, w_buff, it, wav->ncmp, wav->siz_icmp);
+
+    // write slice, use w_rhs as buff
+    io_slice_nc_put(ioslice,&ioslice_nc,gd,w_pre_d,w_buff,it,t_cur);
+
+    // snapshot
+    io_snap_nc_put(iosnap, &iosnap_nc, gd, md, wav, 
+                   w_pre_d, w_buff, nt_total, it, t_cur, 1,1,1);
+
+
     if (myid==0 && verbose>10) fprintf(stdout,"-> it=%d, t=%f\n", it, t_cur);
 
     // mod to get ipair
@@ -508,20 +523,6 @@ drv_rk_curv_col_allstep(
         grid.y = (nj + block.y - 1) / block.y;
         PG_calcu_gpu<<<grid, block>>> (w_end_d, w_pre_d, gd_d, PG_d, Dis_accu_d, dt);
     }
-
-    //-- recv by interp
-    io_recv_keep(iorecv, w_end_d, w_buff, it, wav->ncmp, wav->siz_icmp);
-
-    //-- line values
-    io_line_keep(ioline, w_end_d, w_buff, it, wav->ncmp, wav->siz_icmp);
-
-    // write slice, use w_rhs as buff
-    io_slice_nc_put(ioslice,&ioslice_nc,gd,w_end_d,w_buff,it,t_end);
-
-    // snapshot
-    io_snap_nc_put(iosnap, &iosnap_nc, gd, md, wav, 
-                   w_end_d, w_buff, nt_total, it, t_end, 1,1,1);
-
     // swap w_pre and w_end, avoid copying
     w_cur_d = w_pre_d; w_pre_d = w_end_d; w_end_d = w_cur_d;
 

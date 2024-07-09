@@ -14,7 +14,7 @@ startid=1;
 endid = 3;
 
 % figure control parameters
-flag_print=1;
+flag_print=0;
 
 % ---------------------------------------------------------------------- %
 

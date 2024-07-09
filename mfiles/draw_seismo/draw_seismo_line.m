@@ -43,15 +43,15 @@ for irec=0:nrec-1
     
     sacnm=[output_dir,'/',lineprefix,'.',linenm,'.','no',num2str(irec),'.',varnm,'.sac'];
     sacdata=rsac(sacnm);
-    seismodata(irec+1,:)=sacdata(:,2);
-    seismot(irec+1,:)=sacdata(:,1);
+    seismodata(:,irec+1)=sacdata(:,2);
+    seismot(:,irec+1)=sacdata(:,1);
     
 end
 
 
 % plot single receiver
 figure;
-plot(seismot(recid+1,:),seismodata(recid+1,:),'b','linewidth',1.0);
+plot(seismot(:,recid+1),seismodata(:,recid+1),'b','linewidth',1.0);
 xlabel('Time (s)');
 ylabel('Amplitude');
 title([varnm, ' at No.',num2str(recid+1),' Receiver of No.',num2str(lineid),...
@@ -76,7 +76,7 @@ scl=max(max(abs(seismodata)));
 ytickincre=10;
 figure;
 for irec=0:nrec-1
-    plot(seismot(irec+1,:),seismodata(irec+1,:)+irec*(2*scl),'b');
+    plot(seismot(:,irec+1),seismodata(:,irec+1)+irec*(2*scl),'b');
     hold on;
 end
 xlabel('Time (s)');
