@@ -477,6 +477,16 @@ src_read_locate_file(gd_t *gd,
   //analysis
   float fx,fy,fz;
   float mxx,myy,mzz,myz,mxz,mxy;
+  // init
+  fx = 0;
+  fy = 0;
+  fz = 0;
+  mxx= 0;
+  myy= 0;
+  mzz= 0;
+  mxy= 0;
+  mxz= 0;
+  myz= 0;
 
   //discrete value
   float *f1  = fdlib_mem_calloc_1d_float(in_stf_nt,0.0,"f1");

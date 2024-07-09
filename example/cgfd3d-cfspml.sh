@@ -6,7 +6,8 @@ set -e
 date
 
 #-- system related dir
-MPIDIR=/data3/lihl/software/openmpi-gnu-4.1.2
+#MPIDIR=/data3/lihl/software/openmpi-gnu-4.1.2
+MPIDIR=/data/apps/openmpi/4.1.5-cuda-aware
 
 #-- program related dir
 EXEC_WAVE=`pwd`/../main_curv_col_el_3d
