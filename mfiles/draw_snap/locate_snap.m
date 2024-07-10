@@ -7,7 +7,8 @@ end
 
 % read parameters file
 par=loadjson(parfnm);
-snap_subs=par.snapshot{id}.grid_index_start;
+% need -1, due to C code start from 0
+snap_subs=par.snapshot{id}.grid_index_start-1;
 snap_subc=par.snapshot{id}.grid_index_count;
 snap_subt=par.snapshot{id}.grid_index_incre;
 snap_tinv=par.snapshot{id}.time_index_incre;

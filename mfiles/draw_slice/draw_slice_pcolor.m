@@ -13,8 +13,8 @@ sliceid=110;
 
 % which variable and time to plot
 varnm='Vx';
-ns=500;
-ne=500;
+ns=501;
+ne=501;
 nt=100;
 
 % figure control parameters

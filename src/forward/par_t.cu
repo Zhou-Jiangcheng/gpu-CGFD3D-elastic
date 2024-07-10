@@ -829,10 +829,11 @@ par_read_from_str(const char *str, par_t *par)
         sprintf(par->receiver_line_name[i],"%s",subitem->valuestring);
       }
 
+      // need minus 1. C index start from 1.
       if (subitem = cJSON_GetObjectItem(lineitem, "grid_index_start"))
       {
         for (int j = 0; j < CONST_NDIM; j++) {
-          par->receiver_line_index_start[i*CONST_NDIM+j] = cJSON_GetArrayItem(subitem, j)->valueint;
+          par->receiver_line_index_start[i*CONST_NDIM+j] = cJSON_GetArrayItem(subitem, j)->valueint-1;
         }
       }
 
@@ -866,27 +867,30 @@ par_read_from_str(const char *str, par_t *par)
     {
       par->number_of_slice_x = cJSON_GetArraySize(subitem);
       par->slice_x_index  = (int *)malloc(par->number_of_slice_x*sizeof(int));
+      // need minus 1. C index start from 1.
       for (int i=0; i < par->number_of_slice_x ; i++)
       {
-        par->slice_x_index[i] = cJSON_GetArrayItem(subitem, i)->valueint;
+        par->slice_x_index[i] = cJSON_GetArrayItem(subitem, i)->valueint-1;
       }
     }
     if (subitem = cJSON_GetObjectItem(item, "y_index"))
     {
       par->number_of_slice_y = cJSON_GetArraySize(subitem);
       par->slice_y_index  = (int *)malloc(par->number_of_slice_y*sizeof(int));
+      // need minus 1. C index start from 1.
       for (int i=0; i < par->number_of_slice_y ; i++)
       {
-        par->slice_y_index[i] = cJSON_GetArrayItem(subitem, i)->valueint;
+        par->slice_y_index[i] = cJSON_GetArrayItem(subitem, i)->valueint-1;
       }
     }
     if (subitem = cJSON_GetObjectItem(item, "z_index"))
     {
       par->number_of_slice_z = cJSON_GetArraySize(subitem);
       par->slice_z_index  = (int *)malloc(par->number_of_slice_z*sizeof(int));
+      // need minus 1. C index start from 1.
       for (int i=0; i < par->number_of_slice_z ; i++)
       {
-        par->slice_z_index[i] = cJSON_GetArrayItem(subitem, i)->valueint;
+        par->slice_z_index[i] = cJSON_GetArrayItem(subitem, i)->valueint-1;
       }
     }
   }
@@ -928,8 +932,9 @@ par_read_from_str(const char *str, par_t *par)
 
       if (subitem = cJSON_GetObjectItem(snapitem, "grid_index_start"))
       {
+        // need minus 1. C index start from 1.
         for (int j = 0; j < CONST_NDIM; j++) {
-          par->snapshot_index_start[i*CONST_NDIM+j] = cJSON_GetArrayItem(subitem, j)->valueint;
+          par->snapshot_index_start[i*CONST_NDIM+j] = cJSON_GetArrayItem(subitem, j)->valueint-1;
         }
       }
 
