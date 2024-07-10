@@ -74,54 +74,6 @@ int main(int argc, char** argv)
   // initial gpu device after start MPI
   //-------------------------------------------------------------------------------
   setDeviceBeforeInit(gpu_id_start);
-/*
-  // get commond-line argument
-  // argc checking
-  if (argc < 4) {
-    fprintf(stdout,"usage: cgfdm3d_elastic <par_file> <opt: verbose>\n");
-    MPI_Finalize();
-    exit(1);
-  }
-
-  par_fname = argv[1];
-
-  if (argc >= 4) {
-    verbose = atoi(argv[2]); // verbose number
-    fprintf(stdout,"verbose=%d\n", verbose); fflush(stdout);
-    gpu_id_start = atoi(argv[3]); // gpu_id_start number
-    fprintf(stdout,"gpu_id_start=%d\n",gpu_id_start ); fflush(stdout);
-  }
-
-  //-------------------------------------------------------------------------------
-  // initial gpu device before start MPI
-  //-------------------------------------------------------------------------------
-  setDeviceBeforeInit(gpu_id_start);
-
-  //-------------------------------------------------------------------------------
-  // start MPI and read par
-  //-------------------------------------------------------------------------------
-
-  // init MPI
-
-  int myid, mpi_size;
-  MPI_Init(&argc, &argv);
-  MPI_Comm comm = MPI_COMM_WORLD;
-  MPI_Comm_rank(comm, &myid);
-  MPI_Comm_size(comm, &mpi_size);
-
-
-  if (myid==0) 
-  {
-    // bcast verbose to all nodes
-    MPI_Bcast(&verbose, 1, MPI_INT, 0, comm);
-  }
-  else
-  {
-    // get verbose from id 0
-    MPI_Bcast(&verbose, 1, MPI_INT, 0, comm);
-  }
-
-*/
 
   if (myid==0 && verbose>0) fprintf(stdout,"comm=%d, size=%d\n", comm, mpi_size); 
   if (myid==0 && verbose>0) fprintf(stdout,"par file =  %s\n", par_fname); 
@@ -228,6 +180,9 @@ int main(int argc, char** argv)
       if (myid==0) fprintf(stdout,"import grid vars ...\n"); 
       gd_curv_coord_import(gd, blk->output_fname_part, par->grid_import_dir);
 
+      if (myid==0 && verbose>0) fprintf(stdout,"exchange coords ...\n"); 
+      gd_exchange(gd,gd->v4d,gd->ncmp,mympi->neighid,mympi->topocomm);
+
       break;
     }
   }
@@ -275,6 +230,8 @@ int main(int argc, char** argv)
 
       if (myid==0) fprintf(stdout,"import metric file ...\n"); 
       gd_curv_metric_import(gd, gd_metric, blk->output_fname_part, par->grid_import_dir);
+      if (myid==0 && verbose>0) fprintf(stdout,"exchange metrics ...\n"); 
+      gd_exchange(gd,gd_metric->v4d,gd_metric->ncmp,mympi->neighid,mympi->topocomm);
 
       break;
     }
@@ -346,6 +303,8 @@ int main(int argc, char** argv)
 
       if (myid==0) fprintf(stdout,"import discrete medium file ...\n"); 
       md_import(gd, md, blk->output_fname_part, par->media_import_dir);
+      if (myid==0 && verbose>0) fprintf(stdout,"exchange metrics ...\n"); 
+      gd_exchange(gd,md->v4d,md->ncmp,mympi->neighid,mympi->topocomm);
 
       break;
     }
