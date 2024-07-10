@@ -6,8 +6,8 @@ set -e
 date
 
 #-- system related dir
-MPIDIR=/data3/lihl/software/openmpi-gnu-4.1.2
-#MPIDIR=/data/apps/openmpi/4.1.5-cuda-aware
+#MPIDIR=/data3/lihl/software/openmpi-gnu-4.1.2
+MPIDIR=/data/apps/openmpi/4.1.5-cuda-aware
 
 #-- program related dir
 EXEC_WAVE=`pwd`/../main
@@ -32,6 +32,8 @@ mkdir -p $OUTPUT_DIR
 mkdir -p $GRID_DIR
 mkdir -p $MEDIA_DIR
 
+VERBOSE=100
+GPU_START_ID=0
 #-- total x grid points
 NX=300
 #-- total y grid points
@@ -219,7 +221,7 @@ set -e
 printf "\nUse $NUMPROCS CPUs on following nodes:\n"
 
 printf "\nStart simualtion ...\n";
-time $MPIDIR/bin/mpiexec -np $NUMPROCS $EXEC_WAVE $PAR_FILE 100 0 2>&1 |tee log1
+time $MPIDIR/bin/mpiexec -np $NUMPROCS $EXEC_WAVE $PAR_FILE $VERBOSE $GPU_START_ID 2>&1 |tee log1
 if [ $? -ne 0 ]; then
     printf "\nSimulation fail! stop!\n"
     exit 1

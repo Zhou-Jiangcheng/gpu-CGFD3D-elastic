@@ -31,6 +31,8 @@ mkdir -p $OUTPUT_DIR
 mkdir -p $GRID_DIR
 mkdir -p $MEDIA_DIR
 
+VERBOSE=100
+GPU_START_ID=0
 #-- total x grid points
 NX=400
 #-- total y grid points
@@ -98,12 +100,6 @@ cat << ieof > $PAR_FILE
       "cartesian" : {
         "origin"  : [0.0, 0.0, -9900.0 ],
         "inteval" : [ 100.0, 100.0, 100.0 ]
-      },
-      "#layer_interp" : {
-        "in_grid_layer_file" : "$INPUTDIR/prep_grid/seam_smo_ablex.gdlay",
-        "refine_factor" : [ 1, 1, 1],
-        "horizontal_start_index" : [ 3, 3 ],
-        "vertical_last_to_top" : 0
       }
   },
   "is_export_grid" : 1,
@@ -151,13 +147,13 @@ cat << ieof > $PAR_FILE
       "refer_freq" : 1.0
   },
 
-  "in_source_file" : "$INPUTDIR/prep_source/test_source.src",
+  "in_source_file" : "$INPUTDIR/test_source.src",
   "is_export_source" : 1,
   "source_export_dir"  : "$SOURCE_DIR",
 
   "output_dir" : "$OUTPUT_DIR",
 
-  "in_station_file" : "$INPUTDIR/prep_station/station.list",
+  "in_station_file" : "$INPUTDIR/station.list",
 
   "#receiver_line" : [
     {
@@ -220,7 +216,7 @@ set -e
 printf "\nUse $NUMPROCS CPUs on following nodes:\n"
 
 printf "\nStart simualtion ...\n";
-time $MPIDIR/bin/mpiexec -np $NUMPROCS $EXEC_WAVE $PAR_FILE 100 0 2>&1 |tee log1
+time $MPIDIR/bin/mpiexec -np $NUMPROCS $EXEC_WAVE $PAR_FILE $VERBOSE $GPU_START_ID 2>&1 |tee log1
 if [ $? -ne 0 ]; then
     printf "\nSimulation fail! stop!\n"
     exit 1
