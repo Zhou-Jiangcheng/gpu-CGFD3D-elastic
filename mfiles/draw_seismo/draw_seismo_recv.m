@@ -21,16 +21,6 @@ flag_print=0;
 % read parameter file
 par=loadjson(parfnm);
 
-fileID = fopen(par.in_source_file);
-recvprefix = fgetl(fileID);
-while(recvprefix(1) == "#")
-    recvprefix = fgetl(fileID);
-    if(recvprefix(1) ~= "#")
-        break;
-    end
-end
-fclose(fileID);
-
 fileID = fopen(par.in_station_file);
 %first line is number recv or station
 %must read to skip
@@ -48,7 +38,7 @@ for irec=startid:1:endid
     end
     recvinfo = strsplit(recvinfo);
     recvnm = char(recvinfo(1));
-    sacnm=[output_dir,'/',recvprefix,'.',recvnm,'.',varnm,'.sac'];
+    sacnm=[output_dir,'/',recvnm,'.',varnm,'.sac'];
     sacdata=rsac(sacnm);
     seismodata(:,irec-startid+1)=sacdata(:,2);
     seismot(:,irec-startid+1)=sacdata(:,1);

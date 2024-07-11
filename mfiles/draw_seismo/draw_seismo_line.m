@@ -24,16 +24,6 @@ flag_print=1;
 % read parameter file
 par=loadjson(parfnm);
 
-fileID = fopen(par.in_source_file);
-lineprefix = fgetl(fileID);
-while(lineprefix(1) == "#")
-    lineprefix = fgetl(fileID);
-    if(lineprefix(1) ~= "#")
-        break;
-    end
-end
-fclose(fileID);
-
 % line name and receiver number
 linenm=par.receiver_line{lineid}.name;
 nrec=par.receiver_line{lineid}.grid_index_count;
@@ -41,7 +31,7 @@ nrec=par.receiver_line{lineid}.grid_index_count;
 % load data
 for irec=0:nrec-1
     
-    sacnm=[output_dir,'/',lineprefix,'.',linenm,'.','no',num2str(irec),'.',varnm,'.sac'];
+    sacnm=[output_dir,'/',linenm,'.','no',num2str(irec),'.',varnm,'.sac'];
     sacdata=rsac(sacnm);
     seismodata(:,irec+1)=sacdata(:,2);
     seismot(:,irec+1)=sacdata(:,1);

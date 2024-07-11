@@ -328,7 +328,6 @@ io_recv_output_sac(iorecv_t *iorecv,
                    float dt,
                    int num_of_vars,
                    char **cmp_name,
-                   char *evtnm,
                    char *output_dir,
                    char *err_message);
 int
@@ -336,7 +335,6 @@ io_recv_output_sac_el_iso_strain(iorecv_t *iorecv,
                    float * lam3d,
                    float * mu3d,
                    float dt,
-                   char *evtnm,
                    char *output_dir,
                    char *err_message);
 
@@ -346,7 +344,6 @@ io_recv_output_sac_el_vti_strain(iorecv_t *iorecv,
                         float * c33, float * c55,
                         float * c66,
                         float dt,
-                        char *evtnm,
                         char *output_dir,
                         char *err_message);
 
@@ -364,13 +361,12 @@ io_recv_output_sac_el_aniso_strain(iorecv_t *iorecv,
                         float * c55d, float * c56d,
                         float * c66d,
                         float dt,
-                        char *evtnm,
                         char *output_dir,
                         char *err_message);
 
 int
 io_line_output_sac(ioline_t *ioline,
-      float dt, char **cmp_name, char *evtnm, char *output_dir);
+      float dt, char **cmp_name, char *output_dir);
 
 int
 ioslice_print(ioslice_t *ioslice);

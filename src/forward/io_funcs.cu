@@ -1793,7 +1793,6 @@ io_recv_output_sac(iorecv_t *iorecv,
                    float dt,
                    int num_of_vars,
                    char **cmp_name,
-                   char *evtnm,
                    char *output_dir,
                    char *err_message)
 {
@@ -1815,7 +1814,7 @@ io_recv_output_sac(iorecv_t *iorecv,
 
       float *this_trace = this_recv->seismo + icmp * iorecv->max_nt;
 
-      sprintf(ou_file,"%s/%s.%s.%s.sac", output_dir, evtnm,
+      sprintf(ou_file,"%s/%s.%s.sac", output_dir,
                       this_recv->name, cmp_name[icmp]);
 
       //fprintf(stdout,"=== Debug: icmp=%d,ou_file=%s\n",icmp,ou_file);fflush(stdout);
@@ -1840,7 +1839,6 @@ io_recv_output_sac_el_iso_strain(iorecv_t *iorecv,
                      float *lam3d,
                      float *mu3d,
                      float dt,
-                     char *evtnm,
                      char *output_dir,
                      char *err_message)
 {
@@ -1884,33 +1882,33 @@ io_recv_output_sac_el_iso_strain(iorecv_t *iorecv,
       Txy[it] = 0.5 * E3 * Txy[it];
     }
 
-    // output to sca file
-    sprintf(ou_file,"%s/%s.%s.%s.sac", output_dir, evtnm, this_recv->name, "Exx");
+    // output to sac file
+    sprintf(ou_file,"%s/%s.%s.sac", output_dir, this_recv->name, "Exx");
     sacExport1C1R(ou_file,Txx,evt_x, evt_y, evt_z, evt_d,
           this_recv->x, this_recv->y, this_recv->z,
           dt, dt, iorecv->max_nt, err_message);
 
-    sprintf(ou_file,"%s/%s.%s.%s.sac", output_dir, evtnm, this_recv->name, "Eyy");
+    sprintf(ou_file,"%s/%s.%s.sac", output_dir, this_recv->name, "Eyy");
     sacExport1C1R(ou_file,Tyy,evt_x, evt_y, evt_z, evt_d,
           this_recv->x, this_recv->y, this_recv->z,
           dt, dt, iorecv->max_nt, err_message);
 
-    sprintf(ou_file,"%s/%s.%s.%s.sac", output_dir, evtnm, this_recv->name, "Ezz");
+    sprintf(ou_file,"%s/%s.%s.sac", output_dir, this_recv->name, "Ezz");
     sacExport1C1R(ou_file,Tzz,evt_x, evt_y, evt_z, evt_d,
           this_recv->x, this_recv->y, this_recv->z,
           dt, dt, iorecv->max_nt, err_message);
 
-    sprintf(ou_file,"%s/%s.%s.%s.sac", output_dir, evtnm, this_recv->name, "Eyz");
+    sprintf(ou_file,"%s/%s.%s.sac", output_dir, this_recv->name, "Eyz");
     sacExport1C1R(ou_file,Tyz,evt_x, evt_y, evt_z, evt_d,
           this_recv->x, this_recv->y, this_recv->z,
           dt, dt, iorecv->max_nt, err_message);
 
-    sprintf(ou_file,"%s/%s.%s.%s.sac", output_dir, evtnm, this_recv->name, "Exz");
+    sprintf(ou_file,"%s/%s.%s.sac", output_dir, this_recv->name, "Exz");
     sacExport1C1R(ou_file,Txz,evt_x, evt_y, evt_z, evt_d,
           this_recv->x, this_recv->y, this_recv->z,
           dt, dt, iorecv->max_nt, err_message);
 
-    sprintf(ou_file,"%s/%s.%s.%s.sac", output_dir, evtnm, this_recv->name, "Exy");
+    sprintf(ou_file,"%s/%s.%s.sac", output_dir, this_recv->name, "Exy");
     sacExport1C1R(ou_file,Txy,evt_x, evt_y, evt_z, evt_d,
           this_recv->x, this_recv->y, this_recv->z,
           dt, dt, iorecv->max_nt, err_message);
@@ -1925,7 +1923,6 @@ io_recv_output_sac_el_vti_strain(iorecv_t *iorecv,
                         float * c33, float * c55,
                         float * c66,
                         float dt,
-                        char *evtnm,
                         char *output_dir,
                         char *err_message)
 {
@@ -1949,7 +1946,6 @@ io_recv_output_sac_el_aniso_strain(iorecv_t *iorecv,
                         float * c55, float * c56,
                         float * c66,
                         float dt,
-                        char *evtnm,
                         char *output_dir,
                         char *err_message)
 {
@@ -1961,7 +1957,7 @@ io_recv_output_sac_el_aniso_strain(iorecv_t *iorecv,
 }
 int
 io_line_output_sac(ioline_t *ioline,
-      float dt, char **cmp_name, char *evtnm, char *output_dir)
+      float dt, char **cmp_name, char *output_dir)
 {
   // use fake evt_x etc. since did not implement gather evt_x by mpi
   float evt_x = 0.0;
@@ -1984,7 +1980,7 @@ io_line_output_sac(ioline_t *ioline,
       {
         float *this_trace = this_seismo + icmp * ioline->max_nt;
 
-        sprintf(ou_file,"%s/%s.%s.no%d.%s.sac", output_dir,evtnm,
+        sprintf(ou_file,"%s/%s.no%d.%s.sac", output_dir,
                   ioline->line_name[n],ioline->recv_seq[n][ir],
                   cmp_name[icmp]);
 
