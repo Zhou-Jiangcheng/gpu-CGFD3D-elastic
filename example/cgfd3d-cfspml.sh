@@ -33,7 +33,7 @@ mkdir -p $GRID_DIR
 mkdir -p $MEDIA_DIR
 
 VERBOSE=100
-GPU_START_ID=0
+GPU_START_ID=4
 #-- total x grid points
 NX=300
 #-- total y grid points
