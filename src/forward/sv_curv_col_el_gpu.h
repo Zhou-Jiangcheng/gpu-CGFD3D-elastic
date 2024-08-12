@@ -25,7 +25,7 @@ sv_curv_col_el_iso_rhs_timg_z2_gpu(
     int fdx_len, int * lfdx_indx, float * lfdx_coef,
     int fdy_len, int * lfdy_indx, float * lfdy_coef,
     int fdz_len, int * lfdz_indx, float * lfdz_coef,
-    const int myid, const int verbose);
+    const int myid);
 
 __global__ void
 sv_curv_col_el_iso_rhs_src_gpu(
@@ -34,7 +34,7 @@ sv_curv_col_el_iso_rhs_src_gpu(
     float * hTxz, float * hTyz, float * hTxy,
     float * jac3d, float * slw3d,
     src_t src, // short nation for reference member
-    const int myid, const int verbose);
+    const int myid);
 
 int
 sv_curv_col_el_graves_Qs(float *w, int ncmp, float dt, gd_t *gd, md_t *md);

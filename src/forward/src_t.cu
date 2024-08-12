@@ -151,8 +151,7 @@ src_read_locate_file(gd_t *gd,
                      float *rk_stage_time,
                      int   npoint_half_ext,
                      MPI_Comm comm,
-                     int myid,
-                     int verbose)
+                     int myid)
 {
   int ierr = 0;
 
@@ -398,7 +397,7 @@ src_read_locate_file(gd_t *gd,
     free(all_inc_tmp);
   }
   
-  if(myid==0 && verbose > 500)
+  if(myid==0)
   {
     fprintf(stdout,"src located results:\n");
     fprintf(stdout,"in_num_source is %d\n",in_num_source);
@@ -966,18 +965,8 @@ src_coords_to_glob_indx(float *all_coords_d, int *all_index_d, float *all_inc_d,
     float sy = all_coords_d[3*ix+1];
     float sz = all_coords_d[3*ix+2];
 
-    //printf("myid is %d, locate source by coord (%f,%f,%f) ...\n",myid,sx,sy,sz);
-
-    if (gd_d.type == GD_TYPE_CURV)
-    {
-      gd_curv_coord_to_glob_indx_gpu(&gd_d,sx,sy,sz,comm,myid,
+    gd_curv_coord_to_glob_indx_gpu(&gd_d,sx,sy,sz,comm,myid,
                              &si_glob,&sj_glob,&sk_glob,&sx_inc,&sy_inc,&sz_inc);
-    }
-    else if (gd_d.type == GD_TYPE_CART)
-    {
-      gd_cart_coord_to_glob_indx(&gd_d,sx,sy,sz,comm,myid,
-                             &si_glob,&sj_glob,&sk_glob,&sx_inc,&sy_inc,&sz_inc);
-    }
     
     // keep index to avoid duplicat run
     all_index_d[3*ix+0] = si_glob;
@@ -998,14 +987,7 @@ src_depth_to_axis(float *all_coords_d, gd_t gd_d,
   {
     float sx = all_coords_d[3*ix+0];
     float sy = all_coords_d[3*ix+1];
-    if (gd_d.type == GD_TYPE_CURV)
-    {
-      gd_curv_depth_to_axis(&gd_d,sx,sy,&all_coords_d[3*ix+2],comm,myid);
-    }
-    else if (gd_d.type == GD_TYPE_CART)
-    {
-      all_coords_d[3*ix+2] = gd_d.z1d[gd_d.nk2] - all_coords_d[3*ix+2];
-    }
+    gd_curv_depth_to_axis(&gd_d,sx,sy,&all_coords_d[3*ix+2],comm,myid);
   }
 }
 
@@ -1031,7 +1013,7 @@ src_muDA_to_moment(float strike, float dip, float rake, float mu, float D, float
  */
 
 int
-src_print(src_t *src, int verbose)
+src_print(src_t *src)
 {
   int ierr = 0;
 
@@ -1044,36 +1026,28 @@ src_print(src_t *src, int verbose)
   fprintf(stdout,"-- max_nt=%d,max_stage=%d,max_ext=%d\n",
           src->max_nt,src->max_stage,src->max_ext);
   
-  // only print for large verbose
-  if (verbose > 99)
+  for (int is=0; is<src->total_number; is++)
   {
-    for (int is=0; is<src->total_number; is++)
+    fprintf(stdout,"--- is=%d, si=%d,sj=%d,sk=%d,ext_num=%d,it_begin=%d,it_end=%d\n",
+          is,src->si[is],src->sj[is],src->sk[is],src->ext_num[is],
+          src->it_begin[is],src->it_end[is]);
+    for (int it = src->it_begin[is]; it <= src->it_end[is]; it++)
     {
-      fprintf(stdout,"--- is=%d, si=%d,sj=%d,sk=%d,ext_num=%d,it_begin=%d,it_end=%d\n",
-            is,src->si[is],src->sj[is],src->sk[is],src->ext_num[is],
-            src->it_begin[is],src->it_end[is]);
-      // should not print time series for normal usage
-      if (verbose > 999)
-      {
-        for (int it = src->it_begin[is]; it <= src->it_end[is]; it++)
-        {
-          int it_to_it_start = it - src->it_begin[is];
-          // print 0 stage
-          size_t iptr = is * src->max_nt * src->max_stage
-                        + it_to_it_start * src->max_stage;
-          fprintf(stdout, "---- it=%d",it);
-          if (src->force_actived==1) {
-            fprintf(stdout, ",fx=%g,fy=%g,fz=%g",
-                      src->Fx[iptr], src->Fy[iptr], src->Fz[iptr]);
-          }
-          if (src->moment_actived==1) {
-            fprintf(stdout, ",Mxx=%g,Myy=%g,Mzz=%g,Myz=%g,Mxz=%g,Mxy=%g",
-                      src->Mxx[iptr], src->Myy[iptr], src->Mzz[iptr],
-                      src->Myz[iptr], src->Mxz[iptr], src->Mxy[iptr]);
-          }
-          fprintf(stdout, "\n");
-        }
+      int it_to_it_start = it - src->it_begin[is];
+      // print 0 stage
+      size_t iptr = is * src->max_nt * src->max_stage
+                    + it_to_it_start * src->max_stage;
+      fprintf(stdout, "---- it=%d",it);
+      if (src->force_actived==1) {
+        fprintf(stdout, ",fx=%g,fy=%g,fz=%g",
+                  src->Fx[iptr], src->Fy[iptr], src->Fz[iptr]);
       }
+      if (src->moment_actived==1) {
+        fprintf(stdout, ",Mxx=%g,Myy=%g,Mzz=%g,Myz=%g,Mxz=%g,Mxy=%g",
+                  src->Mxx[iptr], src->Myy[iptr], src->Mzz[iptr],
+                  src->Myz[iptr], src->Mxz[iptr], src->Mxy[iptr]);
+      }
+      fprintf(stdout, "\n");
     }
   }
 

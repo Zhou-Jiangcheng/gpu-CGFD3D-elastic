@@ -28,8 +28,7 @@ io_recv_read_locate(gd_t      *gd,
                     int       num_of_vars,
                     char      *in_filenm,
                     MPI_Comm  comm,
-                    int       myid,
-                    int       verbose)
+                    int       myid)
 {
   FILE *fp;
   char line[500];
@@ -1709,15 +1708,7 @@ recv_depth_to_axis(float *all_coords_d, int num_recv, gd_t gd_d,
     float sy = all_coords_d[3*ix+1];
     if(flag_coord[ix] == 1 && flag_depth[ix] == 1)
     {
-      if(gd_d.type == GD_TYPE_CURV)
-      {
-        gd_curv_depth_to_axis(&gd_d,sx,sy,&all_coords_d[3*ix+2],comm,myid);
-      }
-      else if (gd_d.type == GD_TYPE_CART)
-      {
-        all_coords_d[3*ix+2] = gd_d.z1d[gd_d.nk2] - all_coords_d[3*ix+2];
-      }
-      //printf("ix is %d, sx is %f,sy is %f, sz is %f\n",ix, all_coords_d[3*ix+0],all_coords_d[3*ix+1],all_coords_d[3*ix+2]);
+      gd_curv_depth_to_axis(&gd_d,sx,sy,&all_coords_d[3*ix+2],comm,myid);
     }
   }
 }
@@ -1739,15 +1730,8 @@ recv_coords_to_glob_indx(float *all_coords_d, int *all_index_d,
     float sz = all_coords_d[3*ix+2];
     if(flag_coord[ix] == 1)
     {
-      if (gd_d.type == GD_TYPE_CURV)
-      {
-        gd_curv_coord_to_glob_indx_gpu(&gd_d,sx,sy,sz,comm,myid,&ri_glob, &rj_glob, &rk_glob, &rx_inc,&ry_inc,&rz_inc);
-      }
-      else if (gd_d.type == GD_TYPE_CART)
-      {
-        gd_cart_coord_to_glob_indx(&gd_d,sx,sy,sz,comm,myid,
-                               &ri_glob,&rj_glob,&rk_glob,&rx_inc,&ry_inc,&rz_inc);
-      }
+      gd_curv_coord_to_glob_indx_gpu(&gd_d,sx,sy,sz,comm,myid,
+                    &ri_glob, &rj_glob, &rk_glob, &rx_inc,&ry_inc,&rz_inc);
       
       // keep index to avoid duplicat run
       all_index_d[3*ix+0] = ri_glob;

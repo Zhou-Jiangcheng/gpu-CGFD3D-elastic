@@ -25,8 +25,7 @@ int
 bdry_free_set(gd_t        *gd,
               bdryfree_t  *bdryfree,
               int   *neighid, 
-              int   in_is_sides[][2],
-              const int verbose)
+              int   in_is_sides[][2])
 {
   int ierr = 0;
 
@@ -92,8 +91,7 @@ bdry_pml_set(gd_t *gd,
              int   in_num_layers[][2],
              float in_alpha_max[][2], //
              float in_beta_max[][2], //
-             float in_velocity[][2], //
-             int verbose)
+             float in_velocity[][2])
 {
   int    ni1 = gd->ni1;
   int    ni2 = gd->ni2;
@@ -252,7 +250,7 @@ bdry_pml_set(gd_t *gd,
       int nz = (bdrypml->nk2[idim][iside] - bdrypml->nk1[idim][iside] + 1);
 
       bdry_pml_auxvar_init(nx,ny,nz,wav,
-                           &(bdrypml->auxvar[idim][iside]),verbose);
+                           &(bdrypml->auxvar[idim][iside]));
     } // iside
   } // idim
 
@@ -262,8 +260,7 @@ bdry_pml_set(gd_t *gd,
 void
 bdry_pml_auxvar_init(int nx, int ny, int nz, 
                      wav_t *wav,
-                     bdrypml_auxvar_t *auxvar,
-                     const int verbose)
+                     bdrypml_auxvar_t *auxvar)
 {
   auxvar->nx   = nx;
   auxvar->ny   = ny;
@@ -347,126 +344,108 @@ bdry_cal_abl_len_dh(gd_t *gd,
   int siz_iy = gd->siz_iy;
   int siz_iz = gd->siz_iz;
 
-  // cartesian grid is simple
-  if (gd->type == GD_TYPE_CART)
-  {
-    if (idim == 0) { // x-axis
-      *avg_dh = gd->dx;
-      *avg_L  = gd->dx * (abs_ni2 - abs_ni1);
-    } else if (idim == 1) { // y-axis
-      *avg_dh = gd->dy;
-      *avg_L  = gd->dy * (abs_nj2 - abs_nj1);
-    } else { // z-axis
-      *avg_dh = gd->dz;
-      *avg_L  = gd->dz * (abs_nk2 - abs_nk1);
-    }
-  }
   // curv grid needs avg
-  else if (gd->type == GD_TYPE_CURV)
+  float *x3d = gd->x3d;
+  float *y3d = gd->y3d;
+  float *z3d = gd->z3d;
+
+  double L  = 0.0;
+  double dh = 0.0;
+  int    num = 0;
+
+  if (idim == 0) // x-axis
   {
-    float *x3d = gd->x3d;
-    float *y3d = gd->y3d;
-    float *z3d = gd->z3d;
-
-    double L  = 0.0;
-    double dh = 0.0;
-    int    num = 0;
-
-    if (idim == 0) // x-axis
+    for (int k=abs_nk1; k<=abs_nk2; k++)
     {
-      for (int k=abs_nk1; k<=abs_nk2; k++)
-      {
-        for (int j=abs_nj1; j<=abs_nj2; j++)
-        {
-          int iptr = abs_ni1 + j * siz_iy + k * siz_iz;
-          double x0 = x3d[iptr];
-          double y0 = y3d[iptr];
-          double z0 = z3d[iptr];
-          for (int i=abs_ni1+1; i<=abs_ni2; i++)
-          {
-            int iptr = i + j * siz_iy + k * siz_iz;
-
-            double x1 = x3d[iptr];
-            double y1 = y3d[iptr];
-            double z1 = z3d[iptr];
-
-            L += sqrt( (x1-x0)*(x1-x0) + (y1-y0)*(y1-y0) + (z1-z0)*(z1-z0) );
-
-            x0 = x1;
-            y0 = y1;
-            z0 = z1;
-            num += 1;
-          }
-        }
-      }
-
-      *avg_dh = (float)( L / num );
-      *avg_L = (*avg_dh) * (abs_ni2 - abs_ni1);
-    } 
-    else if (idim == 1) // y-axis
-    { 
-      for (int k=abs_nk1; k<=abs_nk2; k++)
-      {
-        for (int i=abs_ni1; i<=abs_ni2; i++)
-        {
-          int iptr = i + abs_nj1 * siz_iy + k * siz_iz;
-          double x0 = x3d[iptr];
-          double y0 = y3d[iptr];
-          double z0 = z3d[iptr];
-          for (int j=abs_nj1+1; j<=abs_nj2; j++)
-          {
-            int iptr = i + j * siz_iy + k * siz_iz;
-
-            double x1 = x3d[iptr];
-            double y1 = y3d[iptr];
-            double z1 = z3d[iptr];
-
-            L += sqrt( (x1-x0)*(x1-x0) + (y1-y0)*(y1-y0) + (z1-z0)*(z1-z0) );
-
-            x0 = x1;
-            y0 = y1;
-            z0 = z1;
-            num += 1;
-          }
-        }
-      }
-
-      *avg_dh = (float)( L / num );
-      *avg_L = (*avg_dh) * (abs_nj2 - abs_nj1);
-    }
-    else // z-axis
-    { 
       for (int j=abs_nj1; j<=abs_nj2; j++)
       {
-        for (int i=abs_ni1; i<=abs_ni2; i++)
+        int iptr = abs_ni1 + j * siz_iy + k * siz_iz;
+        double x0 = x3d[iptr];
+        double y0 = y3d[iptr];
+        double z0 = z3d[iptr];
+        for (int i=abs_ni1+1; i<=abs_ni2; i++)
         {
-          int iptr = i + j * siz_iy + abs_nk1 * siz_iz;
-          double x0 = x3d[iptr];
-          double y0 = y3d[iptr];
-          double z0 = z3d[iptr];
-          for (int k=abs_nk1+1; k<=abs_nk2; k++)
-          {
-            int iptr = i + j * siz_iy + k * siz_iz;
+          int iptr = i + j * siz_iy + k * siz_iz;
 
-            double x1 = x3d[iptr];
-            double y1 = y3d[iptr];
-            double z1 = z3d[iptr];
+          double x1 = x3d[iptr];
+          double y1 = y3d[iptr];
+          double z1 = z3d[iptr];
 
-            L += sqrt( (x1-x0)*(x1-x0) + (y1-y0)*(y1-y0) + (z1-z0)*(z1-z0) );
+          L += sqrt( (x1-x0)*(x1-x0) + (y1-y0)*(y1-y0) + (z1-z0)*(z1-z0) );
 
-            x0 = x1;
-            y0 = y1;
-            z0 = z1;
-            num += 1;
-          }
+          x0 = x1;
+          y0 = y1;
+          z0 = z1;
+          num += 1;
         }
       }
+    }
 
-      *avg_dh = (float)( L / num );
-      *avg_L = (*avg_dh) * (abs_nk2 - abs_nk1);
-    } // idim
+    *avg_dh = (float)( L / num );
+    *avg_L = (*avg_dh) * (abs_ni2 - abs_ni1);
+  } 
+  else if (idim == 1) // y-axis
+  { 
+    for (int k=abs_nk1; k<=abs_nk2; k++)
+    {
+      for (int i=abs_ni1; i<=abs_ni2; i++)
+      {
+        int iptr = i + abs_nj1 * siz_iy + k * siz_iz;
+        double x0 = x3d[iptr];
+        double y0 = y3d[iptr];
+        double z0 = z3d[iptr];
+        for (int j=abs_nj1+1; j<=abs_nj2; j++)
+        {
+          int iptr = i + j * siz_iy + k * siz_iz;
 
-  } // gd type
+          double x1 = x3d[iptr];
+          double y1 = y3d[iptr];
+          double z1 = z3d[iptr];
+
+          L += sqrt( (x1-x0)*(x1-x0) + (y1-y0)*(y1-y0) + (z1-z0)*(z1-z0) );
+
+          x0 = x1;
+          y0 = y1;
+          z0 = z1;
+          num += 1;
+        }
+      }
+    }
+
+    *avg_dh = (float)( L / num );
+    *avg_L = (*avg_dh) * (abs_nj2 - abs_nj1);
+  }
+  else // z-axis
+  { 
+    for (int j=abs_nj1; j<=abs_nj2; j++)
+    {
+      for (int i=abs_ni1; i<=abs_ni2; i++)
+      {
+        int iptr = i + j * siz_iy + abs_nk1 * siz_iz;
+        double x0 = x3d[iptr];
+        double y0 = y3d[iptr];
+        double z0 = z3d[iptr];
+        for (int k=abs_nk1+1; k<=abs_nk2; k++)
+        {
+          int iptr = i + j * siz_iy + k * siz_iz;
+
+          double x1 = x3d[iptr];
+          double y1 = y3d[iptr];
+          double z1 = z3d[iptr];
+
+          L += sqrt( (x1-x0)*(x1-x0) + (y1-y0)*(y1-y0) + (z1-z0)*(z1-z0) );
+
+          x0 = x1;
+          y0 = y1;
+          z0 = z1;
+          num += 1;
+        }
+      }
+    }
+
+    *avg_dh = (float)( L / num );
+    *avg_L = (*avg_dh) * (abs_nk2 - abs_nk1);
+  } // idim
 
   return ierr;
 }
@@ -485,8 +464,7 @@ bdry_ablexp_set(gd_t *gd,
                 int   in_num_layers[][2],
                 float in_velocity[][2], //
                 float dt,
-                int  *topoid,
-                int verbose)
+                int  *topoid)
 {
   int ierr = 0;
   int ni1 = gd->ni1;

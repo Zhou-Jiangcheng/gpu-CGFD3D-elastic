@@ -31,7 +31,7 @@ sv_curv_col_vis_iso_onestage(
   int num_of_fdy_op, fd_op_t *fdy_op,
   int num_of_fdz_op, fd_op_t *fdz_op,
   int fdz_max_len, 
-  const int myid, const int verbose);
+  const int myid);
 
 __global__ void
 sv_curv_col_vis_iso_atten_gpu(
@@ -41,7 +41,7 @@ sv_curv_col_vis_iso_atten_gpu(
     md_t md_d,
     int ni1, int ni, int nj1, int nj, int nk1, int nk,
     size_t siz_iy, size_t siz_iz,
-    const int myid, const int verbose);
+    const int myid);
 
 __global__ void
 sv_curv_col_vis_iso_free_gpu(float *w_end,
@@ -50,8 +50,7 @@ sv_curv_col_vis_iso_free_gpu(float *w_end,
                              gd_metric_t  metric_d,
                              md_t md_d,
                              bdryfree_t  bdryfree_d,
-                             const int myid, 
-                             const int verbose);
+                             const int myid); 
 
 int
 sv_curv_col_vis_iso_dvh2dvz(gd_t            *gd,
@@ -60,7 +59,6 @@ sv_curv_col_vis_iso_dvh2dvz(gd_t            *gd,
                             bdryfree_t      *bdryfree,
                             int fd_len,
                             int *fd_indx,
-                            float *fd_coef,
-                            const int verbose);
+                            float *fd_coef);
 
 #endif

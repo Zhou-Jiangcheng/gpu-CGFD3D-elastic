@@ -34,7 +34,7 @@ sv_curv_col_ac_iso_onestage(
   int num_of_fdy_op, fd_op_t *fdy_op,
   int num_of_fdz_op, fd_op_t *fdz_op,
   int fdz_max_len, 
-  const int myid, const int verbose)
+  const int myid)
 {
   // local pointer get each vars
   float *Vx    = w_cur_d + wav_d.Vx_pos ;
@@ -184,7 +184,7 @@ sv_curv_col_ac_iso_onestage(
       sv_curv_col_ac_iso_rhs_timg_z2_gpu  <<<grid, block>>> (
                           P,ni,nj,ni1,nj1,nk2,nz,
                           siz_iy,siz_iz,
-                          myid, verbose);
+                          myid);
     }
     CUDACHECK(cudaDeviceSynchronize());
   }
@@ -209,7 +209,7 @@ sv_curv_col_ac_iso_onestage(
                        lfdx_shift_d, lfdx_coef_d,
                        lfdy_shift_d, lfdy_coef_d,
                        lfdz_shift_d, lfdz_coef_d,
-                       myid, verbose);
+                       myid);
     CUDACHECK(cudaDeviceSynchronize());
   }
 
@@ -230,7 +230,7 @@ sv_curv_col_ac_iso_onestage(
                          fdy_len, lfdy_shift_d, lfdy_coef_d,
                          num_of_fdz_op,fdz_max_len,lfdz_len_d,
                          lfdz_coef_all_d,lfdz_shift_all_d,
-                         myid, verbose);
+                         myid);
     }
     CUDACHECK(cudaDeviceSynchronize());
   }
@@ -247,7 +247,7 @@ sv_curv_col_ac_iso_onestage(
                                   lfdy_shift_d, lfdy_coef_d,
                                   lfdz_shift_d, lfdz_coef_d,
                                   bdrypml_d,
-                                  myid, verbose);
+                                  myid);
     
   }
 
@@ -262,7 +262,7 @@ sv_curv_col_ac_iso_onestage(
                                  hVx,hVy,hVz,hP,
                                  jac3d, slw3d, 
                                  src_d,
-                                 myid, verbose);
+                                 myid);
       CUDACHECK(cudaDeviceSynchronize());
     }
   }
@@ -287,7 +287,7 @@ sv_curv_col_ac_iso_rhs_inner_gpu(
     size_t *lfdx_shift, float *lfdx_coef,
     size_t *lfdy_shift, float *lfdy_coef,
     size_t *lfdz_shift, float *lfdz_coef,
-    int myid, int verbose)
+    int myid)
 {
   // local var
   float DxP,DxVx,DxVy,DxVz;
@@ -378,7 +378,7 @@ sv_curv_col_ac_iso_rhs_timg_z2_gpu(
                    float *P, int ni, int nj, int ni1,  
                    int nj1, int nk2, int nz, 
                    size_t siz_iy, size_t siz_iz,
-                   int myid, int verbose)
+                   int myid)
 {
   size_t ix = blockIdx.x * blockDim.x + threadIdx.x;
   size_t iy = blockIdx.y * blockDim.y + threadIdx.y;
@@ -424,7 +424,7 @@ sv_curv_col_ac_iso_rhs_vlow_z2_gpu(
     int fdy_len, size_t *lfdy_shift, float *lfdy_coef,
     int num_of_fdz_op, int fdz_max_len, int *fdz_len,
     float *lfdz_coef_all, size_t *lfdz_shift_all,
-    int myid, int verbose)
+    int myid)
 {
 
   // local var
@@ -527,7 +527,7 @@ sv_curv_col_ac_iso_rhs_cfspml(
     size_t *lfdy_shift, float *lfdy_coef,
     size_t *lfdz_shift, float *lfdz_coef,
     bdrypml_t bdrypml_d,
-    int myid, int verbose)
+    int myid)
 {
   // check each side
   for (int idim=0; idim<CONST_NDIM; idim++)
@@ -567,7 +567,7 @@ sv_curv_col_ac_iso_rhs_cfspml(
                                 lfdy_shift,  lfdy_coef,
                                 lfdz_shift,  lfdz_coef,
                                 bdrypml_d,
-                                myid, verbose);
+                                myid);
         cudaDeviceSynchronize();
       }
     } // iside
@@ -589,7 +589,7 @@ sv_curv_col_ac_iso_rhs_cfspml_gpu(int idim, int iside,
                                   size_t *lfdy_shift, float *lfdy_coef,
                                   size_t *lfdz_shift, float *lfdz_coef,
                                   bdrypml_t bdrypml_d,
-                                  int myid, int verbose)
+                                  int myid)
 {
   size_t ix = blockIdx.x * blockDim.x + threadIdx.x;
   size_t iy = blockIdx.y * blockDim.y + threadIdx.y;
@@ -826,7 +826,7 @@ sv_curv_col_ac_iso_rhs_src_gpu(
     float *hP, 
     float *jac3d, float *slw3d,
     src_t src, 
-    int myid, int verbose)
+    int myid)
 {
   // for easy coding and efficiency
   int max_ext = src.max_ext;

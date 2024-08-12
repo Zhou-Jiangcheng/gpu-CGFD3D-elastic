@@ -6,10 +6,11 @@ set -e
 date
 
 #-- system related dir
-MPIDIR=/data3/lihl/software/openmpi-gnu-4.1.2
+#MPIDIR=/data3/lihl/software/openmpi-gnu-4.1.2
+MPIDIR=/data/apps/openmpi/4.1.5-cuda-aware
 
 #-- program related dir
-EXEC_WAVE=`pwd`/../main_curv_col_el_3d
+EXEC_WAVE=`pwd`/../main
 echo "EXEC_WAVE=$EXEC_WAVE"
 
 #-- input dir
@@ -31,7 +32,6 @@ mkdir -p $OUTPUT_DIR
 mkdir -p $GRID_DIR
 mkdir -p $MEDIA_DIR
 
-VERBOSE=100
 GPU_START_ID=0
 #-- total x grid points
 NX=400
@@ -56,7 +56,7 @@ cat << ieof > $PAR_FILE
   "number_of_mpiprocs_y" : $NPROCS_Y,
 
   "size_of_time_step" : 0.01,
-  "number_of_time_steps" : 500,
+  "number_of_time_steps" : 1000,
   "#time_window_length" : 8,
   "check_stability" : 1,
 
@@ -216,7 +216,7 @@ set -e
 printf "\nUse $NUMPROCS CPUs on following nodes:\n"
 
 printf "\nStart simualtion ...\n";
-time $MPIDIR/bin/mpiexec -np $NUMPROCS $EXEC_WAVE $PAR_FILE $VERBOSE $GPU_START_ID 2>&1 |tee log1
+time $MPIDIR/bin/mpiexec -np $NUMPROCS $EXEC_WAVE $PAR_FILE $GPU_START_ID 2>&1 |tee log1
 if [ $? -ne 0 ]; then
     printf "\nSimulation fail! stop!\n"
     exit 1

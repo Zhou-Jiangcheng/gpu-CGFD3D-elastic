@@ -87,7 +87,7 @@ typedef struct
 
 int
 blk_init(blk_t *blk,
-         const int myid, const int verbose);
+         const int myid);
 
 // set str
 int
@@ -95,8 +95,7 @@ blk_set_output(blk_t *blk,
                mympi_t *mympi,
                char *output_dir,
                char *grid_export_dir,
-               char *media_export_dir,
-               const int verbose);
+               char *media_export_dir);
 
 void
 blk_macdrp_mesg_init(mympi_t *mympi,

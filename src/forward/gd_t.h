@@ -13,19 +13,9 @@
 /*************************************************
  * structure
  *************************************************/
-typedef enum {
-
-  GD_TYPE_CART = 1,
-  GD_TYPE_VMAP = 2,
-  GD_TYPE_CURV = 3
-
-} gd_type_t;
-
 //  grid coordinate for both cart, vmap and curv
 //    to reduce duplicated functions
 typedef struct {
-
-  gd_type_t type;
 
   int ni, nj, nk;
   int nx, ny, nz;
@@ -188,11 +178,6 @@ gd_curv_coord_import(gd_t *gd,
                      char *import_dir);
 
 int
-gd_cart_coord_export(gd_t *gd,
-                     char *fname_coords,
-                     char *output_dir);
-
-int
 gd_curv_metric_export(gd_t            *gd,
                       gd_metric_t *metric,
                       char *fname_coords,
@@ -200,12 +185,6 @@ gd_curv_metric_export(gd_t            *gd,
 
 int
 gd_curv_set_minmax(gd_t *gd);
-
-int 
-gd_cart_init_set(gd_t *gdcart,
-                 float dx, float x0_glob,
-                 float dy, float y0_glob,
-                 float dz, float z0_glob);
 
 int
 gd_curv_coord_to_glob_indx(gd_t *gd,
@@ -241,19 +220,6 @@ gd_coord_get_z(gd_t *gd, int i, int j, int k);
 
 int
 gd_print(gd_t *gd);
-
-
-__host__ __device__
-int
-gd_cart_coord_to_glob_indx(gd_t *gdcart,
-                           float sx,
-                           float sy,
-                           float sz,
-                           MPI_Comm comm,
-                           int myid,
-                           int   *ou_si, int *ou_sj, int *ou_sk,
-                           float *ou_sx_inc, float *ou_sy_inc, float *ou_sz_inc);
-
 
 __host__ __device__
 int
@@ -328,8 +294,7 @@ gd_info_set(gd_t *gd,
             int abs_num_of_layers[][2],
             int fdx_nghosts,
             int fdy_nghosts,
-            int fdz_nghosts,
-            int verbose);
+            int fdz_nghosts);
 
 int
 gd_info_lindx_is_inner(int i, int j, int k, gd_t *gd);

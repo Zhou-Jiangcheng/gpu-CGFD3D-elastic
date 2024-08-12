@@ -153,8 +153,7 @@ io_recv_read_locate(gd_t *gd,
                     int       num_of_vars,
                     char      *in_filenm,
                     MPI_Comm  comm,
-                    int       myid,
-                    int       verbose);
+                    int       myid);
 
 int
 io_line_locate(gd_t *gd,

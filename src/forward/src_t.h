@@ -7,11 +7,6 @@
 #include "gd_t.h"
 #include "md_t.h"
 
-// cal force_vec_stf/moment_ten_rate 1d index for icmp,it,istage
-//  with respect to the start pointer of this source point
-#define M_SRC_IND(icmp,it,istage,nt,num_stage) \
-  ((icmp) * (nt) * (num_stage) + (it) * (num_stage) + (istage))
-
 /*************************************************
  * structure
  *************************************************/
@@ -97,8 +92,7 @@ src_read_locate_file(gd_t *gd,
                      float *rk_stage_time,
                      int   npoint_half_ext,
                      MPI_Comm comm,
-                     int myid,
-                     int verbose);
+                     int myid);
 
 
 float 
@@ -182,10 +176,9 @@ src_muDA_to_moment(float strike, float dip, float rake, float mu, float D, float
              float *mxx, float *myy, float *mzz, float *myz, float *mxz, float *mxy);
 
 int
-src_print(src_t *src, int verbose);
+src_print(src_t *src);
 
 float
 Blackman_window(float t, float dt,float t0);
-
 
 #endif

@@ -46,8 +46,7 @@ drv_rk_curv_col_allstep(
   char *output_fname_part,
   char *output_dir,
   int qc_check_nan_num_of_step,
-  const int output_all, // qc all var
-  const int verbose)
+  const int output_all)
 {
   // retrieve from struct
   int num_rk_stages = fd->num_rk_stages;
@@ -77,15 +76,15 @@ drv_rk_curv_col_allstep(
   {
     if (md->medium_type == CONST_MEDIUM_ELASTIC_ISO)
     {
-      sv_curv_col_el_iso_dvh2dvz(gd,metric,md,bdryfree,verbose);
+      sv_curv_col_el_iso_dvh2dvz(gd,metric,md,bdryfree);
     } else if (md->medium_type == CONST_MEDIUM_ELASTIC_VTI) {
-      sv_curv_col_el_vti_dvh2dvz(gd,metric,md,bdryfree,verbose);
+      sv_curv_col_el_vti_dvh2dvz(gd,metric,md,bdryfree);
     } else if (md->medium_type == CONST_MEDIUM_ELASTIC_ANISO) {
-      sv_curv_col_el_aniso_dvh2dvz(gd,metric,md,bdryfree,verbose);
+      sv_curv_col_el_aniso_dvh2dvz(gd,metric,md,bdryfree);
     } else if (md->medium_type == CONST_MEDIUM_VISCOELASTIC_ISO) {
       if(md->visco_type == CONST_VISCO_GMB)
       {
-        sv_curv_col_vis_iso_dvh2dvz(gd,metric,md,bdryfree,fd->fdc_len,fd->fdc_indx,fd->fdc_coef,verbose);
+        sv_curv_col_vis_iso_dvh2dvz(gd,metric,md,bdryfree,fd->fdc_len,fd->fdc_indx,fd->fdc_coef);
       }
     } else if (md->medium_type == CONST_MEDIUM_ACOUSTIC_ISO) {
       // not need
@@ -138,13 +137,13 @@ drv_rk_curv_col_allstep(
   // for mpi message
   int   ipair_mpi, istage_mpi;
   // create slice nc output files
-  if (myid==0 && verbose>0) fprintf(stdout,"prepare slice nc output ...\n"); 
+  if (myid==0) fprintf(stdout,"prepare slice nc output ...\n"); 
   ioslice_nc_t ioslice_nc;
   io_slice_nc_create(ioslice, wav_d.ncmp, md_d.visco_type, wav_d.cmp_name,
                      gd_d.ni, gd_d.nj, gd_d.nk, topoid,
                      &ioslice_nc);
   // create snapshot nc output files
-  if (myid==0 && verbose>0) fprintf(stdout,"prepare snap nc output ...\n"); 
+  if (myid==0) fprintf(stdout,"prepare snap nc output ...\n"); 
   iosnap_nc_t  iosnap_nc;
   if (md->medium_type == CONST_MEDIUM_ACOUSTIC_ISO) {
     io_snap_nc_create_ac(iosnap, &iosnap_nc, topoid);
@@ -188,7 +187,7 @@ drv_rk_curv_col_allstep(
   // time loop
   //--------------------------------------------------------
 
-  if (myid==0 && verbose>0) fprintf(stdout,"start time loop ...\n"); 
+  if (myid==0) fprintf(stdout,"start time loop ...\n"); 
 
   //---------
   for (int it=0; it<nt_total; it++)
@@ -216,16 +215,16 @@ drv_rk_curv_col_allstep(
     }
 
 
-    if (myid==0 && verbose>10) fprintf(stdout,"-> it=%d, t=%f\n", it, t_cur);
+    if (myid==0) fprintf(stdout,"-> it=%d, t=%f\n", it, t_cur);
 
     // mod to get ipair
     ipair = it % num_of_pairs;
-    if (myid==0 && verbose>10) fprintf(stdout, " --> ipair=%d\n",ipair);
+    if (myid==0) fprintf(stdout, " --> ipair=%d\n",ipair);
 
     // loop RK stages for one step
     for (istage=0; istage<num_rk_stages; istage++)
     {
-      if (myid==0 && verbose>10) fprintf(stdout, " --> istage=%d\n",istage);
+      if (myid==0) fprintf(stdout, " --> istage=%d\n",istage);
 
       // for mesg
       if (istage != num_rk_stages-1) {
@@ -274,7 +273,7 @@ drv_rk_curv_col_allstep(
               fd->num_of_fdy_op, fd->pair_fdy_op[ipair][istage],
               fd->num_of_fdz_op, fd->pair_fdz_op[ipair][istage],
               fd->fdz_max_len,
-              myid, verbose);
+              myid);
           break;
         }
 
@@ -287,7 +286,7 @@ drv_rk_curv_col_allstep(
               fd->num_of_fdy_op, fd->pair_fdy_op[ipair][istage],
               fd->num_of_fdz_op, fd->pair_fdz_op[ipair][istage],
               fd->fdz_max_len,
-              myid, verbose);
+              myid);
           break;
         }
 
@@ -300,7 +299,7 @@ drv_rk_curv_col_allstep(
               fd->num_of_fdy_op, fd->pair_fdy_op[ipair][istage],
               fd->num_of_fdz_op, fd->pair_fdz_op[ipair][istage],
               fd->fdz_max_len,
-              myid, verbose);
+              myid);
           break;
         }
 
@@ -313,7 +312,7 @@ drv_rk_curv_col_allstep(
               fd->num_of_fdy_op, fd->pair_fdy_op[ipair][istage],
               fd->num_of_fdz_op, fd->pair_fdz_op[ipair][istage],
               fd->fdz_max_len,
-              myid, verbose);
+              myid);
           break;
         }
 
@@ -328,7 +327,7 @@ drv_rk_curv_col_allstep(
                 fd->num_of_fdy_op, fd->pair_fdy_op[ipair][istage],
                 fd->num_of_fdz_op, fd->pair_fdz_op[ipair][istage],
                 fd->fdz_max_len,
-                myid, verbose);
+                myid);
           }
           break;
         }
@@ -488,7 +487,7 @@ drv_rk_curv_col_allstep(
             grid.x = (ni+block.x-1)/block.x;
             grid.y = (nj+block.y-1)/block.y;
             sv_curv_col_vis_iso_free_gpu <<<grid, block>>> (
-                w_end_d,wav_d,gd_d,metric_d,md_d,bdryfree_d,myid,verbose);
+                w_end_d,wav_d,gd_d,metric_d,md_d,bdryfree_d,myid);
           }
         }
       }
@@ -508,7 +507,7 @@ drv_rk_curv_col_allstep(
     // QC
     //--------------------------------------------
     if (qc_check_nan_num_of_step >0  && (it % qc_check_nan_num_of_step) == 0) {
-      if (myid==0 && verbose>10) fprintf(stdout,"-> check value nan\n");
+      if (myid==0) fprintf(stdout,"-> check value nan\n");
         //wav_check_value(w_end);
     }
 

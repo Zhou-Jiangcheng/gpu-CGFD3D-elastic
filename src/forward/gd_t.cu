@@ -23,8 +23,6 @@ gd_curv_init(gd_t *gd)
    * 0-2: x3d, y3d, z3d
    */
 
-  gd->type = GD_TYPE_CURV;
-
   gd->ncmp = CONST_NDIM;
   
   // vars
@@ -631,75 +629,6 @@ gd_curv_gen_cart(gd_t *gd,
   return 0;
 }
 
-/*
- * generate cartesian grid
- */
-
-int 
-gd_cart_init_set(gd_t *gd,
-  float dx, float x0_glob,
-  float dy, float y0_glob,
-  float dz, float z0_glob)
-{
-  /*
-   * 0-2: x3d, y3d, z3d
-   */
-
-  gd->type = GD_TYPE_CART;
-
-  gd->ncmp = CONST_NDIM;
-
-  // vars
-  float *x1d = (float *) fdlib_mem_calloc_1d_float(
-                  gd->nx, 0.0, "gd_cart_init");
-  float *y1d = (float *) fdlib_mem_calloc_1d_float(
-                  gd->ny, 0.0, "gd_cart_init");
-  float *z1d = (float *) fdlib_mem_calloc_1d_float(
-                  gd->nz, 0.0, "gd_cart_init");
-  if (z1d == NULL) {
-      fprintf(stderr,"Error: failed to alloc coord vars\n");
-      fflush(stderr);
-  }
-
-  float x0 = x0_glob + (gd->ni1_to_glob_phys0 - gd->fdx_nghosts) * dx;
-  float y0 = y0_glob + (gd->nj1_to_glob_phys0 - gd->fdy_nghosts) * dy;
-  float z0 = z0_glob + (gd->nk1_to_glob_phys0 - gd->fdz_nghosts) * dz;
-
-  for (size_t k=0; k< gd->nz; k++)
-  {
-        z1d[k] = z0 + k * dz;
-  }
-  for (size_t j=0; j< gd->ny; j++)
-  {
-        y1d[j] = y0 + j * dy;
-  }
-  for (size_t i=0; i< gd->nx; i++)
-  {
-        x1d[i] = x0 + i * dx;
-  }
-
-  gd->dx = dx;
-  gd->dy = dy;
-  gd->dz = dz;
-
-  gd->xmin = x0;
-  gd->ymin = y0;
-  gd->zmin = z0;
-  gd->xmax = x0 + (gd->nx-1) * dx;
-  gd->ymax = y0 + (gd->ny-1) * dy;
-  gd->zmax = z0 + (gd->nz-1) * dz;
-
-  gd->x0_glob = x0_glob;
-  gd->y0_glob = y0_glob;
-  gd->z0_glob = z0_glob;
-
-  gd->x1d = x1d;
-  gd->y1d = y1d;
-  gd->z1d = z1d;
-  
-  return 0;
-}
-
 //
 // input/output
 //
@@ -865,71 +794,6 @@ gd_curv_coord_import(gd_t *gd,
   return 0;
 }
 
-int
-gd_cart_coord_export(gd_t *gd,
-                     char *fname_coords,
-                     char *output_dir)
-{
-  int  nx = gd->nx;
-  int  ny = gd->ny;
-  int  nz = gd->nz;
-  int  ni1 = gd->ni1;
-  int  nj1 = gd->nj1;
-  int  nk1 = gd->nk1;
-  int  ni  = gd->ni;
-  int  nj  = gd->nj;
-  int  nk  = gd->nk;
-  int  gni1 = gd->ni1_to_glob_phys0;
-  int  gnj1 = gd->nj1_to_glob_phys0;
-  int  gnk1 = gd->nk1_to_glob_phys0;
-
-  // construct file name
-  char ou_file[CONST_MAX_STRLEN];
-  sprintf(ou_file, "%s/coord_%s.nc", output_dir, fname_coords);
-  
-  // read in nc
-  int ncid;
-  int varid[CONST_NDIM];
-  int dimid[CONST_NDIM];
-
-  int ierr = nc_create(ou_file, NC_CLOBBER | NC_64BIT_OFFSET, &ncid);  handle_nc_err(ierr);
-
-  // define dimension
-  ierr = nc_def_dim(ncid, "i", nx, &dimid[2]);  handle_nc_err(ierr);
-  ierr = nc_def_dim(ncid, "j", ny, &dimid[1]);  handle_nc_err(ierr);
-  ierr = nc_def_dim(ncid, "k", nz, &dimid[0]);  handle_nc_err(ierr);
-
-  // define vars
-  ierr = nc_def_var(ncid, "x", NC_FLOAT, 1, dimid+2, &varid[0]);  handle_nc_err(ierr);
-  ierr = nc_def_var(ncid, "y", NC_FLOAT, 1, dimid+1, &varid[1]);  handle_nc_err(ierr);
-  ierr = nc_def_var(ncid, "z", NC_FLOAT, 1, dimid+0, &varid[2]);  handle_nc_err(ierr);
-
-  // attribute: index in output snapshot, index w ghost in thread
-  int l_start[] = { ni1, nj1, nk1 };
-  nc_put_att_int(ncid,NC_GLOBAL,"local_index_of_first_physical_points",
-                   NC_INT,CONST_NDIM,l_start);
-
-  int g_start[] = { gni1, gnj1, gnk1 };
-  nc_put_att_int(ncid,NC_GLOBAL,"global_index_of_first_physical_points",
-                   NC_INT,CONST_NDIM,g_start);
-
-  int l_count[] = { ni, nj, nk };
-  nc_put_att_int(ncid,NC_GLOBAL,"count_of_physical_points",
-                   NC_INT,CONST_NDIM,l_count);
-
-  // end def
-  ierr = nc_enddef(ncid);  handle_nc_err(ierr);
-
-  // add vars
-  ierr = nc_put_var_float(ncid, varid[0], gd->x1d);  handle_nc_err(ierr);
-  ierr = nc_put_var_float(ncid, varid[1], gd->y1d);  handle_nc_err(ierr);
-  ierr = nc_put_var_float(ncid, varid[2], gd->z1d);  handle_nc_err(ierr);
-  
-  // close file
-  ierr = nc_close(ncid);  handle_nc_err(ierr);
-
-  return 0;
-}
 
 int
 gd_curv_metric_export(gd_t    *gd,
@@ -1251,38 +1115,6 @@ gd_curv_set_minmax(gd_t *gd)
   } // k_tile
 
   return 0;
-}
-/*
- * convert cart coord to global index
- */
-
-__host__ __device__ int
-gd_cart_coord_to_glob_indx(gd_t *gd,
-                           float sx,
-                           float sy,
-                           float sz,
-                           MPI_Comm comm,
-                           int myid,
-                           int   *ou_si, int *ou_sj, int *ou_sk,
-                           float *ou_sx_inc, float *ou_sy_inc, float *ou_sz_inc)
-{
-  int ierr = 0;
-
-  int si_glob = (int)( (sx - gd->x0_glob) / gd->dx + 0.5 );
-  int sj_glob = (int)( (sy - gd->y0_glob) / gd->dy + 0.5 );
-  int sk_glob = (int)( (sz - gd->z0_glob) / gd->dz + 0.5 );
-  float sx_inc = si_glob * gd->dx + gd->x0_glob - sx;
-  float sy_inc = sj_glob * gd->dy + gd->y0_glob - sy;
-  float sz_inc = sk_glob * gd->dz + gd->z0_glob - sz;
-
-  *ou_si = si_glob;
-  *ou_sj = sj_glob;
-  *ou_sk = sk_glob;
-  *ou_sx_inc = sx_inc;
-  *ou_sy_inc = sy_inc;
-  *ou_sz_inc = sz_inc;
-
-  return ierr; 
 }
 
 /*
@@ -1889,15 +1721,8 @@ gd_coord_get_x(gd_t *gd, int i, int j, int k)
 {
   float var = 0.0;
 
-  if (gd->type == GD_TYPE_CART)
-  {
-    var = gd->x1d[i];
-  }
-  else if (gd->type == GD_TYPE_CURV)
-  {
-    size_t iptr = i + j * gd->siz_iy + k * gd->siz_iz;
-    var = gd->x3d[iptr];
-  }
+  size_t iptr = i + j * gd->siz_iy + k * gd->siz_iz;
+  var = gd->x3d[iptr];
 
   return var;
 }
@@ -1907,15 +1732,8 @@ gd_coord_get_y(gd_t *gd, int i, int j, int k)
 {
   float var = 0.0;
 
-  if (gd->type == GD_TYPE_CART)
-  {
-    var = gd->y1d[j];
-  }
-  else if (gd->type == GD_TYPE_CURV)
-  {
-    size_t iptr = i + j * gd->siz_iy + k * gd->siz_iz;
-    var = gd->y3d[iptr];
-  }
+  size_t iptr = i + j * gd->siz_iy + k * gd->siz_iz;
+  var = gd->y3d[iptr];
 
   return var;
 }
@@ -1925,15 +1743,8 @@ gd_coord_get_z(gd_t *gd, int i, int j, int k)
 {
   float var = 0.0;
 
-  if (gd->type == GD_TYPE_CART)
-  {
-    var = gd->z1d[k];
-  }
-  else if (gd->type == GD_TYPE_CURV)
-  {
-    size_t iptr = i + j * gd->siz_iy + k * gd->siz_iz;
-    var = gd->z3d[iptr];
-  }
+  size_t iptr = i + j * gd->siz_iy + k * gd->siz_iz;
+  var = gd->z3d[iptr];
 
   return var;
 }
@@ -2031,13 +1842,7 @@ gd_print(gd_t *gd)
   fprintf(stdout, "print grid structure info:\n");
   fprintf(stdout, "-------------------------------------------------------\n\n");
 
-  if (gd->type == GD_TYPE_CART) {
-    fprintf(stdout, " grid type is cartesian\n");
-  } else if (gd->type == GD_TYPE_VMAP) {
-    fprintf(stdout, " grid type is vmap\n");
-  } else {
-    fprintf(stdout, " grid type is general curvilinear\n");
-  }
+  fprintf(stdout, " grid type is general curvilinear\n");
 
   fprintf(stdout," xmin=%g, xmax=%g\n", gd->xmin,gd->xmax);
   fprintf(stdout," ymin=%g, ymax=%g\n", gd->ymin,gd->ymax);
@@ -2089,8 +1894,7 @@ gd_info_set(gd_t *gd,
             int abs_num_of_layers[][2],
             int fdx_nghosts,
             int fdy_nghosts,
-            int fdz_nghosts,
-            int verbose)
+            int fdz_nghosts)
 {
   int ierr = 0;
 

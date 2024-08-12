@@ -30,7 +30,7 @@ sv_curv_col_el_iso_rhs_timg_z2_gpu(
     int fdx_len, int * fdx_indx, float * lfdx_coef,
     int fdy_len, int * fdy_indx, float * lfdy_coef,
     int fdz_len, int * fdz_indx, float * lfdz_coef,
-    const int myid, const int verbose)
+    const int myid)
 {
   // loop var for fd
   int n_fd; // loop var for fd
@@ -231,7 +231,7 @@ sv_curv_col_el_iso_rhs_src_gpu(
     float * hTxz, float * hTyz, float * hTxy,
     float * jac3d, float * slw3d,
     src_t src, // short nation for reference member
-    const int myid, const int verbose)
+    const int myid)
 {
   // for easy coding and efficiency
   int max_ext = src.max_ext;

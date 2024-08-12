@@ -14,7 +14,7 @@
  * for MPI, master read, broadcast to all procs
  */
 void
-par_mpi_get(char *par_fname, int myid, MPI_Comm comm, par_t *par, int verbose)
+par_mpi_get(char *par_fname, int myid, MPI_Comm comm, par_t *par)
 {
   char *str;
 
@@ -59,7 +59,7 @@ par_mpi_get(char *par_fname, int myid, MPI_Comm comm, par_t *par, int verbose)
  * for non-MPI, read from file
  */
 void
-par_read_from_file(char *par_fname, int myid, MPI_Comm comm, par_t *par, int verbose)
+par_read_from_file(char *par_fname, int myid, MPI_Comm comm, par_t *par)
 {
   //
   // read whole file inot str

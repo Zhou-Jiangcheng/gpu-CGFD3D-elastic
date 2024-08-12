@@ -32,7 +32,7 @@ sv_curv_col_el_iso_onestage(
   int num_of_fdy_op, fd_op_t *fdy_op,
   int num_of_fdz_op, fd_op_t *fdz_op,
   int fdz_max_len, 
-  const int myid, const int verbose);
+  const int myid);
 
 __global__ void
 sv_curv_col_el_iso_rhs_inner_gpu(
@@ -51,7 +51,7 @@ sv_curv_col_el_iso_rhs_inner_gpu(
     size_t * lfdx_shift, float * lfdx_coef,
     size_t * lfdy_shift, float * lfdy_coef,
     size_t * lfdz_shift, float * lfdz_coef,
-    const int myid, const int verbose);
+    const int myid);
 
 __global__ void
 sv_curv_col_el_iso_rhs_vlow_z2_gpu(
@@ -69,7 +69,7 @@ sv_curv_col_el_iso_rhs_vlow_z2_gpu(
     int fdy_len, size_t * fdy_shift, float * fdy_coef,
     int num_of_fdz_op, int fdz_max_len, int * fdz_len,
     float *lfdz_coef_all, size_t *lfdz_shift_all,
-    const int myid, const int verbose);
+    const int myid);
 
 int
 sv_curv_col_el_iso_rhs_cfspml(
@@ -88,7 +88,7 @@ sv_curv_col_el_iso_rhs_cfspml(
     size_t * fdy_shift, float * fdy_coef,
     size_t * fdz_shift, float * fdz_coef,
     bdrypml_t bdrypml_d, bdryfree_t bdryfree_d,
-    const int myid, const int verbose);
+    const int myid);
 
 __global__ void
 sv_curv_col_el_iso_rhs_cfspml_gpu(
@@ -108,13 +108,12 @@ sv_curv_col_el_iso_rhs_cfspml_gpu(
     size_t * fdy_shift, float * fdy_coef,
     size_t * fdz_shift, float * fdz_coef,
     bdrypml_t bdrypml_d, bdryfree_t bdryfree_d,
-    const int myid, const int verbose);
+    const int myid);
 
 int
 sv_curv_col_el_iso_dvh2dvz(gd_t        *gd,
                            gd_metric_t *metric,
                            md_t        *md,
-                           bdryfree_t  *bdryfree,
-                           const int verbose);
+                           bdryfree_t  *bdryfree);
 
 #endif

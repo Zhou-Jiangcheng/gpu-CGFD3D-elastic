@@ -36,7 +36,7 @@ sv_curv_col_vis_iso_onestage(
   int num_of_fdy_op, fd_op_t *fdy_op,
   int num_of_fdz_op, fd_op_t *fdz_op,
   int fdz_max_len, 
-  const int myid, const int verbose)
+  const int myid)
 {
   int nmaxwell = md_d.nmaxwell;
 
@@ -204,7 +204,7 @@ sv_curv_col_vis_iso_onestage(
                         lfdx_shift_d, lfdx_coef_d,
                         lfdy_shift_d, lfdy_coef_d,
                         lfdz_shift_d, lfdz_coef_d,
-                        myid, verbose);
+                        myid);
     CUDACHECK( cudaDeviceSynchronize() );
   }
 
@@ -226,7 +226,7 @@ sv_curv_col_vis_iso_onestage(
                           fdx_len, lfdx_indx_d, lfdx_coef_d,
                           fdy_len, lfdy_indx_d, lfdy_coef_d,
                           fdz_len, lfdz_indx_d, lfdz_coef_d,
-                          myid, verbose);
+                          myid);
       cudaDeviceSynchronize();
     }
     // velocity: vlow
@@ -245,7 +245,7 @@ sv_curv_col_vis_iso_onestage(
                         fdy_len, lfdy_shift_d, lfdy_coef_d,
                         num_of_fdz_op,fdz_max_len,lfdz_len_d,
                         lfdz_coef_all_d,lfdz_shift_all_d,
-                        myid, verbose);
+                        myid);
       CUDACHECK( cudaDeviceSynchronize() );
     }
   }
@@ -262,7 +262,7 @@ sv_curv_col_vis_iso_onestage(
                                   lfdy_shift_d, lfdy_coef_d,
                                   lfdz_shift_d, lfdz_coef_d,
                                   bdrypml_d, bdryfree_d,
-                                  myid, verbose);
+                                  myid);
   }
 
   {
@@ -275,7 +275,7 @@ sv_curv_col_vis_iso_onestage(
                 w_cur, rhs, wav_d, md_d,
                 ni1, ni, nj1, nj, nk1, nk,
                 siz_iy, siz_iz,
-                myid, verbose);
+                myid);
     CUDACHECK( cudaDeviceSynchronize() );
   }
 
@@ -290,7 +290,7 @@ sv_curv_col_vis_iso_onestage(
                         hVx, hVy, hVz, hTxx, hTyy, hTzz, hTxz, hTyz, hTxy,
                         jac3d, slw3d, 
                         src_d,
-                        myid, verbose);
+                        myid);
       CUDACHECK( cudaDeviceSynchronize() );
     }
   }
@@ -310,7 +310,7 @@ sv_curv_col_vis_iso_atten_gpu(
     md_t md_d,
     int ni1, int ni, int nj1, int nj, int nk1, int nk,
     size_t siz_iy, size_t siz_iz,
-    const int myid, const int verbose)
+    const int myid)
 {
   size_t ix = blockIdx.x * blockDim.x + threadIdx.x;
   size_t iy = blockIdx.y * blockDim.y + threadIdx.y;
@@ -449,8 +449,7 @@ sv_curv_col_vis_iso_free_gpu(float *w_end,
                              gd_metric_t  metric_d,
                              md_t md_d,
                              bdryfree_t  bdryfree_d,
-                             const int myid, 
-                             const int verbose)
+                             const int myid) 
 {
   size_t ix = blockIdx.x * blockDim.x + threadIdx.x;
   size_t iy = blockIdx.y * blockDim.y + threadIdx.y;
@@ -569,8 +568,7 @@ sv_curv_col_vis_iso_dvh2dvz(gd_t            *gd,
                             bdryfree_t      *bdryfree,
                             int fd_len,
                             int *fd_indx,
-                            float *fd_coef,
-                            const int verbose)
+                            float *fd_coef)
 {
   int ni1 = gd->ni1;
   int ni2 = gd->ni2;

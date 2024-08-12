@@ -21,7 +21,6 @@
 
 int main(int argc, char** argv)
 {
-  int verbose; 
   int gpu_id_start; 
   char *par_fname;
   char err_message[CONST_MAX_STRLEN];
@@ -42,27 +41,23 @@ int main(int argc, char** argv)
   if (myid==0)
   {
     // argc checking
-    if (argc < 4) {
-      fprintf(stdout,"usage: cgfdm3d_elastic <par_file> <opt: verbose>\n");
+    if (argc < 3) {
+      fprintf(stdout,"usage: cgfdm3d_elastic <par_file> \n");
       MPI_Finalize();
       exit(1);
     }
 
     par_fname = argv[1];
 
-    if (argc >= 4) {
-      verbose = atoi(argv[2]); // verbose number
-      fprintf(stdout,"verbose=%d\n", verbose); fflush(stdout);
-      gpu_id_start = atoi(argv[3]); // gpu_id_start number
+    if (argc >= 3) {
+      gpu_id_start = atoi(argv[2]); // gpu_id_start number
       fprintf(stdout,"gpu_id_start=%d\n",gpu_id_start ); fflush(stdout);
     }
-    MPI_Bcast(&verbose, 1, MPI_INT, 0, comm);
     MPI_Bcast(&gpu_id_start, 1, MPI_INT, 0, comm);
   }
   else
   {
-    // get verbose from id 0
-    MPI_Bcast(&verbose, 1, MPI_INT, 0, comm);
+    // get gpu_id from id 0
     MPI_Bcast(&gpu_id_start, 1, MPI_INT, 0, comm);
   }
 
@@ -71,28 +66,28 @@ int main(int argc, char** argv)
   //-------------------------------------------------------------------------------
   setDeviceBeforeInit(gpu_id_start);
 
-  if (myid==0 && verbose>0) fprintf(stdout,"comm=%d, size=%d\n", comm, mpi_size); 
-  if (myid==0 && verbose>0) fprintf(stdout,"par file =  %s\n", par_fname); 
+  if (myid==0) fprintf(stdout,"comm=%d, size=%d\n", comm, mpi_size); 
+  if (myid==0) fprintf(stdout,"par file =  %s\n", par_fname); 
 
   // read par
 
   par_t *par = (par_t *) malloc(sizeof(par_t));
 
-  par_mpi_get(par_fname, myid, comm, par, verbose);
+  par_mpi_get(par_fname, myid, comm, par);
 
-  if (myid==0 && verbose>0) par_print(par);
+  if (myid==0) par_print(par);
 
 //-------------------------------------------------------------------------------
 // init blk_t
 //-------------------------------------------------------------------------------
 
-  if (myid==0 && verbose>0) fprintf(stdout,"create blk ...\n"); 
+  if (myid==0) fprintf(stdout,"create blk ...\n"); 
 
   // malloc blk
   blk_t *blk = (blk_t *) malloc(sizeof(blk_t));
 
   // malloc inner vars
-  blk_init(blk, myid, verbose);
+  blk_init(blk, myid);
 
   fd_t            *fd            = blk->fd    ;
   mympi_t         *mympi         = blk->mympi ;
@@ -111,16 +106,16 @@ int main(int argc, char** argv)
 
   // set up fd_t
   //    not support selection scheme by par file yet
-  if (myid==0 && verbose>0) fprintf(stdout,"set scheme ...\n"); 
+  if (myid==0) fprintf(stdout,"set scheme ...\n"); 
   fd_set_macdrp(fd);
 
   // set mpi
-  if (myid==0 && verbose>0) fprintf(stdout,"set mpi topo ...\n"); 
+  if (myid==0) fprintf(stdout,"set mpi topo ...\n"); 
   mympi_set(mympi,
             par->number_of_mpiprocs_x,
             par->number_of_mpiprocs_y,
             comm,
-            myid, verbose);
+            myid);
 
   // set gdinfo
   gd_info_set(gd, mympi,
@@ -130,21 +125,20 @@ int main(int argc, char** argv)
               par->abs_num_of_layers,
               fd->fdx_nghosts,
               fd->fdy_nghosts,
-              fd->fdz_nghosts,
-              verbose);
+              fd->fdz_nghosts);
+              
 
   // set str in blk
   blk_set_output(blk, mympi,
                  par->output_dir,
                  par->grid_export_dir,
-                 par->media_export_dir,
-                 verbose);
+                 par->media_export_dir);
 
 //-------------------------------------------------------------------------------
 //-- grid generation or import
 //-------------------------------------------------------------------------------
 
-  if (myid==0 && verbose>0) fprintf(stdout,"allocate grid vars ...\n"); 
+  if (myid==0) fprintf(stdout,"allocate grid vars ...\n"); 
 
   // malloc var in gdcurv
   gd_curv_init(gd);
@@ -176,7 +170,7 @@ int main(int argc, char** argv)
       if (myid==0) fprintf(stdout,"import grid vars ...\n"); 
       gd_curv_coord_import(gd, blk->output_fname_part, par->grid_import_dir);
 
-      if (myid==0 && verbose>0) fprintf(stdout,"exchange coords ...\n"); 
+      if (myid==0) fprintf(stdout,"exchange coords ...\n"); 
       gd_exchange(gd,gd->v4d,gd->ncmp,mympi->neighid,mympi->topocomm);
 
       break;
@@ -210,14 +204,14 @@ int main(int argc, char** argv)
   {
     case PAR_METRIC_CALCULATE : {
 
-      if (myid==0 && verbose>0) fprintf(stdout,"calculate metrics ...\n"); 
+      if (myid==0) fprintf(stdout,"calculate metrics ...\n"); 
       gd_curv_metric_cal(gd,
                          gd_metric,
                          fd->fdc_len,
                          fd->fdc_indx,
                          fd->fdc_coef);
 
-      if (myid==0 && verbose>0) fprintf(stdout,"exchange metrics ...\n"); 
+      if (myid==0) fprintf(stdout,"exchange metrics ...\n"); 
       gd_exchange(gd,gd_metric->v4d,gd_metric->ncmp,mympi->neighid,mympi->topocomm);
 
       break;
@@ -226,13 +220,13 @@ int main(int argc, char** argv)
 
       if (myid==0) fprintf(stdout,"import metric file ...\n"); 
       gd_curv_metric_import(gd, gd_metric, blk->output_fname_part, par->grid_import_dir);
-      if (myid==0 && verbose>0) fprintf(stdout,"exchange metrics ...\n"); 
+      if (myid==0) fprintf(stdout,"exchange metrics ...\n"); 
       gd_exchange(gd,gd_metric->v4d,gd_metric->ncmp,mympi->neighid,mympi->topocomm);
 
       break;
     }
   }
-  if (myid==0 && verbose>0) { fprintf(stdout, " --> done\n"); fflush(stdout); }
+  if (myid==0) { fprintf(stdout, " --> done\n"); fflush(stdout); }
 
   // export metric
   if (par->is_export_metric==1)
@@ -244,16 +238,15 @@ int main(int argc, char** argv)
   } else {
     if (myid==0) fprintf(stdout,"do not export metric\n"); 
   }
-  if (myid==0 && verbose>0) { fprintf(stdout, " --> done\n"); fflush(stdout); }
+  if (myid==0) { fprintf(stdout, " --> done\n"); fflush(stdout); }
   // print basic info for QC
-  fprintf(stdout,"gdcurv info at topoid=%d,%d\n", mympi->topoid[0],mympi->topoid[1]); 
   //gd_print(gd);
 //-------------------------------------------------------------------------------
 //-- media generation or import
 //-------------------------------------------------------------------------------
 
   // allocate media vars
-  if (myid==0 && verbose>0) {fprintf(stdout,"allocate media vars ...\n"); fflush(stdout);}
+  if (myid==0) {fprintf(stdout,"allocate media vars ...\n"); fflush(stdout);}
 
   md_init(gd, md, par->media_itype, par->visco_itype, par->nmaxwell);
 
@@ -299,7 +292,7 @@ int main(int argc, char** argv)
 
       if (myid==0) fprintf(stdout,"import discrete medium file ...\n"); 
       md_import(gd, md, blk->output_fname_part, par->media_import_dir);
-      if (myid==0 && verbose>0) fprintf(stdout,"exchange metrics ...\n"); 
+      if (myid==0) fprintf(stdout,"exchange metrics ...\n"); 
       gd_exchange(gd,md->v4d,md->ncmp,mympi->neighid,mympi->topocomm);
 
       break;
@@ -583,7 +576,7 @@ int main(int argc, char** argv)
   MPI_Barrier(comm);
   time_t t_end_md = time(NULL);
   
-  if (myid==0 && verbose>0) {
+  if (myid==0) {
     fprintf(stdout,"media Time of time :%f s \n", difftime(t_end_md,t_start_md));
   }
 
@@ -666,32 +659,20 @@ int main(int argc, char** argv)
                        fd->num_rk_stages, fd->rk_rhs_time,
                        fd->fdx_max_half_len,
                        comm,
-                       myid,
-                       verbose);
+                       myid);
 
   MPI_Barrier(comm);
   time_t t_end_src = time(NULL);
   
-  if (myid==0 && verbose>0) {
+  if (myid==0) {
     fprintf(stdout,"src Time of time :%f s \n", difftime(t_end_src,t_start_src));
   }
 
-  // print basic info for QC
-  if (verbose>1000) {
-    fprintf(stdout,"src info at topoid=%d,%d\n", mympi->topoid[0],mympi->topoid[1]); 
-    src_print(src, verbose);
-  }
-  /*
-  if (par->is_export_source==1)
-  {
-      ierr = src_export();
-  }
-  */
 //-------------------------------------------------------------------------------
 //-- allocate main var
 //-------------------------------------------------------------------------------
 
-  if (myid==0 && verbose>0) fprintf(stdout,"allocate solver vars ...\n"); 
+  if (myid==0) fprintf(stdout,"allocate solver vars ...\n"); 
   if(md->medium_type == CONST_MEDIUM_ACOUSTIC_ISO)
   {
     wav_ac_init(gd, wav, fd->num_rk_stages);
@@ -703,12 +684,12 @@ int main(int argc, char** argv)
 //-- setup output, may require coord info
 //-------------------------------------------------------------------------------
 
-  if (myid==0 && verbose>0) fprintf(stdout,"setup output info ...\n"); 
+  if (myid==0) fprintf(stdout,"setup output info ...\n"); 
 
   // receiver: need to do
   io_recv_read_locate(gd, iorecv,
                       nt_total, wav->ncmp, par->in_station_file,
-                      comm, myid, verbose);
+                      comm, myid);
 
   // line
   io_line_locate(gd, ioline,
@@ -750,7 +731,7 @@ int main(int argc, char** argv)
 //-- absorbing boundary etc auxiliary variables
 //-------------------------------------------------------------------------------
 
-  if (myid==0 && verbose>0) fprintf(stdout,"setup absorbingg boundary ...\n"); 
+  if (myid==0) fprintf(stdout,"setup absorbingg boundary ...\n"); 
 
   if (par->bdry_has_cfspml == 1)
   {
@@ -760,13 +741,12 @@ int main(int argc, char** argv)
                  par->abs_num_of_layers,
                  par->cfspml_alpha_max,
                  par->cfspml_beta_max,
-                 par->cfspml_velocity,
-                 verbose);
+                 par->cfspml_velocity);
   }
   
   if (par->bdry_has_ablexp == 1)
   {
-    if (myid==0 && verbose>0) fprintf(stdout,"setup sponge layer ...\n"); 
+    if (myid==0) fprintf(stdout,"setup sponge layer ...\n"); 
 
     bdry_ablexp_set(gd, wav, bdryexp,
                     mympi->neighid,
@@ -774,8 +754,7 @@ int main(int argc, char** argv)
                     par->abs_num_of_layers,
                     par->ablexp_velocity,
                     dt,
-                    mympi->topoid,
-                    verbose);
+                    mympi->topoid);
   }
 
 //-------------------------------------------------------------------------------
@@ -784,15 +763,15 @@ int main(int argc, char** argv)
 
   if (par->bdry_has_free == 1)
   {
-    if (myid==0 && verbose>0) fprintf(stdout,"cal free surface matrix ...\n"); 
-    bdry_free_set(gd, bdryfree, mympi->neighid, par->free_is_sides, verbose);
+    if (myid==0) fprintf(stdout,"cal free surface matrix ...\n"); 
+    bdry_free_set(gd, bdryfree, mympi->neighid, par->free_is_sides);
   }
 
 //-------------------------------------------------------------------------------
 //-- setup mesg
 //-------------------------------------------------------------------------------
 
-  if (myid==0 && verbose>0) fprintf(stdout,"init mesg ...\n"); 
+  if (myid==0) fprintf(stdout,"init mesg ...\n"); 
   blk_macdrp_mesg_init(mympi, fd, gd->ni, gd->nj, gd->nk,
                   wav->ncmp);
 
@@ -817,7 +796,7 @@ int main(int argc, char** argv)
   // convert rho to 1 / rho to reduce number of arithmetic cal
   md_rho_to_slow(md->rho, md->siz_icmp);
 
-  if (myid==0 && verbose>0) fprintf(stdout,"start solver ...\n"); 
+  if (myid==0) fprintf(stdout,"start solver ...\n"); 
   
   time_t t_start = time(NULL);
   
@@ -828,12 +807,11 @@ int main(int argc, char** argv)
                           blk->output_fname_part,
                           blk->output_dir,
                           par->check_nan_every_nummber_of_steps,
-                          par->output_all,
-                          verbose);
+                          par->output_all);
   
   time_t t_end = time(NULL);
   
-  if (myid==0 && verbose>0) {
+  if (myid==0) {
     fprintf(stdout,"\n\nRuning Time of time :%f s \n", difftime(t_end,t_start));
   }
 

@@ -31,7 +31,7 @@ sv_curv_col_ac_iso_onestage(
   int num_of_fdy_op, fd_op_t *fdy_op,
   int num_of_fdz_op, fd_op_t *fdz_op,
   int fdz_max_len, 
-  const int myid, const int verbose);
+  const int myid);
 
 __global__ void
 sv_curv_col_ac_iso_rhs_inner_gpu(
@@ -46,14 +46,14 @@ sv_curv_col_ac_iso_rhs_inner_gpu(
     size_t *lfdx_shift, float *lfdx_coef,
     size_t *lfdy_shift, float *lfdy_coef,
     size_t *lfdz_shift, float *lfdz_coef,
-    int myid, int verbose);
+    int myid);
 
 __global__ void
 sv_curv_col_ac_iso_rhs_timg_z2_gpu(
                    float *P, int ni, int nj, int ni1,  
                    int nj1, int nk2, int nz, 
                    size_t siz_iy, size_t siz_iz,
-                   int myid, int verbose);
+                   int myid);
 
 __global__ void
 sv_curv_col_ac_iso_rhs_vlow_z2_gpu(
@@ -69,7 +69,7 @@ sv_curv_col_ac_iso_rhs_vlow_z2_gpu(
     int fdy_len, size_t *lfdy_shift, float *lfdy_coef,
     int num_of_fdz_op, int fdz_max_len, int *fdz_len,
     float *lfdz_coef_all, size_t *lfdz_shift_all,
-    int myid, int verbose);
+    int myid);
 
 int
 sv_curv_col_ac_iso_rhs_cfspml(
@@ -84,7 +84,7 @@ sv_curv_col_ac_iso_rhs_cfspml(
     size_t *lfdy_shift, float *lfdy_coef,
     size_t *lfdz_shift, float *lfdz_coef,
     bdrypml_t bdrypml_d,
-    int myid, int verbose);
+    int myid);
 
 __global__ void
 sv_curv_col_ac_iso_rhs_cfspml_gpu(int idim, int iside,
@@ -99,7 +99,7 @@ sv_curv_col_ac_iso_rhs_cfspml_gpu(int idim, int iside,
                                   size_t *lfdy_shift, float *lfdy_coef,
                                   size_t *lfdz_shift, float *lfdz_coef,
                                   bdrypml_t bdrypml_d,
-                                  int myid, int verbose);
+                                  int myid);
 
 __global__ void
 sv_curv_col_ac_iso_rhs_src_gpu(
@@ -107,6 +107,6 @@ sv_curv_col_ac_iso_rhs_src_gpu(
     float *hP, 
     float *jac3d, float *slw3d,
     src_t src, 
-    int myid, int verbose);
+    int myid);
 
 #endif

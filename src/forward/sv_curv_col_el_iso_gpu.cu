@@ -37,7 +37,7 @@ sv_curv_col_el_iso_onestage(
   int num_of_fdy_op, fd_op_t *fdy_op,
   int num_of_fdz_op, fd_op_t *fdz_op,
   int fdz_max_len, 
-  const int myid, const int verbose)
+  const int myid)
 {
   // local pointer get each vars
   float *Vx    = w_cur_d + wav_d.Vx_pos ;
@@ -203,7 +203,7 @@ sv_curv_col_el_iso_onestage(
                         lfdx_shift_d, lfdx_coef_d,
                         lfdy_shift_d, lfdy_coef_d,
                         lfdz_shift_d, lfdz_coef_d,
-                        myid, verbose);
+                        myid);
     CUDACHECK( cudaDeviceSynchronize() );
   }
 
@@ -225,7 +225,7 @@ sv_curv_col_el_iso_onestage(
                           fdx_len, lfdx_indx_d, lfdx_coef_d,
                           fdy_len, lfdy_indx_d, lfdy_coef_d,
                           fdz_len, lfdz_indx_d, lfdz_coef_d,
-                          myid, verbose);
+                          myid);
       cudaDeviceSynchronize();
     }
     // velocity: vlow
@@ -244,7 +244,7 @@ sv_curv_col_el_iso_onestage(
                         fdy_len, lfdy_shift_d, lfdy_coef_d,
                         num_of_fdz_op,fdz_max_len,lfdz_len_d,
                         lfdz_coef_all_d,lfdz_shift_all_d,
-                        myid, verbose);
+                        myid);
       CUDACHECK( cudaDeviceSynchronize() );
     }
   }
@@ -261,7 +261,7 @@ sv_curv_col_el_iso_onestage(
                                   lfdy_shift_d, lfdy_coef_d,
                                   lfdz_shift_d, lfdz_coef_d,
                                   bdrypml_d, bdryfree_d,
-                                  myid, verbose);
+                                  myid);
   }
 
   // add source term
@@ -275,7 +275,7 @@ sv_curv_col_el_iso_onestage(
                         hVx, hVy, hVz, hTxx, hTyy, hTzz, hTxz, hTyz, hTxy,
                         jac3d, slw3d, 
                         src_d,
-                        myid, verbose);
+                        myid);
       CUDACHECK( cudaDeviceSynchronize() );
     }
   }
@@ -305,7 +305,7 @@ sv_curv_col_el_iso_rhs_inner_gpu(
     size_t * lfdx_shift, float * lfdx_coef,
     size_t * lfdy_shift, float * lfdy_coef,
     size_t * lfdz_shift, float * lfdz_coef,
-    const int myid, const int verbose)
+    const int myid)
 {
   // local var
   float DxTxx,DxTyy,DxTzz,DxTxy,DxTxz,DxTyz,DxVx,DxVy,DxVz;
@@ -475,7 +475,7 @@ sv_curv_col_el_iso_rhs_vlow_z2_gpu(
     int fdy_len, size_t * lfdy_shift, float * lfdy_coef,
     int num_of_fdz_op, int fdz_max_len, int * fdz_len,
     float *lfdz_coef_all, size_t *lfdz_shift_all,
-    const int myid, const int verbose)
+    const int myid)
 {
   // local var
   int k;
@@ -627,7 +627,7 @@ sv_curv_col_el_iso_rhs_cfspml(
     size_t * lfdy_shift, float * lfdy_coef,
     size_t * lfdz_shift, float * lfdz_coef,
     bdrypml_t bdrypml_d, bdryfree_t bdryfree_d,
-    const int myid, const int verbose)
+    const int myid)
 {
   // check each side
   for (int idim=0; idim<CONST_NDIM; idim++)
@@ -668,7 +668,7 @@ sv_curv_col_el_iso_rhs_cfspml(
                                 lfdy_shift,  lfdy_coef,
                                 lfdz_shift,  lfdz_coef,
                                 bdrypml_d, bdryfree_d,
-                                myid, verbose);
+                                myid);
         //cudaDeviceSynchronize();
       }
     } // iside
@@ -694,7 +694,7 @@ sv_curv_col_el_iso_rhs_cfspml_gpu(int idim, int iside,
                                   size_t * lfdy_shift, float * lfdy_coef,
                                   size_t * lfdz_shift, float * lfdz_coef,
                                   bdrypml_t bdrypml_d, bdryfree_t bdryfree_d,
-                                  const int myid, const int verbose)
+                                  const int myid)
 {
   size_t ix = blockIdx.x * blockDim.x + threadIdx.x;
   size_t iy = blockIdx.y * blockDim.y + threadIdx.y;
@@ -1153,8 +1153,7 @@ int
 sv_curv_col_el_iso_dvh2dvz(gd_t            *gd,
                            gd_metric_t     *metric,
                            md_t            *md,
-                           bdryfree_t      *bdryfree,
-                           const int verbose)
+                           bdryfree_t      *bdryfree)
 {
   int ni1 = gd->ni1;
   int ni2 = gd->ni2;
