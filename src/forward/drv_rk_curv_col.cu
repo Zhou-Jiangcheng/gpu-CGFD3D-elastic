@@ -215,16 +215,14 @@ drv_rk_curv_col_allstep(
     }
 
 
-    if (myid==0) fprintf(stdout,"-> it=%d, t=%f\n", it, t_cur);
+    if (myid==0 && it%10== 0) fprintf(stdout,"-> it=%d, t=%f\n", it, t_cur);
 
     // mod to get ipair
     ipair = it % num_of_pairs;
-    if (myid==0) fprintf(stdout, " --> ipair=%d\n",ipair);
 
     // loop RK stages for one step
     for (istage=0; istage<num_rk_stages; istage++)
     {
-      if (myid==0) fprintf(stdout, " --> istage=%d\n",istage);
 
       // for mesg
       if (istage != num_rk_stages-1) {
