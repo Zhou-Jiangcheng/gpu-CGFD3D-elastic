@@ -6,8 +6,8 @@ set -e
 date
 
 #-- system related dir
-#MPIDIR=/data3/lihl/software/openmpi-gnu-4.1.2
-MPIDIR=/data/apps/openmpi/4.1.5-cuda-aware
+MPIDIR=/data3/lihl/software/openmpi-gnu-4.1.2
+#MPIDIR=/data/apps/openmpi/4.1.5-cuda-aware
 
 #-- program related dir
 EXEC_WAVE=`pwd`/../main
@@ -17,7 +17,7 @@ echo "EXEC_WAVE=$EXEC_WAVE"
 INPUTDIR=`pwd`
 
 #-- output and conf
-PROJDIR=`pwd`/../project
+PROJDIR=`pwd`/../project4
 PAR_FILE=${PROJDIR}/test.json
 GRID_DIR=${PROJDIR}/output
 MEDIA_DIR=${PROJDIR}/output
@@ -34,13 +34,13 @@ mkdir -p $MEDIA_DIR
 
 GPU_START_ID=0
 #-- total x grid points
-NX=300
+NX=400
 #-- total y grid points
-NY=200
+NY=300
 #-- total z grid points
 NZ=200
 #-- total x mpi procs
-NPROCS_X=2
+NPROCS_X=4
 #-- total y mpi procs
 NPROCS_Y=2
 #----------------------------------------------------------------------
@@ -105,8 +105,8 @@ cat << ieof > $PAR_FILE
       },
 
   "grid_generation_method" : {
-      "#import" : "$GRID_DIR",
-      "cartesian" : {
+      "import" : "$INPUTDIR/grid2",
+      "#cartesian" : {
         "origin"  : [0.0, 0.0, -29900.0 ],
         "inteval" : [ 100.0, 100.0, 100.0 ]
       }
@@ -121,8 +121,8 @@ cat << ieof > $PAR_FILE
   "is_export_metric" : 1,
 
   "medium" : {
+      "#type" : "viscoelastic_iso",
       "type" : "elastic_iso",
-      "#type" : "elastic_iso",
       "#input_way" : "infile_layer",
       "#input_way" : "binfile",
       "input_way" : "code",
@@ -149,7 +149,7 @@ cat << ieof > $PAR_FILE
   "media_export_dir"  : "$MEDIA_DIR",
 
   "#visco_config" : {
-      "type" : "gmb",
+      "visco_type" : "gmb",
       "Qs_freq" : 1.0,
       "number_of_maxwell" : 3,
       "max_freq" : 10.0,
@@ -165,7 +165,7 @@ cat << ieof > $PAR_FILE
 
   "in_station_file" : "$INPUTDIR/station.list",
 
-  "receiver_line" : [
+  "#receiver_line" : [
     {
       "name" : "line_x_1",
       "grid_index_start"    : [  50, 149, 59 ],
@@ -174,7 +174,7 @@ cat << ieof > $PAR_FILE
     }
   ],
 
-  "slice" : {
+  "#slice" : {
       "x_index" : [ 100 ],
       "y_index" : [ 110 ],
       "z_index" : [ 100 ]
