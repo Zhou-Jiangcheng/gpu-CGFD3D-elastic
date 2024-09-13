@@ -767,9 +767,12 @@ blk_keep_three_digi(float dt)
 {
   char str[40];
   float dt_2;
-  sprintf(str, "%4.3e", dt);
+  sprintf(str, "%9.7e", dt);
 
-  str[4] = '0';
+  for (int i = 3; i < 9; i++)
+  {
+    str[i] = '0';
+  }
 
   sscanf(str, "%f", &dt_2);
   
